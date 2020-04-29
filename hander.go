@@ -3,11 +3,9 @@ package goldengo
 import (
 	"C"
 	"fmt"
-	"strings"
+
 	"syscall"
 	"unsafe"
-
-	"github.com/axgle/mahonia"
 )
 
 /*******************************************************************************
@@ -289,18 +287,6 @@ func (s *RTDBService) PutSnapshots(ids []int32, datatimes []int64, values []floa
 		errors[i] = s.FormatErrMsg(uintptr(err))
 	}
 	return errors
-}
-
-/*******************************************************************************
-- 功能:拆分Unix纳秒为Unix秒和毫秒
-- 输入:
-	[nanosec] UnixNano时间戳
-- 输出:
-	[sec] UnixSec时间戳
-	[ms]  剩余的毫秒数
-*******************************************************************************/
-func splitUnixNanoSec(nanosec int64) (int32, int16) {
-	return int32(nanosec / 1e9), int16((nanosec / 1e6) % 1000)
 }
 
 /*******************************************************************************
@@ -658,8 +644,19 @@ func (s *RTDBService) SetOption(apiType int32, value int32) {
 	go_set_option.Call(uintptr(apiType), uintptr(value))
 }
 
-func GbkToUtf8(buffer []byte) string {
-	enc := mahonia.NewDecoder("GBK")
-	_, cdata, _ := enc.Translate(buffer, true)
-	return strings.Trim(string(cdata), "\u0000")
+/*******************************************************************************
+- 功能：取得标签点表总数
+- 输入：
+- 输出:
+     [count]  整型，输出，标签点表总数。
+- 备注：【未测试成功】
+*******************************************************************************/
+func (s *RTDBService) GetTablesProperty(tableid int) (GOLDEN_TABLE, error) {
+	var table GOLDEN_TABLE
+	table.Id = tableid
+	code, _, _ := gob_get_table_property_by_id.Call(
+		uintptr(s.Handle),
+		uintptr(unsafe.Pointer(&table)),
+	)
+	return table, s.FormatErrMsg(code)
 }

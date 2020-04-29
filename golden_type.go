@@ -103,3 +103,10 @@ type RTDBService struct {
 	Handle int32 //连接句柄
 	Priv   int32 //整型，GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA 之一，帐户权限
 }
+
+type GOLDEN_TABLE struct {
+	Id   int
+	Type int
+	Name []byte
+	Desc []byte
+}

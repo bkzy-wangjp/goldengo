@@ -33,6 +33,9 @@ var (
 	goh_put_archived_values, //写入批量标签点批量历史存储数据
 	gob_tables_count, //取得标签点表总数
 	goh_get_interpo_values, //获取单个标签点一段时间内等间隔历史插值
+	gob_insert_point, //使用完整的属性集来创建单个标签点
+	gob_get_table_property_by_id, //根据标签点表 id 获取表属性
+	gob_get_table_property_by_name, //根据标签点表 name 获取表属性
 	goh_flush_archived_values *syscall.Proc //将标签点未写满的补历史缓存页写入存档文件中
 )
 
@@ -65,4 +68,7 @@ func init() {
 
 	gob_tables_count = dll.MustFindProc("gob_tables_count")             //取得标签点表总数
 	goh_get_interpo_values = dll.MustFindProc("goh_get_interpo_values") //获取单个标签点一段时间内等间隔历史插值
+	gob_insert_point = dll.MustFindProc("gob_insert_point")
+	gob_get_table_property_by_id = dll.MustFindProc("gob_get_table_property_by_id")
+	gob_get_table_property_by_name = dll.MustFindProc("gob_get_table_property_by_name")
 }

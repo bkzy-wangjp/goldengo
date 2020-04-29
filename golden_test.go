@@ -36,24 +36,6 @@ func TestConnect(t *testing.T) {
 	}
 }
 
-/*
-func TestFormatTimespan(t *testing.T) {
-	tests := []struct {
-		timespan int32
-		res      string
-	}{
-		{3600 * 24, ""},
-	}
-	gd := new(RTDBService)
-	for _, tt := range tests {
-		t.Logf("%d", tt.timespan)
-		span := gd.ParseTimespan("52d")
-		t.Logf("1d:%d", span)
-		res := gd.FormatTimespan(span)
-		t.Logf("时间跨度:%s", res)
-	}
-}
-*/
 func TestSearch(t *testing.T) {
 	tests := []struct {
 		tagmask    string
@@ -384,4 +366,25 @@ func TestGetTablesCount(t *testing.T) {
 	defer gd.DisConnect()
 	count, err := gd.GetTablesCount()
 	t.Logf("标签点表数:%d,错误信息:%v", count, err)
+}
+
+func TestGetTablesProperty(t *testing.T) {
+	tests := []struct {
+		id int
+	}{
+		{1},
+		{2},
+		{3},
+		{4},
+	}
+	gd := new(RTDBService)
+	err := gd.Connect("127.0.0.1", "sa", "golden")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for _, tt := range tests {
+		table, err := gd.GetTablesProperty(tt.id)
+		t.Logf("表属性:%+v,错误信息:%v", table, err)
+	}
 }
