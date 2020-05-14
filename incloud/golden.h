@@ -48,6 +48,7 @@ typedef double              golden_float64;       /// 64位浮点数
 typedef GOLDEN_COORDINATE   golden_coordinate;    /// 二维坐标
 typedef unsigned int        golden_error;         /// 错误数值
 typedef void*               golden_datagram_handle;
+typedef int                 bool;
 /// 0x0200 以内的系统定义质量码
 enum GOLDEN_QUALITY
 {
@@ -592,7 +593,7 @@ typedef struct _GOLDEN_POINT
   golden_uint16 named_type_id;
   golden_byte padding[GOLDEN_PACK_OF_POINT];
 } GOLDEN_POINT;
-
+                      
 /// 采集标签点扩展属性集。
 /**
  *  采集标签点扩展属性集。8字节对齐条件下占用512字节。
@@ -1088,7 +1089,8 @@ enum GOLDEN_TABLE_ID
 #define GOLDEN_TAG_FIELD_TYPE_LENGTH    12
 typedef struct TAG_GOLDEN_TAG_FIELD
 {
-  GOLDEN_TABLE_ID table_id;               //列类型
+  //GOLDEN_TABLE_ID table_id;               //列类型
+  golden_int32 table_id;               //列类型
   golden_int16 column_index;                   //字段序号
   golden_int16 column_length;                 //字段长度
   char column_name[GOLDEN_TAG_FIELD_NAME_LENGTH];  //字段名称

@@ -31,17 +31,21 @@ var (
 	goh_get_plot_values, //获取单个标签点一段时间内用于绘图的历史数据
 	goh_put_single_value, //写入单个标签点在某一时间的历史数据
 	goh_put_archived_values, //写入批量标签点批量历史存储数据
-	gob_tables_count, //取得标签点表总数
 	goh_get_interpo_values, //获取单个标签点一段时间内等间隔历史插值
 	gob_insert_point, //使用完整的属性集来创建单个标签点
+	//标签点表
+	gob_tables_count, //取得标签点表总数
 	gob_get_table_property_by_id, //根据标签点表 id 获取表属性
 	gob_get_table_property_by_name, //根据标签点表 name 获取表属性
+	gob_get_tables, //取得所有标签点表的ID
+	gob_get_table_size_by_id, //根据表 id 获取表中包含的标签点数量
+	gob_get_points_property, //批量获取标签点属性
 	goh_flush_archived_values *syscall.Proc //将标签点未写满的补历史缓存页写入存档文件中
 )
 
 func init() {
 
-	dll := syscall.MustLoadDLL("goldenapi64.dll")
+	dll := syscall.MustLoadDLL("static/dll/goldenapi64.dll")
 
 	go_get_api_version = dll.MustFindProc("go_get_api_version")
 	go_set_option = dll.MustFindProc("go_set_option")
@@ -71,4 +75,7 @@ func init() {
 	gob_insert_point = dll.MustFindProc("gob_insert_point")
 	gob_get_table_property_by_id = dll.MustFindProc("gob_get_table_property_by_id")
 	gob_get_table_property_by_name = dll.MustFindProc("gob_get_table_property_by_name")
+	gob_get_tables = dll.MustFindProc("gob_get_tables")                     //取得所有标签点表的ID
+	gob_get_table_size_by_id = dll.MustFindProc("gob_get_table_size_by_id") //根据表 id 获取表中包含的标签点数量
+	gob_get_points_property = dll.MustFindProc("gob_get_points_property")   //批量获取标签点属性
 }

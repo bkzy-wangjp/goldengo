@@ -1,41 +1,16 @@
 package goldengo
 
+/*
+/// 标签点索引表属性集。
+#include "incloud/golden.h"
+*/
+import "C" //注意:import "C"与上面的C代码之间不能有空行
 import (
-	"C"
 	"fmt"
 
 	"syscall"
 	"unsafe"
 )
-
-/*******************************************************************************
--功能：格式化错误码
--参数: [ecode] 错误码,为0时无错误
--返回: [error] 错误信息；ecode为0时返回nil
-*******************************************************************************/
-func (s *RTDBService) FormatErrMsg(ecode uintptr) error {
-	var eMsg error
-	if ecode > 0 {
-		size := 256
-		_message := make([]byte, size)
-		_name := make([]byte, size)
-		code, _, _ := go_format_message.Call(
-			ecode,
-			uintptr(unsafe.Pointer(&_message[0])),
-			uintptr(unsafe.Pointer(&_name[0])),
-			uintptr(size),
-		)
-		if code == 0 {
-			eMsg = fmt.Errorf("ECODE:0x%X, ENAME:%s, DESC:%s",
-				ecode, GbkToUtf8(_name),
-				GbkToUtf8(_message),
-			)
-		} else {
-			eMsg = fmt.Errorf("ECODE:0x%X", code)
-		}
-	}
-	return eMsg
-}
 
 /*******************************************************************************
 // 获取API版本号
@@ -71,7 +46,7 @@ func (s *RTDBService) Connect(hostname, user, password string, port ...int32) er
 	if code == 0 {
 		err = s.login(user, password) //登录
 	} else {
-		err = s.FormatErrMsg(code)
+		err = FormatErrMsg(code)
 	}
 	return err
 }
@@ -84,7 +59,7 @@ func (s *RTDBService) Connect(hostname, user, password string, port ...int32) er
 *******************************************************************************/
 func (s *RTDBService) DisConnect() error {
 	code, _, _ := go_disconnect.Call(uintptr(s.Handle))
-	return s.FormatErrMsg(code)
+	return FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -98,7 +73,7 @@ func (s *RTDBService) login(user string, password string) error {
 	usr, _ := syscall.BytePtrFromString(user)
 	pad, _ := syscall.BytePtrFromString(password)
 	code, _, _ := go_login.Call(uintptr(s.Handle), uintptr(unsafe.Pointer(usr)), uintptr(unsafe.Pointer(pad)), uintptr(unsafe.Pointer(&s.Priv)))
-	return s.FormatErrMsg(code)
+	return FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -143,7 +118,7 @@ func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument 
 	_desc, _ := syscall.BytePtrFromString(desc)
 	_instrument, _ := syscall.BytePtrFromString(instrument)
 
-	var count int32 = 10000
+	var count int32 = _MAX_POINT_IN_SEARCH
 	ids := make([]int32, count)
 	code, _, _ := gob_search.Call(
 		uintptr(s.Handle),
@@ -156,7 +131,7 @@ func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument 
 		uintptr(mode), uintptr(unsafe.Pointer(&ids[0])),
 		uintptr(unsafe.Pointer(&count)),
 	)
-	return ids[:count], s.FormatErrMsg(code)
+	return ids[:count], FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -195,7 +170,7 @@ func (s *RTDBService) FindPoints(table_dot_tags []string) ([]int32, []int32, []i
 	for _, ms := range use_ms {
 		isms = append(isms, int32(ms))
 	}
-	return ids, types, classof, isms, s.FormatErrMsg(code)
+	return ids, types, classof, isms, FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -240,7 +215,7 @@ func (s *RTDBService) GetSnapshots(ids []int32) ([]int64, []float64, []int64, []
 
 	for i, _ := range ids {
 		datetimes[i] = int64(secondes[i])*1000 + int64(ms[i])
-		errors[i] = s.FormatErrMsg(uintptr(errs[i]))
+		errors[i] = FormatErrMsg(uintptr(errs[i]))
 	}
 	return datetimes, values, states, qualities, errors
 }
@@ -284,7 +259,7 @@ func (s *RTDBService) PutSnapshots(ids []int32, datatimes []int64, values []floa
 		uintptr(unsafe.Pointer(&errs[0])),
 	)
 	for i, err := range errs {
-		errors[i] = s.FormatErrMsg(uintptr(err))
+		errors[i] = FormatErrMsg(uintptr(err))
 	}
 	return errors
 }
@@ -408,7 +383,7 @@ func (s *RTDBService) GetSingleValue(id, mode int32, datetime int64) (int64, flo
 		uintptr(unsafe.Pointer(&qualities)),
 	)
 	datatime = int64(sec)*1e3 + int64(ms)
-	return datatime, values, states, qualities, s.FormatErrMsg(code)
+	return datatime, values, states, qualities, FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -546,7 +521,7 @@ func (s *RTDBService) PutSingleValue(id int32, datatime int64, value float64, st
 		uintptr(state),
 		uintptr(quality),
 	)
-	return s.FormatErrMsg(code)
+	return FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -589,7 +564,7 @@ func (s *RTDBService) PutArchivedValues(ids []int32, datatimes []int64, values [
 		uintptr(unsafe.Pointer(&errs[0])),
 	)
 	for i, err := range errs {
-		errors[i] = s.FormatErrMsg(uintptr(err))
+		errors[i] = FormatErrMsg(uintptr(err))
 		s.FlushArchivedValues(ids[i]) //补写缓存进入历史文档
 	}
 	return errors
@@ -616,22 +591,6 @@ func (s *RTDBService) FlushArchivedValues(id int32) int32 {
 }
 
 /*******************************************************************************
-- 功能：取得标签点表总数
-- 输入：
-- 输出:
-     [count]  整型，输出，标签点表总数。
-- 备注：
-*******************************************************************************/
-func (s *RTDBService) GetTablesCount() (int32, error) {
-	var count int32 = 0
-	code, _, _ := gob_tables_count.Call(
-		uintptr(s.Handle),
-		uintptr(unsafe.Pointer(&count)),
-	)
-	return count, s.FormatErrMsg(code)
-}
-
-/*******************************************************************************
 - 功能：配置 api 行为参数
 - 参数：
    [type]   整型，输入，选项类别：参见枚举 GOLDEN_API_OPTION
@@ -649,14 +608,196 @@ func (s *RTDBService) SetOption(apiType int32, value int32) {
 - 输入：
 - 输出:
      [count]  整型，输出，标签点表总数。
-- 备注：【未测试成功】
+- 备注：
 *******************************************************************************/
-func (s *RTDBService) GetTablesProperty(tableid int) (GOLDEN_TABLE, error) {
-	var table GOLDEN_TABLE
-	table.Id = tableid
+func (s *RTDBService) GetTablesCount() (int32, error) {
+	var count int32 = 0
+	code, _, _ := gob_tables_count.Call(
+		uintptr(s.Handle),
+		uintptr(unsafe.Pointer(&count)),
+	)
+	return count, FormatErrMsg(code)
+}
+
+/*******************************************************************************
+- 功能：取得标签点表ID
+- 输入：
+- 输出:  [ids]  标签表ID数组切片
+		[error] 错误信息
+- 备注：标签表数和标签ID同时保存到结构体中
+- 时间：2020年5月14日
+*******************************************************************************/
+func (s *RTDBService) GetTables() error {
+	count, err := s.GetTablesCount()
+	if err != nil {
+		return err
+	}
+	var ids [1000]int32
+	code, _, _ := gob_get_tables.Call(
+		uintptr(s.Handle),
+		uintptr(unsafe.Pointer(&ids)),
+		uintptr(unsafe.Pointer(&count)),
+	)
+	s.TableCounts = int(count)
+	s.TableIds = s.TableIds[0:0] //清空
+	for _, id := range ids[:count] {
+		s.TableIds = append(s.TableIds, int(id))
+	}
+	s.Tables = make(map[int]GoldenTable, count)
+	for _, id := range s.TableIds {
+		tb, err := s.GetTablesProperty(id) //获取标签点表的属性
+		if err != nil {
+			return err
+		}
+		s.Tables[int(id)] = tb
+	}
+	return FormatErrMsg(code)
+}
+
+/*******************************************************************************
+- 功能：根据表 id 获取表中包含的标签点数量
+- 输入：
+- 输出：
+- 备注：
+- 时间：2020年5月14日
+*******************************************************************************/
+func (t *GoldenTable) GetTableSizeById(handle int) (int, error) {
+	var size int32 = 0
+	ecode, _, _ := gob_get_table_size_by_id.Call(
+		uintptr(handle),
+		uintptr(t.Id),
+		uintptr(unsafe.Pointer(&size)),
+	)
+	return int(size), FormatErrMsg(ecode)
+}
+
+/*******************************************************************************
+- 功能：获取表下的所有标签ID列表
+- 输入： [handle] 连接句柄
+- 输出： [[]int] id数组
+		[error] 错误信息
+- 备注：
+- 时间：2020年5月14日
+*******************************************************************************/
+func (t *GoldenTable) GetPointIds(handle int, tablename ...string) ([]int, error) {
+	var nullstring string
+	tbname := fmt.Sprintf("%s", t.Name)
+	if len(tablename) > 0 {
+		tbname = ""
+		for i, name := range tablename {
+			tbname += fmt.Sprintf("%s", name)
+			if i+1 < len(tablename) {
+				tbname += " "
+			}
+		}
+	}
+
+	_tagmask, _ := syscall.BytePtrFromString("*")
+	_tablemask, _ := syscall.BytePtrFromString(tbname)
+	_source, _ := syscall.BytePtrFromString(nullstring)
+	_unit, _ := syscall.BytePtrFromString(nullstring)
+	_desc, _ := syscall.BytePtrFromString(nullstring)
+	_instrument, _ := syscall.BytePtrFromString(nullstring)
+	mode := 2 //以标签点ID排序
+
+	var count int32 = _MAX_POINT_IN_SEARCH
+	ids := make([]int32, count)
+	code, _, _ := gob_search.Call(
+		uintptr(int32(handle)),
+		uintptr(unsafe.Pointer(_tagmask)),
+		uintptr(unsafe.Pointer(_tablemask)),
+		uintptr(unsafe.Pointer(_source)),
+		uintptr(unsafe.Pointer(_unit)),
+		uintptr(unsafe.Pointer(_desc)),
+		uintptr(unsafe.Pointer(_instrument)),
+		uintptr(mode),
+		uintptr(unsafe.Pointer(&ids[0])),
+		uintptr(unsafe.Pointer(&count)),
+	)
+	var pids []int
+	for _, id := range ids[:count] {
+		pids = append(pids, int(id))
+	}
+	t.PointIds = pids
+	return pids, FormatErrMsg(code)
+}
+
+/*******************************************************************************
+- 功能：取得标签点表属性
+- 输入：
+- 输出：
+- 备注：
+- 时间：2020年5月14日
+*******************************************************************************/
+func (s *RTDBService) GetTablesProperty(tableid int) (GoldenTable, error) {
+	var table C.GOLDEN_TABLE
+	var gtb GoldenTable
+	table.id = C.int(tableid)
 	code, _, _ := gob_get_table_property_by_id.Call(
 		uintptr(s.Handle),
 		uintptr(unsafe.Pointer(&table)),
 	)
-	return table, s.FormatErrMsg(code)
+	if code > 0 { //有错误
+		return gtb, FormatErrMsg(code)
+	}
+
+	gtb.Id = tableid
+	gtb.Name = CChars2String(table.name[:])
+	gtb.Desc = CChars2String(table.desc[:])
+
+	_, err := gtb.GetPointIds(s.Handle)
+	if err != nil {
+		return gtb, err
+	}
+	gtb.Size = len(gtb.PointIds)
+	return gtb, nil
+}
+
+/*******************************************************************************
+* 命名：gob_get_points_property
+* 功能：批量获取标签点属性
+* 参数：
+*        [handle] 连接句柄
+*        [count]  整数，输入，表示标签点个数。
+*        [base]   GOLDEN_POINT 结构数组，输入/输出，标签点基本属性列表，
+*                 输入时，id 字段指定需要得到属性的标签点，输出时，其它字段返回标签点属性值。
+*        [scan]   GOLDEN_SCAN_POINT 结构数组，输出，采集标签点扩展属性列表
+*        [calc]   GOLDEN_CALC_POINT 结构数组，输出，计算标签点扩展属性列表
+*        [errors] 无符号整型数组，输出，获取标签属性的返回值列表，参考golden_error.h
+* 备注：用户须保证分配给 base、scan、calc、errors 的空间与 count 相符，
+*        扩展属性集 scan、calc 可为空指针，此时将不返回对应的扩展属性集。
+- 时间：2020年5月14日
+*******************************************************************************/
+func (s *RTDBService) GetPointPropterty(ids ...int) error {
+	count := int32(len(ids))
+	bases := make([]C.GOLDEN_POINT, count)
+	scans := make([]C.GOLDEN_SCAN_POINT, count)
+	calcs := make([]C.GOLDEN_CALC_POINT, count)
+	errors := make([]uint32, count)
+	for i, _ := range bases { //标签点ID赋值
+		bases[i].id = C.int(ids[i])
+	}
+	ecode, _, _ := gob_get_points_property.Call(
+		uintptr(s.Handle),
+		uintptr(count),
+		uintptr(unsafe.Pointer(&bases[0])),
+		uintptr(unsafe.Pointer(&scans[0])),
+		uintptr(unsafe.Pointer(&calcs[0])),
+		uintptr(unsafe.Pointer(&errors[0])),
+	)
+	return FormatErrMsg(ecode)
+}
+
+/*******************************************************************************
+- 功能:C BasePoint转换为go BasePoint
+- 输入:
+	[chars] C.char字符数组切片
+- 输出:
+	[string] go 字符串
+- 时间：2020年5月14日
+*******************************************************************************/
+func CBasePoint2GoBasePoint(c C.GOLDEN_POINT) (g GoldenBasePoint) {
+	g.Id = int(c.id)
+
+	return g
 }

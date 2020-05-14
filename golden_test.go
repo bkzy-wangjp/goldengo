@@ -78,8 +78,7 @@ func TestFormatErrorMessage(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gd := new(RTDBService)
-		err := gd.FormatErrMsg(tt.ecode)
+		err := FormatErrMsg(tt.ecode)
 		if err != nil {
 			t.Log(err.Error())
 		} else {
@@ -200,8 +199,8 @@ func TestGetArchivedValues(t *testing.T) {
 		bgtime  int64
 		endtime int64
 	}{
-		{1, time.Now().Add(-8 * time.Hour).UnixNano(), time.Now().UnixNano()},
-		{1, time.Now().UnixNano(), time.Now().Add(-8 * time.Hour).UnixNano()},
+		{1, time.Now().Add(-8 * time.Minute).UnixNano(), time.Now().UnixNano()},
+		{1, time.Now().UnixNano(), time.Now().Add(-8 * time.Minute).UnixNano()},
 	}
 	gd := new(RTDBService)
 	err := gd.Connect("127.0.0.1", "sa", "golden")
@@ -224,10 +223,10 @@ func TestGetSingleValue(t *testing.T) {
 		mode     int32
 		datatime int64
 	}{
-		{1, GOLDEN_NEXT, time.Now().UnixNano()},
-		{1, GOLDEN_PREVIOUS, time.Now().UnixNano()},
-		{1, GOLDEN_EXACT, time.Now().UnixNano()},
-		{1, GOLDEN_INTER, time.Now().UnixNano()},
+		{1, 0, time.Now().UnixNano()}, ///0:GOLDEN_NEXT 寻找下一个最近的数据；
+		{1, 1, time.Now().UnixNano()}, ///1:GOLDEN_PREVIOUS 寻找上一个最近的数据；
+		{1, 2, time.Now().UnixNano()}, ///2:GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+		{1, 3, time.Now().UnixNano()}, ///3:GOLDEN_INTER 取指定时间的内插值数据。
 	}
 	gd := new(RTDBService)
 	err := gd.Connect("127.0.0.1", "sa", "golden")
@@ -357,34 +356,20 @@ func TestPutArchivedValues(t *testing.T) {
 	}
 }
 
-func TestGetTablesCount(t *testing.T) {
+func TestGetTables(t *testing.T) {
 	gd := new(RTDBService)
 	err := gd.Connect("127.0.0.1", "sa", "golden")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
-	count, err := gd.GetTablesCount()
-	t.Logf("标签点表数:%d,错误信息:%v", count, err)
-}
-
-func TestGetTablesProperty(t *testing.T) {
-	tests := []struct {
-		id int
-	}{
-		{1},
-		{2},
-		{3},
-		{4},
-	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	err = gd.GetTables()
 	if err != nil {
 		t.Error(err.Error())
-	}
-	defer gd.DisConnect()
-	for _, tt := range tests {
-		table, err := gd.GetTablesProperty(tt.id)
-		t.Logf("表属性:%+v,错误信息:%v", table, err)
+	} else {
+		t.Logf("标签点表数:%d", gd.TableCounts)
+		for i, tb := range gd.Tables {
+			t.Logf("第%d个表的属性=%+v", i, tb)
+		}
 	}
 }
