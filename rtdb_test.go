@@ -1,14 +1,15 @@
 package goldengo
 
 import (
-	"math/rand"
+	//"math/rand"
 	"testing"
-	"time"
+	//"time"
 )
 
+/*
 func TestGetVersion(t *testing.T) {
 	gd := new(RTDBService)
-	version := gd.GetAPIVersion()
+	version, _ := gd.GetAPIVersion()
 	t.Logf("Golden API Vsersion:%s", version)
 }
 
@@ -17,19 +18,24 @@ func TestConnect(t *testing.T) {
 		host string
 		user string
 		pswd string
-		port int32
+		port int
 	}{
 		{"127.0.0.1", "sa", "golden", 6327},
 	}
 
 	for _, tt := range tests {
 		gd := new(RTDBService)
-		err := gd.Connect(tt.host, tt.user, tt.pswd, tt.port)
+		gd.HostName = tt.host
+		gd.UserName = tt.user
+		gd.Password = tt.pswd
+		gd.Port = tt.port
+		err := gd.Connect()
 		if err != nil {
 			t.Error(err.Error())
 		} else {
 			t.Logf("Handle:%d,Priv:%d", gd.Handle, gd.Priv)
-			t.Logf("服务器时间:%d", gd.HostTime())
+			stm, _ := gd.HostTime()
+			t.Logf("服务器时间:%d", stm)
 			t.Log(gd.DisConnect())
 		}
 
@@ -44,12 +50,12 @@ func TestSearch(t *testing.T) {
 		unit       string
 		desc       string
 		instrument string
-		mode       int32
+		mode       int
 	}{
 		{"*", "*", "", "", "", "", 2},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -86,7 +92,7 @@ func TestFormatErrorMessage(t *testing.T) {
 		}
 	}
 }
-
+*/
 func TestFindPoints(t *testing.T) {
 	tests := []struct {
 		tags []string
@@ -95,14 +101,14 @@ func TestFindPoints(t *testing.T) {
 		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
 		{[]string{"xxxxx", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for _, tt := range tests {
-		ids, types, class, ms, err := gd.FindPoints(tt.tags)
+		ids, types, class, ms, err := gd.FindPoints(tt.tags...)
 		if err != nil {
 			t.Error(err.Error())
 		} else {
@@ -114,25 +120,26 @@ func TestFindPoints(t *testing.T) {
 	}
 }
 
+/*
 func TestGetSnapshots(t *testing.T) {
 	tests := []struct {
-		tags []int32
+		tags []int
 	}{
-		{[]int32{1, 2, 3, 4, 5}},
-		{[]int32{1, 2, 3, 4}},
-		{[]int32{1, 3, 2, 6}},
-		{[]int32{6}},
-		{[]int32{2}},
-		{[]int32{1}},
+		{[]int{1, 2, 3, 4, 5}},
+		{[]int{1, 2, 3, 4}},
+		{[]int{1, 3, 2, 6}},
+		{[]int{6}},
+		{[]int{2}},
+		{[]int{1}},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for _, tt := range tests {
-		times, values, states, qualitys, errs := gd.GetSnapshots(tt.tags)
+		times, values, states, qualitys, errs, _ := gd.GetSnapshots(tt.tags)
 		t.Logf("查询到的结果数量:%d", len(times))
 		for i, tm := range times {
 			t.Logf("第%d行:time=%d,float=%f,int=%d,Q=%d,E=%v", i, tm, values[i], states[i], qualitys[i], errs[i])
@@ -143,28 +150,28 @@ func TestGetSnapshots(t *testing.T) {
 func TestPutSnapshots(t *testing.T) {
 	rand.Seed(time.Now().UnixNano()) //设定随机数种子
 	tests := []struct {
-		tags    []int32
+		tags    []int
 		dtimes  []int64
 		dvalues []float64
 		dints   []int64
 		dqs     []int16
 	}{
 		{
-			[]int32{1, 2, 3, 4, 5},
+			[]int{1, 2, 3, 4, 5},
 			[]int64{time.Now().Add(-1 * time.Minute).UnixNano(), time.Now().Add(-2 * time.Minute).UnixNano(), time.Now().Add(-3 * time.Minute).UnixNano(), time.Now().Add(-4 * time.Minute).UnixNano(), time.Now().Add(-5 * time.Minute).UnixNano()},
 			[]float64{rand.Float64() * 10, rand.Float64() * 10, rand.Float64() * 10, rand.Float64() * 10, rand.Float64() * 10},
 			[]int64{1, 1, 1, 1, 1},
 			[]int16{0, 0, 0, 0, 0},
 		},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for _, tt := range tests {
-		errs := gd.PutSnapshots(tt.tags, tt.dtimes, tt.dvalues, tt.dints, tt.dqs)
+		errs, _ := gd.PutSnapshots(tt.tags, tt.dtimes, tt.dvalues, tt.dints, tt.dqs)
 		for i, err := range errs {
 			t.Logf("第%d行:%v", i, err)
 		}
@@ -173,7 +180,7 @@ func TestPutSnapshots(t *testing.T) {
 
 func TestArchivedValuesCount(t *testing.T) {
 	tests := []struct {
-		tags    int32
+		tags    int
 		bgtime  int64
 		endtime int64
 	}{
@@ -181,35 +188,60 @@ func TestArchivedValuesCount(t *testing.T) {
 		{1, time.Now().UnixNano(), time.Now().Add(-8 * time.Hour).UnixNano()},
 		{1, 0, 0},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for i, tt := range tests {
-		count := gd.ArchivedValuesCount(tt.tags, tt.bgtime, tt.endtime)
+		count, _ := gd.ArchivedValuesCount(tt.tags, tt.bgtime, tt.endtime)
 		t.Logf("第%d行:记录数:%d", i, count)
 	}
 }
 
 func TestGetArchivedValues(t *testing.T) {
 	tests := []struct {
-		tags    int32
+		tags    int
 		bgtime  int64
 		endtime int64
 	}{
 		{1, time.Now().Add(-8 * time.Minute).UnixNano(), time.Now().UnixNano()},
 		{1, time.Now().UnixNano(), time.Now().Add(-8 * time.Minute).UnixNano()},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for i, tt := range tests {
-		times, vs, ints, qs := gd.GetArchivedValues(tt.tags, tt.bgtime, tt.endtime)
+		times, vs, ints, qs, _ := gd.GetArchivedValues(tt.tags, tt.bgtime, tt.endtime)
+		t.Logf("第%d行:-----------", i)
+		for j, tm := range times {
+			t.Logf("time:%s,v:%f,n:%d,q:%d", time.Unix(tm/1e3, tm%1e3*1e6), vs[j], ints[j], qs[j])
+		}
+	}
+}
+
+func TestGetInterpoValues(t *testing.T) {
+	tests := []struct {
+		tags    int
+		count   int
+		bgtime  int64
+		endtime int64
+	}{
+		{1, 10, time.Now().Add(-8 * time.Minute).UnixNano(), time.Now().UnixNano()},
+		{1, 8, time.Now().UnixNano(), time.Now().Add(-8 * time.Minute).UnixNano()},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		times, vs, ints, qs, _ := gd.GetInterpoValues(tt.tags, tt.count, tt.bgtime, tt.endtime)
 		t.Logf("第%d行:-----------", i)
 		for j, tm := range times {
 			t.Logf("time:%s,v:%f,n:%d,q:%d", time.Unix(tm/1e3, tm%1e3*1e6), vs[j], ints[j], qs[j])
@@ -219,8 +251,8 @@ func TestGetArchivedValues(t *testing.T) {
 
 func TestGetSingleValue(t *testing.T) {
 	tests := []struct {
-		tags     int32
-		mode     int32
+		tags     int
+		mode     int
 		datatime int64
 	}{
 		{1, 0, time.Now().UnixNano()}, ///0:GOLDEN_NEXT 寻找下一个最近的数据；
@@ -228,8 +260,8 @@ func TestGetSingleValue(t *testing.T) {
 		{1, 2, time.Now().UnixNano()}, ///2:GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
 		{1, 3, time.Now().UnixNano()}, ///3:GOLDEN_INTER 取指定时间的内插值数据。
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -243,7 +275,7 @@ func TestGetSingleValue(t *testing.T) {
 
 func TestSummaryEx(t *testing.T) {
 	tests := []struct {
-		tags    int32
+		tags    int
 		bgtime  int64
 		endtime int64
 	}{
@@ -251,14 +283,14 @@ func TestSummaryEx(t *testing.T) {
 		{1, time.Now().UnixNano(), time.Now().Add(-8 * time.Hour).UnixNano()},
 		{1, 0, 0},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for i, tt := range tests {
-		maxt, mint, maxv, minv, tv, cav, pav, cnt := gd.SummaryEx(tt.tags, tt.bgtime, tt.endtime)
+		maxt, mint, maxv, minv, tv, cav, pav, cnt, _ := gd.SummaryEx(tt.tags, tt.bgtime, tt.endtime)
 		t.Logf("第%d行:数据数:%d", i, cnt)
 		t.Logf("maxt:%s,mint:%s,maxv:%f,minv:%f,tv:%f,cav:%f,pav:%f",
 			time.Unix(maxt/1e3, maxt%1e3*1e6),
@@ -270,8 +302,8 @@ func TestSummaryEx(t *testing.T) {
 
 func TestGetPlotValues(t *testing.T) {
 	tests := []struct {
-		tags     int32
-		interval int32
+		tags     int
+		interval int
 		bgtime   int64
 		endtime  int64
 	}{
@@ -279,14 +311,14 @@ func TestGetPlotValues(t *testing.T) {
 		{1, 10, time.Now().UnixNano(), time.Now().Add(-8 * time.Hour).UnixNano()},
 		//{1, 10, 0, 0},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for i, tt := range tests {
-		tms, vs, ints, qs := gd.GetPlotValues(tt.tags, tt.interval, tt.bgtime, tt.endtime)
+		tms, vs, ints, qs, _ := gd.GetPlotValues(tt.tags, tt.interval, tt.bgtime, tt.endtime)
 		t.Logf("第%d行:数据数:%d", i, len(tms))
 		for j, tm := range tms {
 			t.Logf("time:%s,v:%f,n:%d,q:%d",
@@ -300,7 +332,7 @@ func TestGetPlotValues(t *testing.T) {
 func TestPutSingleValue(t *testing.T) {
 	rand.Seed(time.Now().UnixNano()) //设定随机数种子
 	tests := []struct {
-		tags   int32
+		tags   int
 		dtime  int64
 		dvalue float64
 		dint   int64
@@ -312,9 +344,12 @@ func TestPutSingleValue(t *testing.T) {
 		{4, time.Now().Add(-10 * time.Minute).UnixNano(), rand.Float64() * 10, rand.Int63() % 2, 0},
 		{5, time.Now().Add(-10 * time.Minute).UnixNano(), rand.Float64() * 10, rand.Int63() % 2, 0},
 		{6, time.Now().Add(-10 * time.Minute).UnixNano(), rand.Float64() * 10, rand.Int63() % 2, 0},
+		{7, time.Now().Add(-10 * time.Minute).UnixNano(), rand.Float64() * 10, rand.Int63() % 2, 0},
+		{8, time.Now().Add(-10 * time.Minute).UnixNano(), rand.Float64() * 10, rand.Int63() % 2, 0},
+		{9, time.Now().Add(-10 * time.Minute).UnixNano(), rand.Float64() * 10, rand.Int63() % 2, 0},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -328,28 +363,28 @@ func TestPutSingleValue(t *testing.T) {
 func TestPutArchivedValues(t *testing.T) {
 	rand.Seed(time.Now().UnixNano()) //设定随机数种子
 	tests := []struct {
-		tags    []int32
+		tags    []int
 		dtimes  []int64
 		dvalues []float64
 		dints   []int64
 		dqs     []int16
 	}{
 		{
-			[]int32{1, 2, 3, 4, 5, 6},
+			[]int{1, 2, 3, 4, 5, 6},
 			[]int64{time.Now().Add(-3 * time.Minute).UnixNano(), time.Now().Add(-4 * time.Minute).UnixNano(), time.Now().Add(-5 * time.Minute).UnixNano(), time.Now().Add(-6 * time.Minute).UnixNano(), time.Now().Add(-7 * time.Minute).UnixNano(), time.Now().Add(-7 * time.Minute).UnixNano()},
 			[]float64{rand.Float64() * 100, rand.Float64() * 100, rand.Float64() * 100, rand.Float64() * 100, rand.Float64() * 100, rand.Float64() * 100},
 			[]int64{1, 1, 1, 1, 1, 1},
 			[]int16{0, 0, 0, 0, 0, 0},
 		},
 	}
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
 	for _, tt := range tests {
-		errs := gd.PutArchivedValues(tt.tags, tt.dtimes, tt.dvalues, tt.dints, tt.dqs)
+		errs, _ := gd.PutArchivedValues(tt.tags, tt.dtimes, tt.dvalues, tt.dints, tt.dqs)
 		for i, err := range errs {
 			t.Logf("第%d行:%v", i, err)
 		}
@@ -357,8 +392,8 @@ func TestPutArchivedValues(t *testing.T) {
 }
 
 func TestGetTables(t *testing.T) {
-	gd := new(RTDBService)
-	err := gd.Connect("127.0.0.1", "sa", "golden")
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -371,5 +406,24 @@ func TestGetTables(t *testing.T) {
 		for i, tb := range gd.Tables {
 			t.Logf("第%d个表的属性=%+v", i, tb)
 		}
+		for i, p := range gd.Points {
+			t.Logf("变量点id=%d,变量点属性:%+v", i, p)
+		}
 	}
 }
+
+func TestGetSinglePointPropterty(t *testing.T) {
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	pot, err := gd.GetSinglePointPropterty(1)
+	if err != nil {
+		t.Error(err.Error())
+	} else {
+		t.Logf("变量点属性:%+v", pot)
+	}
+}
+*/

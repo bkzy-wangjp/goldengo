@@ -162,24 +162,24 @@ typedef char golden_json_string[GOLDEN_MAX_JSON_SIZE];
 /// 标签点数值类型，决定了标签点数值所占用的存储字节数。
 enum GOLDEN_TYPE
 { 
-  GOLDEN_BOOL,      /// 布尔类型，0值或1值。
-  GOLDEN_UINT8,     /// 无符号8位整数，占用1字节。
-  GOLDEN_INT8,      /// 有符号8位整数，占用1字节。
-  GOLDEN_CHAR,      /// 单字节字符，占用1字节。
-  GOLDEN_UINT16,    /// 无符号16位整数，占用2字节。
-  GOLDEN_INT16,     /// 有符号16位整数，占用2字节。
-  GOLDEN_UINT32,    /// 无符号32位整数，占用4字节。
-  GOLDEN_INT32,     /// 有符号32位整数，占用4字节。
-  GOLDEN_INT64,     /// 有符号64位整数，占用8字节。
-  GOLDEN_REAL16,    /// 16位浮点数，占用2字节。
-  GOLDEN_REAL32,    /// 32位单精度浮点数，占用4字节。
-  GOLDEN_REAL64,    /// 64位双精度浮点数，占用8字节。
-  GOLDEN_COOR,      /// 二维坐标，具有x、y两个维度的浮点数，占用8字节。
-  GOLDEN_STRING,    /// 字符串，长度不超过存储页面大小。
-  GOLDEN_BLOB,      /// 二进制数据块，占用字节不超过存储页面大小。
-  GOLDEN_NAMED_T,   /// 自定义类型，由用户创建时确定字节长度。
+  GOLDEN_BOOL,      ///0 布尔类型，0值或1值。
+  GOLDEN_UINT8,     ///1 无符号8位整数，占用1字节。
+  GOLDEN_INT8,      ///2 有符号8位整数，占用1字节。
+  GOLDEN_CHAR,      ///3 单字节字符，占用1字节。
+  GOLDEN_UINT16,    ///4 无符号16位整数，占用2字节。
+  GOLDEN_INT16,     ///5 有符号16位整数，占用2字节。
+  GOLDEN_UINT32,    ///6 无符号32位整数，占用4字节。
+  GOLDEN_INT32,     ///7 有符号32位整数，占用4字节。
+  GOLDEN_INT64,     ///8 有符号64位整数，占用8字节。
+  GOLDEN_REAL16,    ///9 16位浮点数，占用2字节。
+  GOLDEN_REAL32,    ///10 32位单精度浮点数，占用4字节。
+  GOLDEN_REAL64,    ///11 64位双精度浮点数，占用8字节。
+  GOLDEN_COOR,      ///12 二维坐标，具有x、y两个维度的浮点数，占用8字节。
+  GOLDEN_STRING,    ///13 字符串，长度不超过存储页面大小。
+  GOLDEN_BLOB,      ///14 二进制数据块，占用字节不超过存储页面大小。
+  GOLDEN_NAMED_T,   ///15 自定义类型，由用户创建时确定字节长度。
   //---------------------------------------------------------/
-  GOLDEN_DATETIME,  /// 时间格式类型
+  GOLDEN_DATETIME,  ///16 时间格式类型
 };
 
 #define GOLDEN_TYPE_COUNT (GOLDEN_DATETIME + 1)

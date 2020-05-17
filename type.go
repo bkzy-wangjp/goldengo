@@ -5,8 +5,13 @@ const (
 	_MAX_POINT_IN_SEARCH = 10000 //查询的最大数据点数
 )
 
+//庚顿实时数据库
 type RTDBService struct {
-	Handle      int                 //连接句柄
+	HostName    string              //主机ip或者计算机名
+	Port        int                 //端口号,默认6327
+	UserName    string              //用户名,默认sa
+	Password    string              //密码,默认golden
+	Handle      int32               //连接句柄
 	Priv        int                 //整型，GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA 之一，帐户权限
 	TableCounts int                 //标签点表数量
 	TableIds    []int               //标签点表的ID列表
@@ -31,15 +36,15 @@ type GoldenPoint struct {
 type GoldenBasePoint struct {
 	Id             int     //全库唯一标识
 	Tag            string  //用于在表中唯一标识一个标签点,最长79
-	Type           int     //标签点的数值类型
+	DataType       int     //标签点的数值类型
 	TableId        int     //标签点所属表ID
 	Desc           string  //有关标签点的描述性文字,最长99
 	Unit           string  //工程单位,最长19
-	IsAchive       bool    //是否存档
+	IsArchive      bool    //是否存档
 	Digits         int     //数值位数,>=-20、<=10,默认-5;如果为0或正数，表示数值的小数位数，如果为负数，表示数值的有效位数
-	ShutDown       int     //停机状态字,定义该点在停机状态下是否补写停机状态值.1 表示补写；0 表示不补写
+	IsShutDown     bool    //停机状态字,定义该点在停机状态下是否补写停机状态值.1 表示补写；0 表示不补写
 	LowLimit       float64 //量程下限,缺省0
-	HightLimit     float64 //量程上限,缺省100
+	HighLimit      float64 //量程上限,缺省100
 	IsStep         bool    //是否阶跃.
 	Typical        float64 //典型值
 	IsCompress     bool    //是否压缩,缺省true
@@ -86,6 +91,7 @@ type GoldenCalcPoint struct {
 	Period   int    //计算周期,对周期触发的计算点有效,单位:秒
 }
 
+/*
 //计算点扩展属性集
 type GoldenMinCalcPoint struct {
 	Id         int
@@ -104,3 +110,4 @@ type GoldenMaxCalcPoint struct {
 	TimeCopy int    //计算结果时间戳:0: 表示采用计算时间作为计算结果时间戳； 1: 表示采用输入标签点中的最晚时间作为计算结果时间戳；2: 表示采用输入标签点中的最早时间作为计算结果时间戳。
 	Period   int    //计算周期,对周期触发的计算点有效,单位:秒
 }
+*/

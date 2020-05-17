@@ -3,6 +3,9 @@ package goldengo
 /*
 /// 标签点索引表属性集。
 #include "incloud/golden.h"
+int getPointType(GOLDEN_POINT p){
+	return p.type;
+}
 */
 import "C" //注意:import "C"与上面的C代码之间不能有空行
 import (
@@ -15,36 +18,55 @@ import (
 /*******************************************************************************
 // 获取API版本号
 *******************************************************************************/
-func (s *RTDBService) GetAPIVersion() string {
+func (s *RTDBService) GetAPIVersion() (string, error) {
 	var major int32
 	var minor int32
 	var beta int32
-	go_get_api_version.Call(
+	ecode, _, _ := go_get_api_version.Call(
 		uintptr(unsafe.Pointer(&major)),
 		uintptr(unsafe.Pointer(&minor)),
 		uintptr(unsafe.Pointer(&beta)),
 	)
-	return fmt.Sprintf("%d.%d.%d", major, minor, beta)
+	return fmt.Sprintf("%d.%d.%d", major, minor, beta), FormatErrMsg(ecode)
+}
+
+/*******************************************************************************
+- 功能：创建实时数据库对象
+- 参数：
+	[hostname]  字符串，输入，GOLDEN 数据平台服务器的网络地址或机器名
+	[user]		用户名,字符串,缺省值 sa
+	[password]	密码,字符串,缺省值 golden
+	[port]      端口号,整型,缺省值 6327
+- 输出：
+	[*RTDBService] 实时数据库对象
+- 备注：在调用所有的接口函数之前，必须先调用本函数建立RTDBService对象。
+*******************************************************************************/
+func CreateRTDB(hostname, username, password string, port ...int) *RTDBService {
+	rtdb := new(RTDBService)
+	rtdb.HostName = hostname
+	rtdb.UserName = username
+	rtdb.Password = password
+	rtdb.Port = 6327
+	if len(port) > 0 {
+		rtdb.Port = port[0]
+	}
+	return rtdb
 }
 
 /*******************************************************************************
 - 功能：建立同 GOLDEN 数据库的网络连接
-- 参数：
-	[hostname]     字符串，输入，GOLDEN 数据平台服务器的网络地址或机器名
-	[port]         整型，输入，缺省值 6327，连接端口
+- 参数：无
+- 输出：
 	[error]        错误信息
 - 备注：在调用所有的接口函数之前，必须先调用本函数建立同Golden服务器的连接。
 *******************************************************************************/
-func (s *RTDBService) Connect(hostname, user, password string, port ...int32) error {
-	host, _ := syscall.BytePtrFromString(hostname)
-	var p int32 = 6327 //默认端口号
-	if len(port) > 0 { //如果设置了端口号
-		p = port[0] //赋值端口号
-	}
+func (s *RTDBService) Connect() error {
+	host, _ := syscall.BytePtrFromString(s.HostName)
+	p := int32(s.Port) //默认端口号
 	code, _, _ := go_connect.Call(uintptr(unsafe.Pointer(host)), uintptr(p), uintptr(unsafe.Pointer(&s.Handle)))
 	var err error
 	if code == 0 {
-		err = s.login(user, password) //登录
+		err = s.login(s.UserName, s.Password) //登录
 	} else {
 		err = FormatErrMsg(code)
 	}
@@ -81,10 +103,10 @@ func (s *RTDBService) login(user string, password string) error {
 - 参数：无
 - 返回：[hosttime]     整型，输出，Golden服务器的当前UTC时间，表示距离1970年1月1日08:00:00的秒数。
 /*******************************************************************************/
-func (s *RTDBService) HostTime() int32 {
+func (s *RTDBService) HostTime() (int, error) {
 	var hosttime int32 = 0
-	go_host_time.Call(uintptr(s.Handle), uintptr(unsafe.Pointer(&hosttime)))
-	return hosttime
+	ecode, _, _ := go_host_time.Call(uintptr(s.Handle), uintptr(unsafe.Pointer(&hosttime)))
+	return int(hosttime), FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -110,7 +132,7 @@ func (s *RTDBService) HostTime() int32 {
  	如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*",
  	多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 *******************************************************************************/
-func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument string, mode int32) ([]int32, error) {
+func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument string, mode int) ([]int, error) {
 	_tagmask, _ := syscall.BytePtrFromString(tagmask)
 	_tablemask, _ := syscall.BytePtrFromString(tablemask)
 	_source, _ := syscall.BytePtrFromString(source)
@@ -128,10 +150,14 @@ func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument 
 		uintptr(unsafe.Pointer(_unit)),
 		uintptr(unsafe.Pointer(_desc)),
 		uintptr(unsafe.Pointer(_instrument)),
-		uintptr(mode), uintptr(unsafe.Pointer(&ids[0])),
+		uintptr(int32(mode)), uintptr(unsafe.Pointer(&ids[0])),
 		uintptr(unsafe.Pointer(&count)),
 	)
-	return ids[:count], FormatErrMsg(code)
+	oids := make([]int, count)
+	for i, _ := range oids {
+		oids[i] = int(ids[i])
+	}
+	return oids, FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -145,32 +171,42 @@ func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument 
 	 [use_ms]           整型数组，输出，时间戳精度， 返回 1 表示时间戳精度为毫秒， 为 0 表示为秒。
 - 备注：
 *******************************************************************************/
-func (s *RTDBService) FindPoints(table_dot_tags []string) ([]int32, []int32, []int32, []int32, error) {
+func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int, []int, error) {
 	count := len(table_dot_tags) //标签点个数(即table_dot_tags、ids、types、classof、use_ms 的长度
-	tags := make([]*byte, count)
-	ids := make([]int32, count)
-	types := make([]int32, count)
-	classof := make([]int32, count)
-	use_ms := make([]int16, count)
-	for i, tagstr := range table_dot_tags {
-		tag, _ := syscall.BytePtrFromString(tagstr)
-		tags[i] = tag
-	}
+	var isms []int
+	var oids []int
+	var otypes []int
+	var oclassof []int
+	var code uintptr
+	if count > 0 {
+		tags := make([]*byte, count)
+		ids := make([]int32, count)
+		types := make([]int32, count)
+		classof := make([]int32, count)
+		use_ms := make([]int16, count)
+		for i, tagstr := range table_dot_tags {
+			tag, _ := syscall.BytePtrFromString(tagstr)
+			tags[i] = tag
+		}
 
-	code, _, _ := gob_find_points.Call(
-		uintptr(s.Handle),
-		uintptr(unsafe.Pointer(&count)),
-		uintptr(unsafe.Pointer(&tags[0])),
-		uintptr(unsafe.Pointer(&ids[0])),
-		uintptr(unsafe.Pointer(&types[0])),
-		uintptr(unsafe.Pointer(&classof[0])),
-		uintptr(unsafe.Pointer(&use_ms[0])),
-	)
-	var isms []int32
-	for _, ms := range use_ms {
-		isms = append(isms, int32(ms))
+		code, _, _ = gob_find_points.Call(
+			uintptr(s.Handle),
+			uintptr(unsafe.Pointer(&count)),
+			uintptr(unsafe.Pointer(&tags[0])),
+			uintptr(unsafe.Pointer(&ids[0])),
+			uintptr(unsafe.Pointer(&types[0])),
+			uintptr(unsafe.Pointer(&classof[0])),
+			uintptr(unsafe.Pointer(&use_ms[0])),
+		)
+
+		for i, ms := range use_ms {
+			isms = append(isms, int(ms))
+			oids = append(oids, int(ids[i]))
+			otypes = append(otypes, int(types[i]))
+			oclassof = append(oclassof, int(classof[i]))
+		}
 	}
-	return ids, types, classof, isms, FormatErrMsg(code)
+	return oids, otypes, oclassof, isms, FormatErrMsg(code)
 }
 
 /*******************************************************************************
@@ -188,9 +224,12 @@ func (s *RTDBService) FindPoints(table_dot_tags []string) ([]int32, []int32, []i
      [errors]    错误信息数组，输出，读取实时数据的错误返回值列表，参考golden_error.h
 - 备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 *******************************************************************************/
-func (s *RTDBService) GetSnapshots(ids []int32) ([]int64, []float64, []int64, []int32, []error) {
+func (s *RTDBService) GetSnapshots(ids []int) ([]int64, []float64, []int64, []int, []error, error) {
 	var count int32 = int32(len(ids))
-
+	var pids []int32
+	for _, id := range ids {
+		pids = append(pids, int32(id))
+	}
 	secondes := make([]int32, count)  //秒,表示距离1970年1月1日08:00:00的秒数
 	ms := make([]int16, count)        //毫秒，对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
 	values := make([]float64, count)  //浮点型值
@@ -200,24 +239,28 @@ func (s *RTDBService) GetSnapshots(ids []int32) ([]int64, []float64, []int64, []
 
 	datetimes := make([]int64, count) //unix毫秒值，表示距离1970年1月1日08:00:00的毫秒数
 	errors := make([]error, count)    //错误信息
+	var qual []int
+	var ecode uintptr
+	if count > 0 {
+		ecode, _, _ = gos_get_snapshots.Call(
+			uintptr(s.Handle),
+			uintptr(unsafe.Pointer(&count)),
+			uintptr(unsafe.Pointer(&pids[0])),
+			uintptr(unsafe.Pointer(&secondes[0])),
+			uintptr(unsafe.Pointer(&ms[0])),
+			uintptr(unsafe.Pointer(&values[0])),
+			uintptr(unsafe.Pointer(&states[0])),
+			uintptr(unsafe.Pointer(&qualities[0])),
+			uintptr(unsafe.Pointer(&errs[0])),
+		)
 
-	gos_get_snapshots.Call(
-		uintptr(s.Handle),
-		uintptr(unsafe.Pointer(&count)),
-		uintptr(unsafe.Pointer(&ids[0])),
-		uintptr(unsafe.Pointer(&secondes[0])),
-		uintptr(unsafe.Pointer(&ms[0])),
-		uintptr(unsafe.Pointer(&values[0])),
-		uintptr(unsafe.Pointer(&states[0])),
-		uintptr(unsafe.Pointer(&qualities[0])),
-		uintptr(unsafe.Pointer(&errs[0])),
-	)
-
-	for i, _ := range ids {
-		datetimes[i] = int64(secondes[i])*1000 + int64(ms[i])
-		errors[i] = FormatErrMsg(uintptr(errs[i]))
+		for i, _ := range ids {
+			datetimes[i] = int64(secondes[i])*1000 + int64(ms[i])
+			errors[i] = FormatErrMsg(uintptr(errs[i]))
+			qual = append(qual, int(qualities[i]))
+		}
 	}
-	return datetimes, values, states, qualities, errors
+	return datetimes, values, states, qual, errors, FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -236,9 +279,12 @@ func (s *RTDBService) GetSnapshots(ids []int32) ([]int64, []float64, []int64, []
 -备注：用户须保证 ids、datatimes、ms、values、states、qualities的长度一致。
  本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 *******************************************************************************/
-func (s *RTDBService) PutSnapshots(ids []int32, datatimes []int64, values []float64, states []int64, qualities []int16) []error {
+func (s *RTDBService) PutSnapshots(ids []int, datatimes []int64, values []float64, states []int64, qualities []int16) ([]error, error) {
 	var count int32 = int32(len(ids))
-
+	var pids []int32
+	for _, id := range ids {
+		pids = append(pids, int32(id))
+	}
 	secondes := make([]int32, count) //秒,表示距离1970年1月1日08:00:00的秒数
 	ms := make([]int16, count)       //毫秒，对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
 	errs := make([]uint32, count)    //错误码
@@ -247,10 +293,10 @@ func (s *RTDBService) PutSnapshots(ids []int32, datatimes []int64, values []floa
 		secondes[i], ms[i] = splitUnixNanoSec(dtime)
 	}
 
-	gos_put_snapshots.Call(
+	ecode, _, _ := gos_put_snapshots.Call(
 		uintptr(s.Handle),
 		uintptr(unsafe.Pointer(&count)),
-		uintptr(unsafe.Pointer(&ids[0])),
+		uintptr(unsafe.Pointer(&pids[0])),
 		uintptr(unsafe.Pointer(&secondes[0])),
 		uintptr(unsafe.Pointer(&ms[0])),
 		uintptr(unsafe.Pointer(&values[0])),
@@ -261,7 +307,7 @@ func (s *RTDBService) PutSnapshots(ids []int32, datatimes []int64, values []floa
 	for i, err := range errs {
 		errors[i] = FormatErrMsg(uintptr(err))
 	}
-	return errors
+	return errors, FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -274,20 +320,20 @@ func (s *RTDBService) PutSnapshots(ids []int32, datatimes []int64, values []floa
      [count]    整型，输出，返回上述时间范围内的存储值数量
 备注：bgtime可以大于endtime,此时前者表示结束时间，后者表示起始时间。
 *******************************************************************************/
-func (s *RTDBService) ArchivedValuesCount(id int32, bgtime, endtime int64) int32 {
+func (s *RTDBService) ArchivedValuesCount(id int, bgtime, endtime int64) (int, error) {
 	var count int32 = 0
 	sec1, ms1 := splitUnixNanoSec(bgtime)
 	sec2, ms2 := splitUnixNanoSec(endtime)
-	goh_archived_values_count.Call(
+	ecode, _, _ := goh_archived_values_count.Call(
 		uintptr(s.Handle),
-		uintptr(id),
+		uintptr(int32(id)),
 		uintptr(sec1),
 		uintptr(ms1),
 		uintptr(sec2),
 		uintptr(ms2),
 		uintptr(unsafe.Pointer(&count)),
 	)
-	return count
+	return int(count), FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -308,8 +354,8 @@ func (s *RTDBService) ArchivedValuesCount(id int32, bgtime, endtime int64) int32
 - 备注：bgtime可以大于endtime,此时前者表示结束时间，后者表示起始时间。
     本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
-func (s *RTDBService) GetArchivedValues(id int32, bgtime int64, endtime int64) ([]int64, []float64, []int64, []int16) {
-	count := s.ArchivedValuesCount(id, bgtime, endtime) //读取历史数据数量
+func (s *RTDBService) GetArchivedValues(id int, bgtime int64, endtime int64) ([]int64, []float64, []int64, []int16, error) {
+	count, err := s.ArchivedValuesCount(id, bgtime, endtime) //读取历史数据数量
 
 	//整型数组，输入/输出，输入时第一个元素表示起始时间秒数，最后一个元素表示结束时间
 	//秒数，如果为 0，表示直到数据的最后时间；输出时表示对应的历史数值时间秒数。
@@ -324,13 +370,72 @@ func (s *RTDBService) GetArchivedValues(id int32, bgtime int64, endtime int64) (
 	values := make([]float64, count)
 	states := make([]int64, count)
 	qualities := make([]int16, count)
+	if err == nil {
+		if count > 0 {
+			datetimes[count-1], ms[count-1] = splitUnixNanoSec(endtime)
+			datetimes[0], ms[0] = splitUnixNanoSec(bgtime)
+
+			ecode, _, _ := goh_get_archived_values.Call(
+				uintptr(s.Handle),
+				uintptr(int32(id)),
+				uintptr(unsafe.Pointer(&count)),
+				uintptr(unsafe.Pointer(&datetimes[0])),
+				uintptr(unsafe.Pointer(&ms[0])),
+				uintptr(unsafe.Pointer(&values[0])),
+				uintptr(unsafe.Pointer(&states[0])),
+				uintptr(unsafe.Pointer(&qualities[0])),
+			)
+			err = FormatErrMsg(ecode)
+		}
+		for i, sec := range datetimes {
+			times[i] = int64(sec)*1e3 + int64(ms[i])
+		}
+	}
+	return times, values, states, qualities, err
+}
+
+/*******************************************************************************
+- 功能：获取单个标签点一段时间内等间隔历史插值
+- 输入：
+     [id]       整型,输入,标签点标识
+     [count]	整形,需要的插值个数
+     [bgtime]   整型,输入,表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
+     [endtime]  整型,输入,表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
+- 输出:
+	 [times]    整型数组，输出，实时数值时间列表,表示距离1970年1月1日08:00:00的毫秒数
+     [values]   双精度浮点数数组，输出，历史浮点型数值列表,对于数据类型为 GOLDEN_REAL16、
+    	GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史存储值；否则为 0
+     [states]   64位整数数组，输出，历史整型数值列表，对于数据类型为 GOLDEN_BOOL、
+	    GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、
+	    GOLDEN_INT16、GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存
+	    放相应的历史存储值；否则为 0
+     [qualities] 短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举GOLDEN_QUALITY
+- 备注：bgtime可以大于endtime,此时前者表示结束时间，后者表示起始时间。
+    本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
+*******************************************************************************/
+func (s *RTDBService) GetInterpoValues(id, cnt int, bgtime int64, endtime int64) ([]int64, []float64, []int64, []int16, error) {
+	count := int32(cnt)
+	//整型数组，输入/输出，输入时第一个元素表示起始时间秒数，最后一个元素表示结束时间
+	//秒数，如果为 0，表示直到数据的最后时间；输出时表示对应的历史数值时间秒数。
+	datetimes := make([]int32, count)
+
+	//短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，则输入时第一个元素
+	//表示起始时间毫秒，最后一个元素表示结束时间毫秒；输出时表示对应的历史数值时间毫
+	//秒。否则忽略输入，输出时为 0。
+	ms := make([]int16, count)
+	times := make([]int64, count)
+
+	values := make([]float64, count)
+	states := make([]int64, count)
+	qualities := make([]int16, count)
+	var err error
 	if count > 0 {
 		datetimes[count-1], ms[count-1] = splitUnixNanoSec(endtime)
 		datetimes[0], ms[0] = splitUnixNanoSec(bgtime)
 
-		goh_get_archived_values.Call(
+		ecode, _, _ := goh_get_interpo_values.Call(
 			uintptr(s.Handle),
-			uintptr(id),
+			uintptr(int32(id)),
 			uintptr(unsafe.Pointer(&count)),
 			uintptr(unsafe.Pointer(&datetimes[0])),
 			uintptr(unsafe.Pointer(&ms[0])),
@@ -338,19 +443,20 @@ func (s *RTDBService) GetArchivedValues(id int32, bgtime int64, endtime int64) (
 			uintptr(unsafe.Pointer(&states[0])),
 			uintptr(unsafe.Pointer(&qualities[0])),
 		)
+		err = FormatErrMsg(ecode)
 	}
 	for i, sec := range datetimes {
 		times[i] = int64(sec)*1e3 + int64(ms[i])
 	}
-	return times, values, states, qualities
+	return times, values, states, qualities, err
 }
 
 /*******************************************************************************
-- 功能：读取单个标签点某个时间的历史数据
+- 功能：读取单个标签点某个时间点的历史数据
 - 输入：
      [id]       整型，输入，标签点标识
-     [mode]     整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT、
-    			GOLDEN_INTER 之一：
+     [mode]     整型，输入，取值 GOLDEN_NEXT(0)、GOLDEN_PREVIOUS(1)、GOLDEN_EXACT(2)、
+    			GOLDEN_INTER(3) 之一：
     				 GOLDEN_NEXT(0) 寻找下一个最近的数据；
    					 GOLDEN_PREVIOUS(1) 寻找上一个最近的数据；
     				 GOLDEN_EXACT(2) 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
@@ -366,7 +472,7 @@ func (s *RTDBService) GetArchivedValues(id int32, bgtime int64, endtime int64) (
      [quality]  短整型，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY
  备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
-func (s *RTDBService) GetSingleValue(id, mode int32, datetime int64) (int64, float64, int64, int16, error) {
+func (s *RTDBService) GetSingleValue(id, mode int, datetime int64) (int64, float64, int64, int16, error) {
 	sec, ms := splitUnixNanoSec(datetime)
 	var values float64
 	var states int64
@@ -374,8 +480,8 @@ func (s *RTDBService) GetSingleValue(id, mode int32, datetime int64) (int64, flo
 	var datatime int64
 	code, _, _ := goh_get_single_value.Call(
 		uintptr(s.Handle),
-		uintptr(id),
-		uintptr(mode),
+		uintptr(int32(id)),
+		uintptr(int32(mode)),
 		uintptr(unsafe.Pointer(&sec)),
 		uintptr(unsafe.Pointer(&ms)),
 		uintptr(unsafe.Pointer(&values)),
@@ -405,15 +511,15 @@ func (s *RTDBService) GetSingleValue(id, mode int32, datetime int64) (int64, flo
 	如果输出的最大值或最小值的时间戳秒值为 0，则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
   	本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
-func (s *RTDBService) SummaryEx(id int32, bgtime, endtime int64) (int64, int64, float64, float64, float64, float64, float64, int32) {
+func (s *RTDBService) SummaryEx(id int, bgtime, endtime int64) (int64, int64, float64, float64, float64, float64, float64, int, error) {
 	var count int32 = 0
 	sec1, ms1 := splitUnixNanoSec(bgtime)
 	sec2, ms2 := splitUnixNanoSec(endtime)
 	var min_time, max_time int64
 	var min_value, max_value, total_value, calc_avg, power_avg float64
-	goh_summary_ex.Call(
+	ecode, _, _ := goh_summary_ex.Call(
 		uintptr(s.Handle),
-		uintptr(id),
+		uintptr(int32(id)),
 		uintptr(unsafe.Pointer(&sec1)),
 		uintptr(unsafe.Pointer(&ms1)),
 		uintptr(unsafe.Pointer(&sec2)),
@@ -427,7 +533,7 @@ func (s *RTDBService) SummaryEx(id int32, bgtime, endtime int64) (int64, int64, 
 	)
 	max_time = int64(sec1)*1e3 + int64(ms1)
 	min_time = int64(sec2)*1e3 + int64(ms2)
-	return max_time, min_time, max_value, min_value, total_value, calc_avg, power_avg, count
+	return max_time, min_time, max_value, min_value, total_value, calc_avg, power_avg, int(count), FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -455,11 +561,11 @@ func (s *RTDBService) SummaryEx(id int32, bgtime, endtime int64) (int64, int64, 
 		最后一个元素表示开始时间。
    		本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
-func (s *RTDBService) GetPlotValues(id int32, interval int32, bgtime, endtime int64) ([]int64, []float64, []int64, []int16) {
+func (s *RTDBService) GetPlotValues(id, interval int, bgtime, endtime int64) ([]int64, []float64, []int64, []int16, error) {
 	if interval == 0 { //不可为0
 		interval = 10
 	}
-	var count int32 = interval * 6
+	var count int32 = int32(interval) * 6
 	//整型数组，输入/输出，输入时第一个元素表示起始时间秒数，最后一个元素表示结束时间
 	//秒数，如果为 0，表示直到数据的最后时间；输出时表示对应的历史数值时间秒数。
 	datetimes := make([]int32, count)
@@ -477,10 +583,10 @@ func (s *RTDBService) GetPlotValues(id int32, interval int32, bgtime, endtime in
 	datetimes[count-1], ms[count-1] = splitUnixNanoSec(endtime)
 	datetimes[0], ms[0] = splitUnixNanoSec(bgtime)
 
-	goh_get_plot_values.Call(
+	ecode, _, _ := goh_get_plot_values.Call(
 		uintptr(s.Handle),
-		uintptr(id),
-		uintptr(interval),
+		uintptr(int32(id)),
+		uintptr(int32(interval)),
 		uintptr(unsafe.Pointer(&count)),
 		uintptr(unsafe.Pointer(&datetimes[0])),
 		uintptr(unsafe.Pointer(&ms[0])),
@@ -491,7 +597,7 @@ func (s *RTDBService) GetPlotValues(id int32, interval int32, bgtime, endtime in
 	for i, sec := range datetimes {
 		datatimes[i] = int64(sec)*1e3 + int64(ms[i])
 	}
-	return datatimes[:count], values[:count], states[:count], qualities[:count]
+	return datatimes[:count], values[:count], states[:count], qualities[:count], FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -507,20 +613,20 @@ func (s *RTDBService) GetPlotValues(id int32, interval int32, bgtime, endtime in
      [quality] 短整型，输入，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY
  备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
       如果 datatime 标识的数据已经存在，其值将被替换。
-    【【【【【【【写入的数据始终为0】】】】】】
+    【【【【【【【测试未通过：写入的数据始终为0】】】】】】
 *******************************************************************************/
-func (s *RTDBService) PutSingleValue(id int32, datatime int64, value float64, state int64, quality int16) error {
+func (s *RTDBService) PutSingleValue(id int, datatime int64, value float64, state int64, quality int16) error {
 	sec, ms := splitUnixNanoSec(datatime)
-	//fmt.Println(id, datatime, value, sec, ms)
 	code, _, _ := goh_put_single_value.Call(
 		uintptr(s.Handle),
-		uintptr(id),
+		uintptr(int32(id)),
 		uintptr(sec),
 		uintptr(ms),
 		uintptr(value),
 		uintptr(state),
-		uintptr(quality),
+		uintptr(int16(quality)),
 	)
+	s.FlushArchivedValues(id) //补写缓存进入历史文档
 	return FormatErrMsg(code)
 }
 
@@ -542,9 +648,12 @@ func (s *RTDBService) PutSingleValue(id int32, datatime int64, value float64, st
 	本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
   	如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 *******************************************************************************/
-func (s *RTDBService) PutArchivedValues(ids []int32, datatimes []int64, values []float64, states []int64, qualities []int16) []error {
+func (s *RTDBService) PutArchivedValues(ids []int, datatimes []int64, values []float64, states []int64, qualities []int16) ([]error, error) {
 	var count int32 = int32(len(ids))
-
+	var pids []int32
+	for _, id := range ids {
+		pids = append(pids, int32(id))
+	}
 	secondes := make([]int32, count) //秒,表示距离1970年1月1日08:00:00的秒数
 	ms := make([]int16, count)       //毫秒，对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
 	errs := make([]uint32, count)    //错误码
@@ -552,10 +661,10 @@ func (s *RTDBService) PutArchivedValues(ids []int32, datatimes []int64, values [
 	for i, dtime := range datatimes { //将时间戳分为毫秒和秒两部分
 		secondes[i], ms[i] = splitUnixNanoSec(dtime)
 	}
-	goh_put_archived_values.Call(
+	ecode, _, _ := goh_put_archived_values.Call(
 		uintptr(s.Handle),
 		uintptr(unsafe.Pointer(&count)),
-		uintptr(unsafe.Pointer(&ids[0])),
+		uintptr(unsafe.Pointer(&pids[0])),
 		uintptr(unsafe.Pointer(&secondes[0])),
 		uintptr(unsafe.Pointer(&ms[0])),
 		uintptr(unsafe.Pointer(&values[0])),
@@ -567,7 +676,7 @@ func (s *RTDBService) PutArchivedValues(ids []int32, datatimes []int64, values [
 		errors[i] = FormatErrMsg(uintptr(err))
 		s.FlushArchivedValues(ids[i]) //补写缓存进入历史文档
 	}
-	return errors
+	return errors, FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -580,14 +689,14 @@ func (s *RTDBService) PutArchivedValues(ids []int32, datatimes []int64, values [
 		在此期间此段数据可能查询不到，为了及时看到补历史的结果，应在结束补历史后调用本接口。
   count 参数可为空指针，对应的信息将不再返回。
 *******************************************************************************/
-func (s *RTDBService) FlushArchivedValues(id int32) int32 {
+func (s *RTDBService) FlushArchivedValues(id int) (int, error) {
 	var count int32 = 0
-	goh_flush_archived_values.Call(
+	ecode, _, _ := goh_flush_archived_values.Call(
 		uintptr(s.Handle),
-		uintptr(id),
+		uintptr(int32(id)),
 		uintptr(unsafe.Pointer(&count)),
 	)
-	return count
+	return int(count), FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -599,8 +708,8 @@ func (s *RTDBService) FlushArchivedValues(id int32) int32 {
    [value]  整型，输入，选项值。
 - 备注：选项设置后在下一次调用 api 时才生效。
 *******************************************************************************/
-func (s *RTDBService) SetOption(apiType int32, value int32) {
-	go_set_option.Call(uintptr(apiType), uintptr(value))
+func (s *RTDBService) SetOption(apiType int, value int) {
+	go_set_option.Call(uintptr(int32(apiType)), uintptr(int32(value)))
 }
 
 /*******************************************************************************
@@ -610,30 +719,29 @@ func (s *RTDBService) SetOption(apiType int32, value int32) {
      [count]  整型，输出，标签点表总数。
 - 备注：
 *******************************************************************************/
-func (s *RTDBService) GetTablesCount() (int32, error) {
+func (s *RTDBService) GetTablesCount() (int, error) {
 	var count int32 = 0
 	code, _, _ := gob_tables_count.Call(
 		uintptr(s.Handle),
 		uintptr(unsafe.Pointer(&count)),
 	)
-	return count, FormatErrMsg(code)
+	return int(count), FormatErrMsg(code)
 }
 
 /*******************************************************************************
-- 功能：取得标签点表ID
-- 输入：
-- 输出:  [ids]  标签表ID数组切片
-		[error] 错误信息
+- 功能：取得标签点表信息
+- 输入：[needpointmsg]是否需要标签点信息,0不需要,1需要；省略不需要
+- 输出:  [error] 错误信息
 - 备注：标签表数和标签ID同时保存到结构体中
 - 时间：2020年5月14日
 *******************************************************************************/
-func (s *RTDBService) GetTables() error {
+func (s *RTDBService) GetTables(needpointmsg ...bool) error {
 	count, err := s.GetTablesCount()
 	if err != nil {
 		return err
 	}
 	var ids [1000]int32
-	code, _, _ := gob_get_tables.Call(
+	code, _, _ := gob_get_tables.Call( //获取全部表的ID
 		uintptr(s.Handle),
 		uintptr(unsafe.Pointer(&ids)),
 		uintptr(unsafe.Pointer(&count)),
@@ -643,13 +751,22 @@ func (s *RTDBService) GetTables() error {
 	for _, id := range ids[:count] {
 		s.TableIds = append(s.TableIds, int(id))
 	}
-	s.Tables = make(map[int]GoldenTable, count)
+	s.Tables = make(map[int]GoldenTable, count) //重置表
+	s.Points = make(map[int]GoldenPoint)        //重置标签点
 	for _, id := range s.TableIds {
 		tb, err := s.GetTablesProperty(id) //获取标签点表的属性
 		if err != nil {
 			return err
 		}
 		s.Tables[int(id)] = tb
+		if len(needpointmsg) > 0 { //需要标签点信息
+			if needpointmsg[0] {
+				err = s.GetPointPropterty(tb.PointIds...) //获取变量点属性
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 	return FormatErrMsg(code)
 }
@@ -661,7 +778,7 @@ func (s *RTDBService) GetTables() error {
 - 备注：
 - 时间：2020年5月14日
 *******************************************************************************/
-func (t *GoldenTable) GetTableSizeById(handle int) (int, error) {
+func (t *GoldenTable) GetTableSizeById(handle int32) (int, error) {
 	var size int32 = 0
 	ecode, _, _ := gob_get_table_size_by_id.Call(
 		uintptr(handle),
@@ -674,12 +791,13 @@ func (t *GoldenTable) GetTableSizeById(handle int) (int, error) {
 /*******************************************************************************
 - 功能：获取表下的所有标签ID列表
 - 输入： [handle] 连接句柄
+		[tablename] 可选的表名切片,可以多个表名
 - 输出： [[]int] id数组
 		[error] 错误信息
 - 备注：
 - 时间：2020年5月14日
 *******************************************************************************/
-func (t *GoldenTable) GetPointIds(handle int, tablename ...string) ([]int, error) {
+func (t *GoldenTable) GetPointIds(handle int32, tablename ...string) ([]int, error) {
 	var nullstring string
 	tbname := fmt.Sprintf("%s", t.Name)
 	if len(tablename) > 0 {
@@ -703,7 +821,7 @@ func (t *GoldenTable) GetPointIds(handle int, tablename ...string) ([]int, error
 	var count int32 = _MAX_POINT_IN_SEARCH
 	ids := make([]int32, count)
 	code, _, _ := gob_search.Call(
-		uintptr(int32(handle)),
+		uintptr(handle),
 		uintptr(unsafe.Pointer(_tagmask)),
 		uintptr(unsafe.Pointer(_tablemask)),
 		uintptr(unsafe.Pointer(_source)),
@@ -756,27 +874,65 @@ func (s *RTDBService) GetTablesProperty(tableid int) (GoldenTable, error) {
 /*******************************************************************************
 * 命名：gob_get_points_property
 * 功能：批量获取标签点属性
-* 参数：
-*        [handle] 连接句柄
-*        [count]  整数，输入，表示标签点个数。
-*        [base]   GOLDEN_POINT 结构数组，输入/输出，标签点基本属性列表，
-*                 输入时，id 字段指定需要得到属性的标签点，输出时，其它字段返回标签点属性值。
-*        [scan]   GOLDEN_SCAN_POINT 结构数组，输出，采集标签点扩展属性列表
-*        [calc]   GOLDEN_CALC_POINT 结构数组，输出，计算标签点扩展属性列表
-*        [errors] 无符号整型数组，输出，获取标签属性的返回值列表，参考golden_error.h
-* 备注：用户须保证分配给 base、scan、calc、errors 的空间与 count 相符，
-*        扩展属性集 scan、calc 可为空指针，此时将不返回对应的扩展属性集。
+* 参数：[ids]   需要读取属性的id切片
+* 输出：[error] 错误信息
+* 备注：读取到的标签点信息保存到结构体数组的Point Map中
 - 时间：2020年5月14日
 *******************************************************************************/
 func (s *RTDBService) GetPointPropterty(ids ...int) error {
 	count := int32(len(ids))
+	if count > 0 {
+		bases := make([]C.GOLDEN_POINT, count)
+		scans := make([]C.GOLDEN_SCAN_POINT, count)
+		calcs := make([]C.GOLDEN_CALC_POINT, count)
+		errors := make([]uint32, count)
+		for i, id := range ids { //标签点ID赋值
+			bases[i].id = C.int(id)
+		}
+		ecode, _, _ := gob_get_points_property.Call(
+			uintptr(s.Handle),
+			uintptr(count),
+			uintptr(unsafe.Pointer(&bases[0])),
+			uintptr(unsafe.Pointer(&scans[0])),
+			uintptr(unsafe.Pointer(&calcs[0])),
+			uintptr(unsafe.Pointer(&errors[0])),
+		)
+		if s.Points == nil {
+			s.Points = make(map[int]GoldenPoint)
+		}
+		for i, id := range ids { //标签点ID赋值
+			var point GoldenPoint
+			base := CBasePoint2GoBasePoint(bases[i])
+			err := FormatErrMsg(uintptr(errors[i]))
+			if err != nil {
+				base.Err = err.Error()
+			}
+			point.Base = base
+			point.Scan = CScanPoint2GoScanPoint(scans[i])
+			point.Calc = CCalcPoint2GoCalcPoint(calcs[i])
+			s.Points[id] = point
+		}
+		return FormatErrMsg(ecode)
+	}
+	return nil
+}
+
+/*******************************************************************************
+* 命名：gob_get_points_property
+* 功能：获取单个标签点的属性
+* 参数：[ids]   需要读取属性的id切片
+* 输出：[GoldenPoint]标签点信息
+	   [error] 错误信息
+* 备注：读取到的信息只返回，不保存
+- 时间：2020年5月14日
+*******************************************************************************/
+func (s *RTDBService) GetSinglePointPropterty(id int) (GoldenPoint, error) {
+	var count int32 = 1
 	bases := make([]C.GOLDEN_POINT, count)
 	scans := make([]C.GOLDEN_SCAN_POINT, count)
 	calcs := make([]C.GOLDEN_CALC_POINT, count)
 	errors := make([]uint32, count)
-	for i, _ := range bases { //标签点ID赋值
-		bases[i].id = C.int(ids[i])
-	}
+	bases[0].id = C.int(id)
 	ecode, _, _ := gob_get_points_property.Call(
 		uintptr(s.Handle),
 		uintptr(count),
@@ -785,19 +941,104 @@ func (s *RTDBService) GetPointPropterty(ids ...int) error {
 		uintptr(unsafe.Pointer(&calcs[0])),
 		uintptr(unsafe.Pointer(&errors[0])),
 	)
-	return FormatErrMsg(ecode)
+
+	var point GoldenPoint
+	base := CBasePoint2GoBasePoint(bases[0])
+	err := FormatErrMsg(uintptr(errors[0]))
+	if err != nil {
+		base.Err = err.Error()
+	}
+	point.Base = base
+	point.Scan = CScanPoint2GoScanPoint(scans[0])
+	point.Calc = CCalcPoint2GoCalcPoint(calcs[0])
+
+	return point, FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
-- 功能:C BasePoint转换为go BasePoint
+- 功能:C的GOLDEN_POINT转换为go BasePoint
 - 输入:
-	[chars] C.char字符数组切片
+	[GOLDEN_POINT] C的GOLDEN_POINT
 - 输出:
-	[string] go 字符串
+	[GoldenBasePoint] go GoldenBasePoint结构体
 - 时间：2020年5月14日
 *******************************************************************************/
 func CBasePoint2GoBasePoint(c C.GOLDEN_POINT) (g GoldenBasePoint) {
-	g.Id = int(c.id)
+	g.Id = int(c.id)                                  //int     //全库唯一标识
+	g.Tag = CChars2String(c.tag[:])                   //string  //用于在表中唯一标识一个标签点,最长79
+	g.DataType = int(C.getPointType(c))               //int     //标签点的数值类型
+	g.TableId = int(c.table)                          //int     //标签点所属表ID
+	g.Desc = CChars2String(c.desc[:])                 //string  //有关标签点的描述性文字,最长99
+	g.Unit = CChars2String(c.unit[:])                 //string  //工程单位,最长19
+	g.IsArchive = CByte2Bool(c.archive)               //bool    //是否存档
+	g.Digits = int(c.digits)                          //int     //数值位数,>=-20、<=10,默认-5;如果为0或正数，表示数值的小数位数，如果为负数，表示数值的有效位数
+	g.IsShutDown = CByte2Bool(c.shutdown)             //int     //停机状态字,定义该点在停机状态下是否补写停机状态值.1 表示补写；0 表示不补写
+	g.LowLimit = float64(c.lowlimit)                  //float64 //量程下限,缺省0
+	g.HighLimit = float64(c.highlimit)                //float64 //量程上限,缺省100
+	g.IsStep = CByte2Bool(c.step)                     //bool    //是否阶跃.
+	g.Typical = float64(c.typical)                    //float64 //典型值
+	g.IsCompress = CByte2Bool(c.compress)             //bool    //是否压缩,缺省true
+	g.CompDev = float64(c.compdev)                    //float64 //压缩偏差,单位:标签工程单位,缺省:1
+	g.CompDevPercent = float64(c.compdevpercent)      //float64 //压缩偏差百分比
+	g.CompTimeMax = int(c.comptimemax)                //int     //最大压缩间隔,单位:秒,缺省值:28800
+	g.CompTimeMin = int(c.comptimemin)                //int     //最短压缩间隔,单位:秒,缺省值:0
+	g.ExcDev = float64(c.excdev)                      //float64 //例外偏差,单位:标签工程单位.缺省0.5
+	g.ExcDevPercent = float64(c.excdevpercent)        //float64 //例外偏差百分比
+	g.ExcTimeMax = int(c.exctimemax)                  //int     //最大例外间隔,单位:秒,缺省值600
+	g.ExcTimeMin = int(c.exctimemin)                  //int     //最短例外间隔,单位:秒,缺省值0
+	g.ClassOf = uint(c.classof)                       //uint    //标签点类别,基本点(0)、采集点(1)、计算点(2)、采集计算点(3) 、报警点(4)等
+	g.ChangeDate = int(c.changedate)                  //int     //标签点属性最后一次被修改的时间
+	g.Changer = CChars2String(c.changer[:])           //string  //最后一次修改的用户名
+	g.CreateDate = int(c.createdate)                  //int     //标签点被创建的时间
+	g.Creator = CChars2String(c.creator[:])           //string  //标签点创建者用户名
+	g.Mirror = int(c.mirror)                          //int     //镜像收发控制:0:关闭;1:既接收,又发送;2:只接受,不发送;3:只发送,不接收
+	g.MilliSecond = int(c.millisecond)                //int     //时间戳精度,默认值:0,秒;1:毫秒;创建后不可更改
+	g.ScanIndex = uint(c.scanindex)                   //uint    //采集点扩展属性集索引
+	g.CalcIndex = uint(c.calcindex)                   //uint    //计算点扩展属性集索引
+	g.AlarmIndex = uint(c.alarmindex)                 //uint    //报警点扩展属性集索引
+	g.TableDotTag = CChars2String(c.table_dot_tag[:]) //string  //标签点全名
+	g.IsSummary = CByte2Bool(c.summary)               //bool    //统计加速开关,默认0;用于设定是否生成标签点统计信息，从而加速历史数据统计过程
+	return g
+}
 
+/*******************************************************************************
+- 功能:C的GOLDEN_SCAN_POINT转换为go GoldenScanPoint
+- 输入:
+	[GOLDEN_SCAN_POINT] C的GOLDEN_SCAN_POINT
+- 输出:
+	[GoldenScanPoint] go GoldenScanPoint结构体
+- 时间：2020年5月15日
+*******************************************************************************/
+func CScanPoint2GoScanPoint(c C.GOLDEN_SCAN_POINT) (g GoldenScanPoint) {
+	g.Id = int(c.id)                              //int        //
+	g.Source = CChars2String(c.source[:])         //string     //数据源,缺省为空
+	g.IsScan = CByte2Bool(c.scan)                 //bool       //是否采集
+	g.Instrument = CChars2String(c.instrument[:]) //string     //设备标签
+	for i, cloc := range c.locations {
+		g.Locations[i] = int(cloc) //[5]int     //设备位置
+	}
+	for i, cuint := range c.userints {
+		g.UserInts[i] = int(cuint) //[5]int     //自定义整数
+	}
+	for i, cur := range c.userreals {
+		g.UserReals[i] = float64(cur) //[2]float64 //自定义浮点数
+	}
+	return g
+}
+
+/*******************************************************************************
+- 功能:C的GOLDEN_CALC_POINT转换为go GoldenCalcPoint
+- 输入:
+	[GOLDEN_CALC_POINT] C的GOLDEN_CALC_POINT
+- 输出:
+	[GoldenCalcPoint] go GoldenCalcPoint结构体
+- 时间：2020年5月15日
+*******************************************************************************/
+func CCalcPoint2GoCalcPoint(c C.GOLDEN_CALC_POINT) (g GoldenCalcPoint) {
+	g.Id = int(c.id)                          //int        //
+	g.Equation = CChars2String(c.equation[:]) //string //试试方程式，长度不超过2047字节
+	g.Trigger = int(c.trigger)                //int    //计算触发机制
+	g.TimeCopy = int(c.timecopy)              //int    //计算结果时间戳:0: 表示采用计算时间作为计算结果时间戳； 1: 表示采用输入标签点中的最晚时间作为计算结果时间戳；2: 表示采用输入标签点中的最早时间作为计算结果时间戳。
+	g.Period = int(c.period)                  //int    //计算周期,对周期触发的计算点有效,单位:秒
 	return g
 }
