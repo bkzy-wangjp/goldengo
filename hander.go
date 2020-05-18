@@ -103,10 +103,10 @@ func (s *RTDBService) login(user string, password string) error {
 - 参数：无
 - 返回：[hosttime]     整型，输出，Golden服务器的当前UTC时间，表示距离1970年1月1日08:00:00的秒数。
 /*******************************************************************************/
-func (s *RTDBService) HostTime() (int, error) {
+func (s *RTDBService) HostTime() (int64, error) {
 	var hosttime int32 = 0
 	ecode, _, _ := go_host_time.Call(uintptr(s.Handle), uintptr(unsafe.Pointer(&hosttime)))
-	return int(hosttime), FormatErrMsg(ecode)
+	return int64(hosttime), FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -281,33 +281,37 @@ func (s *RTDBService) GetSnapshots(ids []int) ([]int64, []float64, []int64, []in
 *******************************************************************************/
 func (s *RTDBService) PutSnapshots(ids []int, datatimes []int64, values []float64, states []int64, qualities []int16) ([]error, error) {
 	var count int32 = int32(len(ids))
-	var pids []int32
-	for _, id := range ids {
-		pids = append(pids, int32(id))
-	}
-	secondes := make([]int32, count) //秒,表示距离1970年1月1日08:00:00的秒数
-	ms := make([]int16, count)       //毫秒，对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
-	errs := make([]uint32, count)    //错误码
-	errors := make([]error, count)
-	for i, dtime := range datatimes { //将时间戳分为毫秒和秒两部分
-		secondes[i], ms[i] = splitUnixNanoSec(dtime)
-	}
+	if count > 0 {
+		var pids []int32
+		for _, id := range ids {
+			pids = append(pids, int32(id))
+		}
+		secondes := make([]int32, count) //秒,表示距离1970年1月1日08:00:00的秒数
+		ms := make([]int16, count)       //毫秒，对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+		errs := make([]uint32, count)    //错误码
+		errors := make([]error, count)
+		for i, dtime := range datatimes { //将时间戳分为毫秒和秒两部分
+			secondes[i], ms[i] = splitUnixNanoSec(dtime)
+		}
 
-	ecode, _, _ := gos_put_snapshots.Call(
-		uintptr(s.Handle),
-		uintptr(unsafe.Pointer(&count)),
-		uintptr(unsafe.Pointer(&pids[0])),
-		uintptr(unsafe.Pointer(&secondes[0])),
-		uintptr(unsafe.Pointer(&ms[0])),
-		uintptr(unsafe.Pointer(&values[0])),
-		uintptr(unsafe.Pointer(&states[0])),
-		uintptr(unsafe.Pointer(&qualities[0])),
-		uintptr(unsafe.Pointer(&errs[0])),
-	)
-	for i, err := range errs {
-		errors[i] = FormatErrMsg(uintptr(err))
+		ecode, _, _ := gos_put_snapshots.Call(
+			uintptr(s.Handle),
+			uintptr(unsafe.Pointer(&count)),
+			uintptr(unsafe.Pointer(&pids[0])),
+			uintptr(unsafe.Pointer(&secondes[0])),
+			uintptr(unsafe.Pointer(&ms[0])),
+			uintptr(unsafe.Pointer(&values[0])),
+			uintptr(unsafe.Pointer(&states[0])),
+			uintptr(unsafe.Pointer(&qualities[0])),
+			uintptr(unsafe.Pointer(&errs[0])),
+		)
+		for i, err := range errs {
+			errors[i] = FormatErrMsg(uintptr(err))
+		}
+		return errors, FormatErrMsg(ecode)
+	} else {
+		return nil, fmt.Errorf("写快照时输入的数组长度为0")
 	}
-	return errors, FormatErrMsg(ecode)
 }
 
 /*******************************************************************************
@@ -738,7 +742,7 @@ func (s *RTDBService) GetTablesCount() (int, error) {
 func (s *RTDBService) GetTables(needpointmsg ...bool) error {
 	count, err := s.GetTablesCount()
 	if err != nil {
-		return err
+		return fmt.Errorf("获取表数量时错误:[%s]", err.Error())
 	}
 	var ids [1000]int32
 	code, _, _ := gob_get_tables.Call( //获取全部表的ID
@@ -746,6 +750,9 @@ func (s *RTDBService) GetTables(needpointmsg ...bool) error {
 		uintptr(unsafe.Pointer(&ids)),
 		uintptr(unsafe.Pointer(&count)),
 	)
+	if e := FormatErrMsg(code); e != nil {
+		return fmt.Errorf("获取表ID示错误:[%s]", e.Error())
+	}
 	s.TableCounts = int(count)
 	s.TableIds = s.TableIds[0:0] //清空
 	for _, id := range ids[:count] {
@@ -756,19 +763,19 @@ func (s *RTDBService) GetTables(needpointmsg ...bool) error {
 	for _, id := range s.TableIds {
 		tb, err := s.GetTablesProperty(id) //获取标签点表的属性
 		if err != nil {
-			return err
+			return fmt.Errorf("获取标签点表属性时错误:[%s]", err.Error())
 		}
 		s.Tables[int(id)] = tb
 		if len(needpointmsg) > 0 { //需要标签点信息
 			if needpointmsg[0] {
 				err = s.GetPointPropterty(tb.PointIds...) //获取变量点属性
 				if err != nil {
-					return err
+					return fmt.Errorf("获取标签点属性时错误:[%s]", err.Error())
 				}
 			}
 		}
 	}
-	return FormatErrMsg(code)
+	return nil
 }
 
 /*******************************************************************************

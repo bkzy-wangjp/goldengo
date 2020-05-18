@@ -1,5 +1,6 @@
 package goldengo
 
+/*
 import (
 	"testing"
 	"time"
@@ -214,3 +215,5 @@ func TestGetTagPointInfoByName(t *testing.T) {
 		}
 	}
 }
+
+*/

@@ -2,6 +2,7 @@ package goldengo
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 )
@@ -37,15 +38,15 @@ type SnapData struct { //快照基础数据结构
 }
 
 /*******************************************************************************
-- 功能：创建庚顿实时数据库对象
-- 参数：
+- 功能:创建庚顿实时数据库对象
+- 参数:
 	[hostname]  字符串，输入，GOLDEN 数据平台服务器的网络地址或机器名
 	[user]		用户名,字符串,缺省值 sa
 	[password]	密码,字符串,缺省值 golden
 	[port]      端口号,整型,缺省值 6327
-- 输出：
+- 输出:
 	[*Golden] 实时数据库对象
-- 备注：在调用所有的接口函数之前，必须先调用本函数建立Golden对象。
+- 备注:在调用所有的接口函数之前，必须先调用本函数建立Golden对象。
 *******************************************************************************/
 func CreateGolden(hostname, username, password string, port ...int) *Golden {
 	rtdb := new(Golden)
@@ -60,14 +61,14 @@ func CreateGolden(hostname, username, password string, port ...int) *Golden {
 }
 
 /*******************************************************************************
-- 功能： 通过变量全名获取快照值
-- 参数：
+- 功能: 通过变量全名获取快照值
+- 参数:
 	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
-- 输出：
+- 输出:
 	[map[string]SnapData] 快照Map,key为变量全名
 	[error] 错误信息
-- 备注：
-- 时间： 2020年5月15日
+- 备注:
+- 时间: 2020年5月15日
 *******************************************************************************/
 func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData, error) {
 	snaps := make(map[string]SnapData)
@@ -114,16 +115,16 @@ func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData,
 }
 
 /*******************************************************************************
-- 功能： 通过变量全名获取历史数据值
-- 参数：
+- 功能: 通过变量全名获取历史数据值
+- 参数:
 	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
     [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
 	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
-- 输出：
+- 输出:
 	[map[string][]RealTimeSeriesData] 快照Map,key为变量全名
 	[error] 错误信息
-- 备注：
-- 时间： 2020年5月15日
+- 备注:
+- 时间: 2020年5月15日
 *******************************************************************************/
 func (g *Golden) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
 	datas := make(map[string][]RealTimeSeriesData)
@@ -161,21 +162,21 @@ func (g *Golden) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string)
 }
 
 /*******************************************************************************
-- 功能： 通过变量全名获取单个时间点的历史数据值
-- 参数：
+- 功能: 通过变量全名获取单个时间点的历史数据值
+- 参数:
 	[mode]   整型，输入，取值 GOLDEN_NEXT(0)、GOLDEN_PREVIOUS(1)、GOLDEN_EXACT(2)、
-    			GOLDEN_INTER(3) 之一：
+    			GOLDEN_INTER(3) 之一:
     				 GOLDEN_NEXT(0) 寻找下一个最近的数据；
    					 GOLDEN_PREVIOUS(1) 寻找上一个最近的数据；
     				 GOLDEN_EXACT(2) 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
     				 GOLDEN_INTER(3) 取指定时间的内插值数据。
     [datatime]  整型，输入，时间UnixNano秒数。
 	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
-- 输出：
+- 输出:
 	[map[string]RealTimeSeriesData] 快照Map,key为变量全名
 	[error] 错误信息
-- 备注：
-- 时间： 2020年5月15日
+- 备注:
+- 时间: 2020年5月15日
 *******************************************************************************/
 func (g *Golden) GetHistorySingleByName(mode int, datatime int64, tagfullnames ...string) (map[string]RealTimeSeriesData, error) {
 	datas := make(map[string]RealTimeSeriesData)
@@ -209,17 +210,17 @@ func (g *Golden) GetHistorySingleByName(mode int, datatime int64, tagfullnames .
 }
 
 /*******************************************************************************
-- 功能： 通过变量全名获取等间隔历史数据值
-- 参数：
+- 功能: 通过变量全名获取等间隔历史数据值
+- 参数:
 	[count]	整形,需要的插值个数
 	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
     [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
 	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
-- 输出：
+- 输出:
 	[map[string][]RealTimeSeriesData] 快照Map,key为变量全名
 	[error] 错误信息
-- 备注：
-- 时间： 2020年5月15日
+- 备注:
+- 时间: 2020年5月15日
 *******************************************************************************/
 func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
 	datas := make(map[string][]RealTimeSeriesData)
@@ -257,30 +258,37 @@ func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfulln
 }
 
 /*******************************************************************************
-功能：根据庚顿数据库的地址和读取指令获取补全了开头和结尾时刻数据的历史数据
-输入：add:Golden API的地址
-	cmd:读取指令接口
-输出：数据接口
-时间：2020年5月16日
-编辑：wang_jp
+功能:获取补全了开头和结尾时刻数据的历史数据
+输入:[bginTime] 开始时间,UnixNano
+	[endTime] 结束时间,UnixNano
+	[Interval] 两个数据点之间的间隔时间,单位:秒.如果为0，则读取原始历史数据.如果大于零,则读取等间隔差值历史数据
+	[tagnames] 变量名,至少要有一个,可以为多个
+输出:[map[string][]RealTimeSeriesData] 数据Map,以变量名为key
+	[map[string]error] 变量的错误信息Map,以变量名为key
+	[map[string]bool] 快照数据时间大于endTime,则为true,否则为false
+	[error]
+时间:2020年5月16日
+编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string][]RealTimeSeriesData, map[string]error, error) {
+func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string][]RealTimeSeriesData, map[string]error, map[string]bool, error) {
 	datas := make(map[string][]RealTimeSeriesData)
 	errs := make(map[string]error, len(tagnames))
+	newdata_afterEnd := make(map[string]bool)
 	ids, dtypes, _, _, err := g.FindPoints(tagnames...) //根据变量名读取基本信息
 	if err != nil {
-		return datas, errs, fmt.Errorf("通过变量全名[%v]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
+		return datas, errs, newdata_afterEnd, fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
 	}
 	for i, id := range ids { //校验ID,不能为0
 		if id == 0 {
-			return datas, errs, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagnames[i])
+			return datas, errs, newdata_afterEnd, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagnames[i])
 		}
 	}
 	snaptimes, _, _, _, _, err := g.GetSnapshots(ids) //根据Id读取快照
 	if err != nil {
-		return datas, errs, fmt.Errorf("读取变量[%v]快照值失败:[%s]", tagnames, err.Error())
+		return datas, errs, newdata_afterEnd, fmt.Errorf("读取变量[%s]快照值失败:[%s]", tagnames, err.Error())
 	}
 	for i, tag := range tagnames {
+		newdata_afterEnd[tag] = snaptimes[i] > endTime/1e6
 		var hisdata []RealTimeSeriesData
 		var histime, hisint []int64
 		var hisreal []float64
@@ -288,20 +296,20 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 		if Interval == 0 {
 			histime, hisreal, hisint, hisq, err = g.GetArchivedValues(ids[i], bginTime, endTime) //根据Id读取历史数据
 			if err != nil {
-				errs[tag] = fmt.Errorf("读取变量[%s]的历史存档数据时错误:[%s]", tag, err.Error())
+				errs[tag] = fmt.Errorf("读取变量[%s]从[%s]到[%s]的历史存档数据时错误:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9), time.Unix(endTime/1e9, endTime%1e9), err.Error())
 			}
 		} else {
 			count := (endTime - bginTime) / int64(Interval) / 1e9
 			histime, hisreal, hisint, hisq, err = g.GetInterpoValues(ids[i], int(count), bginTime, endTime) //根据Id读取历史数据
 			if err != nil {
-				errs[tag] = fmt.Errorf("读取变量[%s]的等间隔插值历史存档数据时错误:[%s]", tag, err.Error())
+				errs[tag] = fmt.Errorf("读取变量[%s]从[%s]到[%s]的等间隔插值历史存档数据时错误:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9), time.Unix(endTime/1e9, endTime%1e9), err.Error())
 			}
 		}
 
 		var bghd RealTimeSeriesData                                                //开始时间点之前的一个历史数据
 		bgtime, bgreal, bgint, bgq, bgerr := g.GetSingleValue(ids[i], 1, bginTime) //根据Id读取历史时刻单值数据
 		if bgerr != nil {
-			bgerr = fmt.Errorf("读取变量[%s]的时间点[%s]数据失败:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6), err.Error())
+			bgerr = fmt.Errorf("读取变量[%s]的时间点[%s]数据失败:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6), bgerr.Error())
 		} else {
 			if bgtime == 0 {
 				bgerr = fmt.Errorf("变量[%s]在时间点[%s](含)之前没有数据", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6))
@@ -344,7 +352,10 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 			}
 		} else { //没有读到历史数据
 			if bgerr != nil {
-				errs[tag] = fmt.Errorf("%s;\n\t变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]", bgerr.Error(), tag, time.Unix(bginTime/1e3, bginTime%1e3*1e6), time.Unix(endTime/1e3, endTime%1e3*1e6), time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
+				errs[tag] = fmt.Errorf("%s;变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
+					bgerr.Error(), tag, time.Unix(bginTime/1e9, bginTime%1e9),
+					time.Unix(endTime/1e9, endTime%1e9),
+					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
 			} else {
 				bghd.Time = bginTime / 1e6
 				hisdata = append(hisdata, bghd)
@@ -354,18 +365,18 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 		}
 		datas[tag] = hisdata
 	}
-	return datas, errs, nil
+	return datas, errs, newdata_afterEnd, nil
 }
 
 /*******************************************************************************
-功能：获取表中的标签点名称列表
-输入：可选的表名称列表
-输出：标签点表Map,Map的key为表名
-说明：如果不输入表名,则读取数据库中所有表下的标签点
+功能:获取表中的标签点名称列表
+输入:可选的表名称列表
+输出:标签点表Map,Map的key为表名
+说明:如果不输入表名,则读取数据库中所有表下的标签点
 	如果输入表名,则读取输入的每个表下的标签点
 	如果输入的表不存在,对应的map下的字符串切片为空
-时间：2020年5月16日
-编辑：wang_jp
+时间:2020年5月16日
+编辑:wang_jp
 *******************************************************************************/
 func (g *Golden) GetTagNameListInTables(tbnames ...string) (map[string][]string, error) {
 	tagsmap := make(map[string][]string)
@@ -407,14 +418,14 @@ func (g *Golden) GetTagNameListInTables(tbnames ...string) (map[string][]string,
 }
 
 /*******************************************************************************
-功能：获取表中的标签点列表
-输入：可选的表名称列表
-输出：标签点表Map,Map的key为表名
-说明：如果不输入表名,则读取数据库中所有表下的标签点
+功能:获取表中的标签点列表
+输入:可选的表名称列表
+输出:标签点表Map,Map的key为表名
+说明:如果不输入表名,则读取数据库中所有表下的标签点
 	如果输入表名,则读取输入的每个表下的标签点
 	如果输入的表不存在,对应的map下的字符串切片为空
-时间：2020年5月16日
-编辑：wang_jp
+时间:2020年5月16日
+编辑:wang_jp
 *******************************************************************************/
 func (g *Golden) GetTagListInTables(tbnames ...string) (map[string][]GoldenPoint, error) {
 	tagsmap := make(map[string][]GoldenPoint)
@@ -456,12 +467,12 @@ func (g *Golden) GetTagListInTables(tbnames ...string) (map[string][]GoldenPoint
 }
 
 /*******************************************************************************
-功能：根据标签点全名获取标签点的配置信息
-输入：标签点名列表
-输出：标签点Map,Map的key为标签名
-说明：
-时间：2020年5月16日
-编辑：wang_jp
+功能:根据标签点全名获取标签点的配置信息
+输入:标签点名列表
+输出:标签点Map,Map的key为标签名
+说明:
+时间:2020年5月16日
+编辑:wang_jp
 *******************************************************************************/
 func (g *Golden) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoint, error) {
 	datas := make(map[string]GoldenPoint)
@@ -491,4 +502,88 @@ func (g *Golden) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoi
 		datas[name] = g.Points[id]
 	}
 	return datas, nil
+}
+
+/*******************************************************************************
+功能:根据标签点名写快照
+输入:[tagname]   标签点全名
+	[datavalue] 数值
+	[qualitie]  质量码
+	[datatime]  可选的时间,UnixNano。省略时采用当前服务器时间
+输出:
+说明:
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (g *Golden) SetSnapShot(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
+	timestemp := time.Now().UnixNano()
+	if len(datatime) > 0 {
+		timestemp = datatime[0]
+	}
+	var dt []int64
+	var df []float64
+	var dv []int64
+	var dq []int16
+
+	ids, dtypes, _, _, err := g.FindPoints(tagname) //根据变量名读取基本信息
+	if err != nil || len(ids) == 0 {
+		return fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagname, err.Error())
+	}
+	if ids[0] == 0 {
+		return fmt.Errorf("变量名[%s]在实时数据库中不存在", tagname)
+	}
+	dt = append(dt, timestemp)
+	dq = append(dq, int16(qualitie))
+	if dtypes[0] < 9 {
+		dv = append(dv, int64(math.Ceil(datavalue)))
+		df = append(df, 0)
+	} else {
+		dv = append(dv, 0)
+		df = append(df, datavalue)
+	}
+	_, err = g.PutSnapshots(ids, dt, df, dv, dq)
+
+	return err
+}
+
+/*******************************************************************************
+功能:批量写快照
+输入:[tagnames]   标签点全名.同一个标签点标识可以出现多次，但它们的时间戳必需是递增的
+	[datavalues] 数值
+	[qualities]  质量码
+	[datatimes]  时间,UnixNano
+输出:
+说明:
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (g *Golden) SetSnapShotBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
+	var df []float64
+	var dv []int64
+	var dq []int16
+	cnt := len(tagnames)
+	if cnt != len(datavalues) || cnt != len(qualities) || cnt != len(datatimes) {
+		return fmt.Errorf("输入参数数组的长度不一致")
+	}
+	ids, dtypes, _, _, err := g.FindPoints(tagnames...) //根据变量名读取基本信息
+	if err != nil || len(ids) == 0 {
+		return fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
+	}
+	for i, tag := range tagnames {
+		if ids[i] == 0 {
+			return fmt.Errorf("变量名[%s]在实时数据库中不存在", tag)
+		}
+		dq = append(dq, int16(qualities[i]))
+		if dtypes[i] < 9 {
+			dv = append(dv, int64(math.Ceil(datavalues[i])))
+			df = append(df, 0)
+		} else {
+			dv = append(dv, 0)
+			df = append(df, datavalues[i])
+		}
+	}
+
+	_, err = g.PutSnapshots(ids, datatimes, df, dv, dq)
+
+	return err
 }

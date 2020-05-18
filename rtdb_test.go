@@ -92,7 +92,7 @@ func TestFormatErrorMessage(t *testing.T) {
 		}
 	}
 }
-*/
+
 func TestFindPoints(t *testing.T) {
 	tests := []struct {
 		tags []string
@@ -120,7 +120,6 @@ func TestFindPoints(t *testing.T) {
 	}
 }
 
-/*
 func TestGetSnapshots(t *testing.T) {
 	tests := []struct {
 		tags []int
@@ -391,26 +390,7 @@ func TestPutArchivedValues(t *testing.T) {
 	}
 }
 
-func TestGetTables(t *testing.T) {
-	gd := CreateRTDB("127.0.0.1", "sa", "golden")
-	err := gd.Connect()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer gd.DisConnect()
-	err = gd.GetTables()
-	if err != nil {
-		t.Error(err.Error())
-	} else {
-		t.Logf("标签点表数:%d", gd.TableCounts)
-		for i, tb := range gd.Tables {
-			t.Logf("第%d个表的属性=%+v", i, tb)
-		}
-		for i, p := range gd.Points {
-			t.Logf("变量点id=%d,变量点属性:%+v", i, p)
-		}
-	}
-}
+
 
 func TestGetSinglePointPropterty(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
@@ -427,3 +407,24 @@ func TestGetSinglePointPropterty(t *testing.T) {
 	}
 }
 */
+
+func TestGetTables(t *testing.T) {
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	err = gd.GetTables(true)
+	if err != nil {
+		t.Error(err.Error())
+	} else {
+		t.Logf("标签点表数:%d", gd.TableCounts)
+		for i, tb := range gd.Tables {
+			t.Logf("第%d个表的属性=%+v", i, tb)
+		}
+		for i, p := range gd.Points {
+			t.Logf("变量点id=%d,变量点属性:%+v", i, p)
+		}
+	}
+}
