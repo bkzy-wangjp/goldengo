@@ -1,9 +1,8 @@
 package goldengo
 
-/*
 import (
 	"testing"
-	"time"
+	//"time"
 )
 
 func TestGetSnapShotByName(t *testing.T) {
@@ -12,7 +11,7 @@ func TestGetSnapShotByName(t *testing.T) {
 	}{
 		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
 		{[]string{"sf8kt.x3_zjs_sfc_ps8kt_4-1_35-4_47-49_run:1"}},
-		{[]string{"sf8kt.webinsert_point", "demo.demo1"}},
+		{[]string{"sf8kt.webinsert_point", "demo.demo1xxx"}},
 	}
 	gd := CreateGolden("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
@@ -33,6 +32,7 @@ func TestGetSnapShotByName(t *testing.T) {
 	}
 }
 
+/*
 func TestGetHistoryByName(t *testing.T) {
 	tests := []struct {
 		bgtime  int64

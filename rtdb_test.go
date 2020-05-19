@@ -1,10 +1,8 @@
 package goldengo
 
-import (
-	//"math/rand"
-	"testing"
-	//"time"
-)
+//"math/rand"
+//"testing"
+//"time"
 
 /*
 func TestGetVersion(t *testing.T) {
@@ -406,7 +404,7 @@ func TestGetSinglePointPropterty(t *testing.T) {
 		t.Logf("变量点属性:%+v", pot)
 	}
 }
-*/
+
 
 func TestGetTables(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
@@ -428,3 +426,4 @@ func TestGetTables(t *testing.T) {
 		}
 	}
 }
+*/

@@ -10,6 +10,7 @@ int getPointType(GOLDEN_POINT p){
 import "C" //注意:import "C"与上面的C代码之间不能有空行
 import (
 	"fmt"
+	"strings"
 
 	"syscall"
 	"unsafe"
@@ -185,6 +186,10 @@ func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int,
 		classof := make([]int32, count)
 		use_ms := make([]int16, count)
 		for i, tagstr := range table_dot_tags {
+			strs := strings.Split(tagstr, ".")
+			if len(strs) < 2 {
+				return oids, otypes, oclassof, isms, fmt.Errorf("标签名[%s]不合法,标签名应为[tablename.tagname]格式", tagstr)
+			}
 			tag, _ := syscall.BytePtrFromString(tagstr)
 			tags[i] = tag
 		}

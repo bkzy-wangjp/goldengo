@@ -72,14 +72,21 @@ func CreateGolden(hostname, username, password string, port ...int) *Golden {
 *******************************************************************************/
 func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData, error) {
 	snaps := make(map[string]SnapData)
+	idtagmap := make(map[int]string) //以id为key,以变量名为value的map
 	if len(tagfullnames) > 0 {
 		ids, dtypes, _, _, err := g.FindPoints(tagfullnames...) //根据变量名读取基本信息
 		if err != nil {
 			return snaps, err
 		}
 		for i, id := range ids { //校验ID,不能为0
+			var snp SnapData
 			if id == 0 {
-				return snaps, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagfullnames[i])
+				snp.Err = fmt.Sprintf("没有在数据库中找到匹配变量名[%s]的变量", tagfullnames[i])
+				snaps[tagfullnames[i]] = snp
+				ids = append(ids[:i], ids[i+1:]...) //删除ID为0的元素
+				//return snaps, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagfullnames[i])
+			} else {
+				idtagmap[id] = tagfullnames[i]
 			}
 		}
 		dtime, dreal, dint, dq, de, err := g.GetSnapshots(ids) //根据Id读取快照
@@ -87,10 +94,10 @@ func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData,
 			return snaps, err
 		}
 
-		for i, tag := range tagfullnames {
+		for i, id := range ids { //遍历有效的ID
 			var snap SnapData
 			var rtsd RealTimeSeriesData
-			snap.Id = ids[i]
+			snap.Id = id
 			if de[i] != nil {
 				snap.Err = de[i].Error()
 			}
@@ -106,7 +113,7 @@ func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData,
 				rtsd.Value = 0.0
 			}
 			snap.Rtsd = rtsd
-			snaps[tag] = snap
+			snaps[idtagmap[id]] = snap
 		}
 	} else {
 		return snaps, fmt.Errorf("没有设置要查询的变量名")
@@ -274,6 +281,9 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 	datas := make(map[string][]RealTimeSeriesData)
 	errs := make(map[string]error, len(tagnames))
 	newdata_afterEnd := make(map[string]bool)
+	if len(tagnames) == 0 {
+		return datas, errs, newdata_afterEnd, fmt.Errorf("没有设置有效的变量")
+	}
 	ids, dtypes, _, _, err := g.FindPoints(tagnames...) //根据变量名读取基本信息
 	if err != nil {
 		return datas, errs, newdata_afterEnd, fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
