@@ -78,42 +78,46 @@ func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData,
 		if err != nil {
 			return snaps, err
 		}
+		var okids []int          //有效的ID变量数组
 		for i, id := range ids { //校验ID,不能为0
 			var snp SnapData
 			if id == 0 {
 				snp.Err = fmt.Sprintf("没有在数据库中找到匹配变量名[%s]的变量", tagfullnames[i])
 				snaps[tagfullnames[i]] = snp
-				ids = append(ids[:i], ids[i+1:]...) //删除ID为0的元素
+				//ids = append(ids[:i], ids[i+1:]...) //删除ID为0的元素
 				//return snaps, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagfullnames[i])
 			} else {
+				okids = append(okids, id)
 				idtagmap[id] = tagfullnames[i]
 			}
 		}
-		dtime, dreal, dint, dq, de, err := g.GetSnapshots(ids) //根据Id读取快照
-		if err != nil {
-			return snaps, err
-		}
-
-		for i, id := range ids { //遍历有效的ID
-			var snap SnapData
-			var rtsd RealTimeSeriesData
-			snap.Id = id
-			if de[i] != nil {
-				snap.Err = de[i].Error()
+		if len(okids) > 0 { //有有效的ID
+			dtime, dreal, dint, dq, de, err := g.GetSnapshots(okids) //根据Id读取快照
+			if err != nil {
+				return snaps, err
 			}
-			rtsd.Time = dtime[i]
-			rtsd.Quality = dq[i]
 
-			switch dtypes[i] {
-			case 0, 1, 2, 3, 4, 5, 6, 7, 8: //整形等
-				rtsd.Value = float64(dint[i])
-			case 9, 10, 11: //浮点数
-				rtsd.Value = dreal[i]
-			default: //其他类型
-				rtsd.Value = 0.0
+			for i, id := range okids { //遍历有效的ID
+				var snap SnapData
+				var rtsd RealTimeSeriesData
+				snap.Id = id
+				if de[i] != nil {
+					snap.Err = de[i].Error()
+				}
+				rtsd.Time = dtime[i]
+				rtsd.Quality = dq[i]
+
+				switch dtypes[i] {
+				case 0, 1, 2, 3, 4, 5, 6, 7, 8: //整形等
+					rtsd.Value = float64(dint[i])
+				case 9, 10, 11: //浮点数
+					rtsd.Value = dreal[i]
+				default: //其他类型
+					rtsd.Value = 0.0
+				}
+				snap.Rtsd = rtsd
+				snaps[idtagmap[id]] = snap
 			}
-			snap.Rtsd = rtsd
-			snaps[idtagmap[id]] = snap
 		}
 	} else {
 		return snaps, fmt.Errorf("没有设置要查询的变量名")
