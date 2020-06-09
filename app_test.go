@@ -1,9 +1,19 @@
 package goldengo
 
+/*
 import (
 	"testing"
 	//"time"
 )
+
+func TestUseNewEncoder(t *testing.T) {
+	sour := "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-004_sp:1"
+	res1 := UseNewEncoder(sour, "utf8", "ascii")
+	res2 := UseNewEncoder(res1, "ascii", "utf8")
+	t.Log(sour)
+	t.Log(res1)
+	t.Log(res2)
+}
 
 func TestGetSnapShotByName(t *testing.T) {
 	tests := []struct {
@@ -32,7 +42,7 @@ func TestGetSnapShotByName(t *testing.T) {
 	}
 }
 
-/*
+
 func TestGetHistoryByName(t *testing.T) {
 	tests := []struct {
 		bgtime  int64

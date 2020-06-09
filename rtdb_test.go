@@ -1,8 +1,10 @@
 package goldengo
 
-//"math/rand"
-//"testing"
-//"time"
+import (
+	//"math/rand"
+	"testing"
+	//"time"
+)
 
 /*
 func TestGetVersion(t *testing.T) {
@@ -91,32 +93,6 @@ func TestFormatErrorMessage(t *testing.T) {
 	}
 }
 
-func TestFindPoints(t *testing.T) {
-	tests := []struct {
-		tags []string
-	}{
-		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1", "sf8kt.x3_zjs_sfc_ps8kt_4-1_35-4_47-49_run:1", "sf8kt.webinsert_point"}},
-		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
-		{[]string{"xxxxx", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
-	}
-	gd := CreateRTDB("127.0.0.1", "sa", "golden")
-	err := gd.Connect()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer gd.DisConnect()
-	for _, tt := range tests {
-		ids, types, class, ms, err := gd.FindPoints(tt.tags...)
-		if err != nil {
-			t.Error(err.Error())
-		} else {
-			t.Logf("查询到的结果数量:%d", len(ids))
-			for i, id := range ids {
-				t.Logf("第%d行:id=%d,type=%d,class=%d,isms=%d", i, id, types[i], class[i], ms[i])
-			}
-		}
-	}
-}
 
 func TestGetSnapshots(t *testing.T) {
 	tests := []struct {
@@ -405,7 +381,34 @@ func TestGetSinglePointPropterty(t *testing.T) {
 	}
 }
 
+func TestFindPoints(t *testing.T) {
+	tests := []struct {
+		tags []string
+	}{
+		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1", "sf8kt.x3_zjs_sfc_ps8kt_4-1_35-4_47-49_run:1", "sf8kt.webinsert_point"}},
+		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
+		{[]string{"Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-004_sp:1", "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅡ3_MY1-043_sp:1"}},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for _, tt := range tests {
+		ids, types, class, ms, err := gd.FindPoints(tt.tags...)
+		if err != nil {
+			t.Error(err.Error())
+		} else {
+			t.Logf("查询到的结果数量:%d", len(ids))
+			for i, id := range ids {
+				t.Logf("第%d行:id=%d,type=%d,class=%d,isms=%d", i, id, types[i], class[i], ms[i])
+			}
+		}
+	}
+}
 
+*/
 func TestGetTables(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
@@ -423,6 +426,245 @@ func TestGetTables(t *testing.T) {
 		}
 		for i, p := range gd.Points {
 			t.Logf("变量点id=%d,变量点属性:%+v", i, p)
+		}
+	}
+}
+
+/*
+func TestGetPointPropterty(t *testing.T) {
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	err = gd.GetPointPropterty(1, 2, 3, 4)
+	if err != nil {
+		t.Error(err.Error())
+	} else {
+		for i, p := range gd.Points {
+			t.Logf("变量点id=%d,变量点属性:%+v,%s", i, p, string(p.Scan.Padding))
+			p.PlatEx.Id = int64(i)
+			p.PlatEx.HHv = 123.456
+			p.PlatEx.Hv = 345.678
+			p.PlatEx.Lv = 123.643
+			p.PlatEx.LLv = 789.123
+			if e := p.UpdatePointById(gd.Handle); e != nil {
+				t.Error(e.Error())
+			}
+		}
+	}
+}
+
+//测试未通过
+//func TestAppendPointWithJson(t *testing.T) {
+//	tests := []struct {
+//		pointjson string
+//	}{
+//		{`{"tag":"demo_001","type":10,"table":3,"desc":"浮点型自动创建1"}`},
+//		{`{"tag":"demo_002","type":7,"table":3,"desc":"int型自动创建2"}`},
+//		{`{"tag":"demo_003","type":0,"table":3,"desc":"bool型自动创建3"}`},
+//	}
+//	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+//	err := gd.Connect()
+//	if err != nil {
+//		t.Error(err.Error())
+//	}
+//	defer gd.DisConnect()
+//	for _, tt := range tests {
+//		point := new(GoldenPoint)
+//		err := point.appendPointWithJson(gd.Handle, tt.pointjson)
+//		if err != nil {
+//			t.Error(err.Error())
+//		} else {
+//			t.Logf("新创建的点信息:%+v", point)
+//		}
+//	}
+//}
+
+func TestRemovePointsByIds(t *testing.T) {
+	tests := []struct {
+		ids []int
+	}{
+		{[]int{0}},
+		{[]int{1255, 0, 1256, 1257, 1258, 1259}},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		num, emaps, err := gd.RemovePointsById(tt.ids...)
+		if err != nil {
+			t.Error(err.Error())
+			for id, e := range emaps {
+				if e != nil {
+					t.Logf("id=%d,错误:%s", id, e.Error())
+				}
+			}
+		} else {
+			t.Logf("共删除了%d个标签点", num)
+			for id, e := range emaps {
+				if e != nil {
+					t.Logf("id=%d,错误:%s", id, e.Error())
+				}
+			}
+		}
+	}
+}
+
+func TestRemovePointById(t *testing.T) {
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	err = gd.GetPointPropterty(1260, 1261, 1262, 1263)
+	if err != nil {
+		t.Error(err.Error())
+	} else {
+		for _, p := range gd.Points {
+			if e := p.RemovePointById(gd.Handle); e != nil {
+				t.Error(e.Error())
+			}
+		}
+	}
+}
+
+func TestRemoveTableById(t *testing.T) {
+	tests := []struct {
+		id int
+	}{
+		{3},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		gdt := new(GoldenTable)
+		gdt.Id = tt.id
+		err := gdt.RemoveTableById(gd.Handle)
+		if err != nil {
+			t.Error(err.Error())
+		} else {
+			t.Log("删除表成功")
+		}
+	}
+}
+
+func TestInsertPoint(t *testing.T) {
+	tests := []struct {
+		point GoldenBasePoint
+	}{
+		{GoldenBasePoint{Tag: "demo_test_0011", TableId: 3, DataType: 0, Desc: "汉语描述信息", Unit: "V"}},
+		{GoldenBasePoint{Tag: "demo_test_0010", TableId: 3, DataType: 0, Desc: "我是测试点", Unit: "L"}},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		gdp := new(GoldenPoint)
+		gdp.Base = tt.point
+		err := gdp.InsertPoint(gd.Handle)
+		if err != nil {
+			t.Error(err.Error())
+		}
+	}
+}
+
+
+func TestInsertTable(t *testing.T) {
+	tests := []struct {
+		name string
+		desc string
+	}{
+		{"demo1", "测试"},
+		{"demo2", "demo2"},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		gdt := new(GoldenTable)
+		gdt.Name = tt.name
+		gdt.Desc = tt.desc
+		err := gdt.AppendTable(gd.Handle)
+		if err != nil {
+			t.Error(err.Error())
+		} else {
+			t.Logf("新建表%s成功,表id是:%d", gdt.Name, gdt.Id)
+		}
+	}
+}
+
+func TestUpdateTableNameById(t *testing.T) {
+	tests := []struct {
+		id      int
+		newname string
+	}{
+		{3, "demo3"},
+		{21, "demo4"},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		gdt := new(GoldenTable)
+		gdt.Id = tt.id
+		gdt.Name = tt.newname
+		err = gdt.UpdateTableNameById(gd.Handle)
+		if err != nil {
+			t.Error(err.Error())
+		} else {
+			t.Logf("修改表%d名称成功,表新名称是:%s", gdt.Id, gdt.Name)
+		}
+	}
+}
+
+
+func TestUpdateTableNameByOldName(t *testing.T) {
+	tests := []struct {
+		oldname string
+		newname string
+	}{
+		{"demo3", "demo5"},
+		{"demo4", "demo6"},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		gdt := new(GoldenTable)
+		gdt.Name = tt.oldname
+		err = gdt.UpdateTableNameByOldName(gd.Handle, tt.newname)
+		if err != nil {
+			t.Error(err.Error())
+		} else {
+			t.Logf("修改表%s名称成功,表新名称是:%s", tt.oldname, gdt.Name)
 		}
 	}
 }

@@ -27,16 +27,17 @@ type GoldenTable struct {
 	PointIds []int  //标签点ID列表
 }
 type GoldenPoint struct {
-	Base GoldenBasePoint //基本属性
-	Scan GoldenScanPoint //采集属性
-	Calc GoldenCalcPoint //计算属性
+	Base   GoldenBasePoint //基本属性
+	Scan   GoldenScanPoint //采集属性
+	Calc   GoldenCalcPoint //计算属性
+	PlatEx PointMicPlatEx  //平台扩展属性
 }
 
 //基本标签点属性集
 type GoldenBasePoint struct {
 	Id             int     //全库唯一标识
 	Tag            string  //用于在表中唯一标识一个标签点,最长79
-	DataType       int     //标签点的数值类型
+	DataType       int     //标签点的数值类型,0:BOOL,1:UINT8,2:INT8,3:CHAR,4:UINT16,5:INT16,6:UINT32,7:INT32,8:INT64,9:FLOAT16,10:FLOAT32,11:FLOAT64
 	TableId        int     //标签点所属表ID
 	Desc           string  //有关标签点的描述性文字,最长99
 	Unit           string  //工程单位,最长19
@@ -57,17 +58,19 @@ type GoldenBasePoint struct {
 	ExcTimeMax     int     //最大例外间隔,单位:秒,缺省值600
 	ExcTimeMin     int     //最短例外间隔,单位:秒,缺省值0
 	ClassOf        uint    //标签点类别,基本点(0)、采集点(1)、计算点(2)、采集计算点(3) 、报警点(4)等
-	ChangeDate     int     //标签点属性最后一次被修改的时间
-	Changer        string  //最后一次修改的用户名
-	CreateDate     int     //标签点被创建的时间
-	Creator        string  //标签点创建者用户名
+	changeDate     int     //标签点属性最后一次被修改的时间
+	changer        string  //最后一次修改的用户名
+	createDate     int     //标签点被创建的时间
+	creator        string  //标签点创建者用户名
 	Mirror         int     //镜像收发控制:0:关闭;1:既接收,又发送;2:只接受,不发送;3:只发送,不接收
 	MilliSecond    int     //时间戳精度,默认值:0,秒;1:毫秒;创建后不可更改
-	ScanIndex      uint    //采集点扩展属性集索引
-	CalcIndex      uint    //计算点扩展属性集索引
-	AlarmIndex     uint    //报警点扩展属性集索引
+	scanIndex      uint    //采集点扩展属性集索引
+	calcIndex      uint    //计算点扩展属性集索引
+	alarmIndex     uint    //报警点扩展属性集索引
 	TableDotTag    string  //标签点全名
 	IsSummary      bool    //统计加速开关,默认0;用于设定是否生成标签点统计信息，从而加速历史数据统计过程
+	NamedTypeId    uint    //
+	Padding        []byte  //基本标签点备用字节(5字节)
 	Err            string  //错误信息
 }
 
@@ -80,34 +83,23 @@ type GoldenScanPoint struct {
 	Locations  [5]int     //设备位置
 	UserInts   [2]int     //自定义整数
 	UserReals  [2]float64 //自定义浮点数
+	Padding    []byte     //采集标签点备用字节(164字节)
 }
 
 //计算点扩展属性集
 type GoldenCalcPoint struct {
 	Id       int
-	Equation string //试试方程式，长度不超过2047字节
+	Equation string //方程式，长度不超过2047字节
 	Trigger  int    //计算触发机制
 	TimeCopy int    //计算结果时间戳:0: 表示采用计算时间作为计算结果时间戳； 1: 表示采用输入标签点中的最晚时间作为计算结果时间戳；2: 表示采用输入标签点中的最早时间作为计算结果时间戳。
 	Period   int    //计算周期,对周期触发的计算点有效,单位:秒
 }
 
-/*
-//计算点扩展属性集
-type GoldenMinCalcPoint struct {
-	Id         int
-	Equation   string //试试方程式，长度不超过480字节
-	Trigger    int    //计算触发机制
-	TimeCopy   int    //计算结果时间戳:0: 表示采用计算时间作为计算结果时间戳； 1: 表示采用输入标签点中的最晚时间作为计算结果时间戳；2: 表示采用输入标签点中的最早时间作为计算结果时间戳。
-	Period     int    //计算周期,对周期触发的计算点有效,单位:秒
-	IsEquation bool   //此方程式中保存的是否是方程式
+//庚顿标签点在智云平台中的扩展属性,存储在ScanPoint的Padding中
+type PointMicPlatEx struct {
+	Id  int64   //标签点在平台中的ID
+	LLv float64 //低低报警值
+	Lv  float64 //低报警值
+	Hv  float64 //高报警值
+	HHv float64 //高高报警值
 }
-
-//计算点扩展属性集
-type GoldenMaxCalcPoint struct {
-	Id       int
-	Equation string //试试方程式，长度不超过62*1024字节
-	Trigger  int    //计算触发机制
-	TimeCopy int    //计算结果时间戳:0: 表示采用计算时间作为计算结果时间戳； 1: 表示采用输入标签点中的最晚时间作为计算结果时间戳；2: 表示采用输入标签点中的最早时间作为计算结果时间戳。
-	Period   int    //计算周期,对周期触发的计算点有效,单位:秒
-}
-*/

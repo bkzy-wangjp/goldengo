@@ -7,17 +7,6 @@ import (
 	"time"
 )
 
-/*
-	_SnapCmd     = "SnapShot"            //获取快照
-	_HisCmd      = "History"             //获取历史时刻值或者历史范围值
-	_HisInterCmd = "HistoryInterval"     //获取插补的等间隔历史数据
-	_Table       = "Table"               //获取变量表信息
-	_Sever       = "Server"              //获取服务器时间
-	_Point       = "Point"               //获取标签点信息
-	_HisSum      = "HistorySummary"      //历史统计数据
-	_SnapWrite   = "pointDataCollection" //写快照数据
-*/
-
 //庚顿数据库结构
 type Golden struct {
 	RTDBService
@@ -121,6 +110,65 @@ func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData,
 		}
 	} else {
 		return snaps, fmt.Errorf("没有设置要查询的变量名")
+	}
+	return snaps, nil
+}
+
+/*******************************************************************************
+- 功能: 通过变量id获取快照值
+- 参数:
+	[ids]  id切片，输入
+- 输出:
+	[map[int]SnapData] 快照Map,key为变量全名
+	[error] 错误信息
+- 备注:
+- 时间: 2020年5月15日
+*******************************************************************************/
+func (g *Golden) GetSnapShotById(ids, dtypes []int) (map[int]SnapData, error) {
+	snaps := make(map[int]SnapData)
+	if len(ids) != len(dtypes) {
+		return snaps, fmt.Errorf("设置的Id数量和变量类型数量不匹配")
+	}
+	if len(ids) > 0 {
+		var okids []int          //有效的ID变量数组
+		for i, id := range ids { //校验ID,不能为0
+			var snp SnapData
+			if id == 0 {
+				snaps[ids[i]] = snp
+			} else {
+				okids = append(okids, id)
+			}
+		}
+		if len(okids) > 0 { //有有效的ID
+			dtime, dreal, dint, dq, de, err := g.GetSnapshots(okids) //根据Id读取快照
+			if err != nil {
+				return snaps, err
+			}
+
+			for i, id := range okids { //遍历有效的ID
+				var snap SnapData
+				var rtsd RealTimeSeriesData
+				snap.Id = id
+				if de[i] != nil {
+					snap.Err = de[i].Error()
+				}
+				rtsd.Time = dtime[i]
+				rtsd.Quality = dq[i]
+
+				switch dtypes[i] {
+				case 0, 1, 2, 3, 4, 5, 6, 7, 8: //整形等
+					rtsd.Value = float64(dint[i])
+				case 9, 10, 11: //浮点数
+					rtsd.Value = dreal[i]
+				default: //其他类型
+					rtsd.Value = 0.0
+				}
+				snap.Rtsd = rtsd
+				snaps[id] = snap
+			}
+		}
+	} else {
+		return snaps, fmt.Errorf("没有设置要查询的变量ID")
 	}
 	return snaps, nil
 }

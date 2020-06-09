@@ -60,6 +60,7 @@ func main() {
 		err = gd.GetTables(true)
 		if err != nil {
 			fmt.Printf("获取数据库信息失败:[%s]", err.Error())
+			gd.Connect()
 		} else {
 			bufcnt := 0
 			ids := make([]int, count)

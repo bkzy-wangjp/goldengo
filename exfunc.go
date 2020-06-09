@@ -16,6 +16,14 @@ func GbkToUtf8(buffer []byte) string {
 	return strings.Trim(string(cdata), "\u0000")
 }
 
+func UseNewEncoder(src string, oldEncoder string, newEncoder string) string {
+	srcDecoder := mahonia.NewDecoder(oldEncoder)
+	desDecoder := mahonia.NewDecoder(newEncoder)
+	resStr := srcDecoder.ConvertString(src)
+	_, resBytes, _ := desDecoder.Translate([]byte(resStr), true)
+	return string(resBytes)
+}
+
 /*******************************************************************************
 -功能：格式化错误码
 -参数: [ecode] 错误码,为0时无错误
@@ -65,14 +73,102 @@ func splitUnixNanoSec(nanosec int64) (int32, int16) {
 	[string] go 字符串
 - 时间：2020年5月14日
 *******************************************************************************/
-func CChars2String(chars []C.char) string {
+func cChars2String(chars []C.char) string {
 	var bstr []byte
 	for _, c := range chars {
 		if byte(c) > 0 {
 			bstr = append(bstr, byte(c))
 		}
 	}
-	return string(bstr)
+	return UseNewEncoder(string(bstr), "gbk", "utf8")
+}
+
+/*******************************************************************************
+- 功能:Go的string转换为c char切片
+- 输入:
+	[chars] C语言的char字符数组切片
+- 输出:
+	[string] go 字符串
+- 时间：2020年5月14日
+*******************************************************************************/
+func string2Cchars(bstr string) []C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars []C.char
+	for _, c := range gbkstr {
+		chars = append(chars, C.char(c))
+	}
+	return chars
+}
+
+func string2C20chars(bstr string) [20]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [20]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
+}
+func string2C50chars(bstr string) [50]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [50]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
+}
+func string2C80chars(bstr string) [80]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [80]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
+}
+func string2C100chars(bstr string) [100]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [100]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
+}
+func string2C160chars(bstr string) [160]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [160]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
+}
+func string2C256chars(bstr string) [256]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [256]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
+}
+func string2C2036chars(bstr string) [2036]C.char {
+	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	var chars [2036]C.char
+	for i, c := range gbkstr {
+		if i < len(chars) {
+			chars[i] = C.char(c)
+		}
+	}
+	return chars
 }
 
 /*******************************************************************************
@@ -83,8 +179,69 @@ func CChars2String(chars []C.char) string {
 	[bool] go bool
 - 时间：2020年5月15日
 *******************************************************************************/
-func CByte2Bool(cbyte C.uchar) bool {
+func cByte2Bool(cbyte C.uchar) bool {
 	return cbyte > 0
+}
+
+/*******************************************************************************
+- 功能:go的bool转换为c byte
+- 输入:
+	[bool] go语言的bool类型变量
+- 输出:
+	[c.uchar] c语言的uchar类型变量
+- 时间：2020年5月26日
+*******************************************************************************/
+func bool2Cbyte(gobool bool) C.uchar {
+	if gobool {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+/*******************************************************************************
+- 功能:C的 []uchar 转换为go []byte
+- 输入:
+	[cbyte] C语言的[]uchar 类型变量
+- 输出:
+	[[]byte] go []byte
+- 时间：2020年5月26日
+*******************************************************************************/
+func cUchar2bytes(cbytes []C.uchar) []byte {
+	var gbytes []byte
+	for _, uchar := range cbytes {
+		if uchar > 0 {
+			gbytes = append(gbytes, byte(uchar))
+		}
+	}
+	return gbytes
+}
+
+/*******************************************************************************
+- 功能:go的 []byte 转换为c []uchar
+- 输入:
+	[[]byte] go语言的[]byte 类型变量
+- 输出:
+	[[]uchar] c []uchar
+- 时间：2020年5月26日
+*******************************************************************************/
+func bytes2C5uchar(gbytes []byte) [5]C.uchar {
+	var cbytes [5]C.uchar
+	for i, bt := range gbytes {
+		if i < len(cbytes) {
+			cbytes[i] = C.uchar(bt)
+		}
+	}
+	return cbytes
+}
+func bytes2C164uchar(gbytes []byte) [164]C.uchar {
+	var cbytes [164]C.uchar
+	for i, bt := range gbytes {
+		if i < len(cbytes) {
+			cbytes[i] = C.uchar(bt)
+		}
+	}
+	return cbytes
 }
 
 /****************************************************
