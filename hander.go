@@ -194,8 +194,8 @@ func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int,
 			if len(strs) < 2 {
 				return oids, otypes, oclassof, isms, fmt.Errorf("标签名[%s]不合法,标签名应为[tablename.tagname]格式", tagstr)
 			}
-			tag, _ := syscall.BytePtrFromString(tagstr)
-			tags[i] = tag
+			tag := Utf8ToGbk([]byte(tagstr))
+			tags[i] = &tag[0]
 		}
 
 		code, _, _ = gob_find_points.Call(
@@ -825,6 +825,7 @@ func (t *GoldenTable) GetPointIds(handle int32, tablename ...string) ([]int, err
 			}
 		}
 	}
+	tbname = string(Utf8ToGbk([]byte(tbname)))
 
 	_tagmask, _ := syscall.BytePtrFromString("*")
 	_tablemask, _ := syscall.BytePtrFromString(tbname)
@@ -876,6 +877,7 @@ func (t *GoldenTable) GetTablePropertyByName(handle int32) error {
 
 	t.Id = int(table.id)
 	t.Desc = cChars2String(table.desc[:])
+	fmt.Println(t.Desc, table.desc) //============测试==================
 
 	return nil
 }
@@ -1161,9 +1163,10 @@ func (t *GoldenTable) RemoveTableById(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) RemoveTableByName(handle int32) error {
+	tbname := string2C80chars(t.Name)
 	ecode, _, _ := gob_remove_table_by_name.Call(
 		uintptr(handle),
-		uintptr(unsafe.Pointer(&t.Name)),
+		uintptr(unsafe.Pointer(&tbname)),
 	)
 
 	return FormatErrMsg(ecode)
@@ -1212,8 +1215,8 @@ func (t *GoldenTable) UpdateTableNameByOldName(handle int32, newname string) err
 * 备注:
 * 时间:2020年5月27日
 *******************************************************************************/
-func (t *GoldenTable) updateTableDescById(handle int32) error {
-	desc := string2Cchars(t.Desc)
+func (t *GoldenTable) UpdateTableDescById(handle int32) error {
+	desc := string2C100chars(t.Desc)
 	ecode, _, _ := gob_update_table_desc_by_id.Call(
 		uintptr(handle),
 		uintptr(int32(t.Id)),
@@ -1231,9 +1234,9 @@ func (t *GoldenTable) updateTableDescById(handle int32) error {
 * 备注:
 * 时间:2020年5月27日
 *******************************************************************************/
-func (t *GoldenTable) updateTableDescByName(handle int32) error {
-	name := string2Cchars(t.Name)
-	desc := string2Cchars(t.Desc)
+func (t *GoldenTable) UpdateTableDescByName(handle int32) error {
+	name := string2C80chars(t.Name)
+	desc := string2C100chars(t.Desc)
 	ecode, _, _ := gob_update_table_desc_by_name.Call(
 		uintptr(handle),
 		uintptr(unsafe.Pointer(&name)),

@@ -365,7 +365,6 @@ func TestPutArchivedValues(t *testing.T) {
 }
 
 
-
 func TestGetSinglePointPropterty(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
@@ -373,20 +372,26 @@ func TestGetSinglePointPropterty(t *testing.T) {
 		t.Error(err.Error())
 	}
 	defer gd.DisConnect()
-	pot, err := gd.GetSinglePointPropterty(1)
+	pot, err := gd.GetSinglePointPropterty(4370)
 	if err != nil {
 		t.Error(err.Error())
 	} else {
 		t.Logf("变量点属性:%+v", pot)
+		// pot.Base.Desc = pot.Base.Desc + "你好"
+		// err := pot.UpdatePointById(gd.Handle)
+		// if err != nil {
+		// 	t.Error(err.Error())
+		// }
 	}
 }
+*/
 
 func TestFindPoints(t *testing.T) {
 	tests := []struct {
 		tags []string
 	}{
 		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1", "sf8kt.x3_zjs_sfc_ps8kt_4-1_35-4_47-49_run:1", "sf8kt.webinsert_point"}},
-		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1"}},
+		{[]string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1", "sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_sum:1", "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-004_sp:1"}},
 		{[]string{"Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-004_sp:1", "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅡ3_MY1-043_sp:1"}},
 	}
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
@@ -408,7 +413,7 @@ func TestFindPoints(t *testing.T) {
 	}
 }
 
-*/
+/*
 func TestGetTables(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
@@ -430,7 +435,6 @@ func TestGetTables(t *testing.T) {
 	}
 }
 
-/*
 func TestGetPointPropterty(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
@@ -443,16 +447,32 @@ func TestGetPointPropterty(t *testing.T) {
 		t.Error(err.Error())
 	} else {
 		for i, p := range gd.Points {
-			t.Logf("变量点id=%d,变量点属性:%+v,%s", i, p, string(p.Scan.Padding))
+			t.Logf("变量点id=%d,变量描述:%s", i, p.Base.Desc)
 			p.PlatEx.Id = int64(i)
 			p.PlatEx.HHv = 123.456
 			p.PlatEx.Hv = 345.678
 			p.PlatEx.Lv = 123.643
 			p.PlatEx.LLv = 789.123
+			p.Base.Desc = "测试信号"
 			if e := p.UpdatePointById(gd.Handle); e != nil {
 				t.Error(e.Error())
 			}
 		}
+	}
+}
+
+func TestCondeTrans(t *testing.T) {
+	tests := []struct {
+		utf8 string
+	}{
+		{"ABCDEFG"},
+		{"测试信号"},
+		{"MF1_MKⅡ3_M1"},
+	}
+	for _, tt := range tests {
+		gbk := Utf8ToGb2312([]byte(tt.utf8))
+		utf8 := Gb2312ToUtf8(gbk)
+		t.Log(tt.utf8, gbk, string(utf8))
 	}
 }
 
@@ -665,6 +685,37 @@ func TestUpdateTableNameByOldName(t *testing.T) {
 			t.Error(err.Error())
 		} else {
 			t.Logf("修改表%s名称成功,表新名称是:%s", tt.oldname, gdt.Name)
+		}
+	}
+}
+
+
+func TestUpdateTableDescByName(t *testing.T) {
+	tests := []struct {
+		name string
+		desc string
+	}{
+		{"demo1", "测试1"},
+		{"demo2", "测试2"},
+	}
+	gd := CreateRTDB("127.0.0.1", "sa", "golden")
+	err := gd.Connect()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer gd.DisConnect()
+	for i, tt := range tests {
+		t.Logf("=======[%d]======", i)
+		gdt := new(GoldenTable)
+		gdt.Name = tt.name
+		gdt.GetTablePropertyByName(gd.Handle)
+		t.Logf("原始描述:[%s]", gdt.Desc)
+		gdt.Desc = tt.desc
+		err = gdt.updateTableDescByName(gd.Handle)
+		if err != nil {
+			t.Error(err.Error())
+		} else {
+			t.Logf("修改表%s描述成功,表新描述是:%s", tt.name, gdt.Desc)
 		}
 	}
 }

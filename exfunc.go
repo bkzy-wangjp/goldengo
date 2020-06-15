@@ -2,26 +2,55 @@ package goldengo
 
 import (
 	"C"
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"reflect"
-	"strings"
+
 	"unsafe"
 
-	"github.com/axgle/mahonia"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
-func GbkToUtf8(buffer []byte) string {
-	enc := mahonia.NewDecoder("GBK")
-	_, cdata, _ := enc.Translate(buffer, true)
-	return strings.Trim(string(cdata), "\u0000")
+/****************************************************
+功能:字符串转码,将utf8码转换为gbk码
+输入:[s] 原始字符串
+输出:转码后的字符串
+说明:
+时间:2020年6月11日
+编辑:wang_jp
+****************************************************/
+func Utf8ToGbk(s []byte) []byte {
+	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewEncoder())
+	d, e := ioutil.ReadAll(reader)
+	if e != nil {
+		return nil
+	}
+	return d
 }
 
-func UseNewEncoder(src string, oldEncoder string, newEncoder string) string {
-	srcDecoder := mahonia.NewDecoder(oldEncoder)
-	desDecoder := mahonia.NewDecoder(newEncoder)
-	resStr := srcDecoder.ConvertString(src)
-	_, resBytes, _ := desDecoder.Translate([]byte(resStr), true)
-	return string(resBytes)
+/****************************************************
+功能:字符串转码,将bgk码转换为utf8码
+输入:[s] 原始字符串
+输出:转码后的字符串
+说明:
+时间:2020年6月11日
+编辑:wang_jp
+****************************************************/
+func GbkToUtf8(s []byte) []byte {
+	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
+	d, e := ioutil.ReadAll(reader)
+	if e != nil {
+		return nil
+	}
+	var bstr []byte
+	for _, c := range d {
+		if c > 0 {
+			bstr = append(bstr, c)
+		}
+	}
+	return bstr
 }
 
 /*******************************************************************************
@@ -80,7 +109,8 @@ func cChars2String(chars []C.char) string {
 			bstr = append(bstr, byte(c))
 		}
 	}
-	return UseNewEncoder(string(bstr), "gbk", "utf8")
+	resstr := string(GbkToUtf8(bstr))
+	return resstr
 }
 
 /*******************************************************************************
@@ -92,7 +122,7 @@ func cChars2String(chars []C.char) string {
 - 时间：2020年5月14日
 *******************************************************************************/
 func string2Cchars(bstr string) []C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars []C.char
 	for _, c := range gbkstr {
 		chars = append(chars, C.char(c))
@@ -101,7 +131,7 @@ func string2Cchars(bstr string) []C.char {
 }
 
 func string2C20chars(bstr string) [20]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [20]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
@@ -111,7 +141,7 @@ func string2C20chars(bstr string) [20]C.char {
 	return chars
 }
 func string2C50chars(bstr string) [50]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [50]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
@@ -121,7 +151,7 @@ func string2C50chars(bstr string) [50]C.char {
 	return chars
 }
 func string2C80chars(bstr string) [80]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [80]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
@@ -131,7 +161,7 @@ func string2C80chars(bstr string) [80]C.char {
 	return chars
 }
 func string2C100chars(bstr string) [100]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [100]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
@@ -141,7 +171,7 @@ func string2C100chars(bstr string) [100]C.char {
 	return chars
 }
 func string2C160chars(bstr string) [160]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [160]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
@@ -151,7 +181,7 @@ func string2C160chars(bstr string) [160]C.char {
 	return chars
 }
 func string2C256chars(bstr string) [256]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [256]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
@@ -161,7 +191,7 @@ func string2C256chars(bstr string) [256]C.char {
 	return chars
 }
 func string2C2036chars(bstr string) [2036]C.char {
-	gbkstr := UseNewEncoder(string(bstr), "utf8", "gbk")
+	gbkstr := Utf8ToGbk([]byte(bstr))
 	var chars [2036]C.char
 	for i, c := range gbkstr {
 		if i < len(chars) {
