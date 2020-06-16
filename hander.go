@@ -628,7 +628,7 @@ func (s *RTDBService) GetPlotValues(id, interval int, bgtime, endtime int64) ([]
       如果 datatime 标识的数据已经存在，其值将被替换。
     【【【【【【【测试未通过:写入的数据始终为0】】】】】】
 *******************************************************************************/
-func (s *RTDBService) PutSingleValue(id int, datatime int64, value float64, state int64, quality int16) error {
+func (s *RTDBService) putSingleValue(id int, datatime int64, value float64, state int64, quality int16) error {
 	sec, ms := splitUnixNanoSec(datatime)
 	code, _, _ := goh_put_single_value.Call(
 		uintptr(s.Handle),
@@ -877,8 +877,6 @@ func (t *GoldenTable) GetTablePropertyByName(handle int32) error {
 
 	t.Id = int(table.id)
 	t.Desc = cChars2String(table.desc[:])
-	fmt.Println(t.Desc, table.desc) //============测试==================
-
 	return nil
 }
 

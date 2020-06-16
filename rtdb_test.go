@@ -384,7 +384,6 @@ func TestGetSinglePointPropterty(t *testing.T) {
 		// }
 	}
 }
-*/
 
 func TestFindPoints(t *testing.T) {
 	tests := []struct {
@@ -413,7 +412,6 @@ func TestFindPoints(t *testing.T) {
 	}
 }
 
-/*
 func TestGetTables(t *testing.T) {
 	gd := CreateRTDB("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
