@@ -6,7 +6,6 @@ import (
 	//"time"
 )
 
-/*
 func TestGetVersion(t *testing.T) {
 	gd := new(RTDBService)
 	version, _ := gd.GetAPIVersion()
@@ -21,6 +20,7 @@ func TestConnect(t *testing.T) {
 		port int
 	}{
 		{"127.0.0.1", "sa", "golden", 6327},
+		{"zjs-t3.vicp.net", "sa", "golden", 56732},
 	}
 
 	for _, tt := range tests {
@@ -42,6 +42,7 @@ func TestConnect(t *testing.T) {
 	}
 }
 
+/*
 func TestSearch(t *testing.T) {
 	tests := []struct {
 		tagmask    string
