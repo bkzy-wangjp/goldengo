@@ -26,6 +26,13 @@ type SnapData struct { //快照基础数据结构
 	Err  string             //错误描述,无错误时为空
 }
 
+//历史数据结构
+type HisData struct {
+	HisRtsd  []RealTimeSeriesData //历史时序数据
+	Err      error                //错误信息
+	Continue bool                 //快照数据比历史数据的结束点更新
+}
+
 /*******************************************************************************
 - 功能:创建庚顿实时数据库对象
 - 参数:
@@ -329,25 +336,26 @@ func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfulln
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string][]RealTimeSeriesData, map[string]error, map[string]bool, error) {
+func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string]HisData, error) {
 	datas := make(map[string][]RealTimeSeriesData)
 	errs := make(map[string]error, len(tagnames))
 	newdata_afterEnd := make(map[string]bool)
+	hismap := make(map[string]HisData)
 	if len(tagnames) == 0 {
-		return datas, errs, newdata_afterEnd, fmt.Errorf("没有设置有效的变量")
+		return hismap, fmt.Errorf("没有设置有效的变量")
 	}
 	ids, dtypes, _, _, err := g.FindPoints(tagnames...) //根据变量名读取基本信息
 	if err != nil {
-		return datas, errs, newdata_afterEnd, fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
+		return hismap, fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
 	}
 	for i, id := range ids { //校验ID,不能为0
 		if id == 0 {
-			return datas, errs, newdata_afterEnd, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagnames[i])
+			return hismap, fmt.Errorf("没有在数据库中找到匹配变量名[%s]的变量", tagnames[i])
 		}
 	}
 	snaptimes, _, _, _, _, err := g.GetSnapshots(ids) //根据Id读取快照
 	if err != nil {
-		return datas, errs, newdata_afterEnd, fmt.Errorf("读取变量[%s]快照值失败:[%s]", tagnames, err.Error())
+		return hismap, fmt.Errorf("读取变量[%s]快照值失败:[%s]", tagnames, err.Error())
 	}
 	for i, tag := range tagnames {
 		newdata_afterEnd[tag] = snaptimes[i] > endTime/1e6
@@ -427,7 +435,14 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 		}
 		datas[tag] = hisdata
 	}
-	return datas, errs, newdata_afterEnd, nil
+	for tg, his := range datas {
+		var hd HisData
+		hd.Continue = newdata_afterEnd[tg]
+		hd.Err = errs[tg]
+		hd.HisRtsd = his
+		hismap[tg] = hd
+	}
+	return hismap, nil
 }
 
 /*******************************************************************************

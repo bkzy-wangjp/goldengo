@@ -1,11 +1,11 @@
 package goldengo
 
-/*
 import (
 	"testing"
-	//"time"
+	"time"
 )
 
+/*
 func TestUseNewEncoder(t *testing.T) {
 	sour := "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-004_sp:1"
 	res1 := UseNewEncoder(sour, "utf8", "ascii")
@@ -137,7 +137,7 @@ func TestGetHistorySingleByName(t *testing.T) {
 		}
 	}
 }
-
+*/
 func TestGetHistoryDataAlignHeadAndTail(t *testing.T) {
 	tests := []struct {
 		bgtime   int64
@@ -147,7 +147,7 @@ func TestGetHistoryDataAlignHeadAndTail(t *testing.T) {
 	}{
 		{time.Now().Add(-10 * time.Minute).UnixNano(), time.Now().UnixNano(), 60, []string{"sf8kt.x1_zjs_sfc_ps8kt_4-1_100-1_pv:1"}},
 		{time.Now().Add(-10 * time.Minute).UnixNano(), time.Now().UnixNano(), 0, []string{"sf8kt.x3_zjs_sfc_ps8kt_4-1_35-4_47-49_run:1"}},
-		//{time.Now().Add(-10 * time.Minute).UnixNano(), time.Now().UnixNano(), 0, []string{"sf8kt.webinsert_point", "demo.demo1"}},
+		{time.Now().Add(-20 * time.Minute).UnixNano(), time.Now().Add(-10 * time.Minute).UnixNano(), 0, []string{"sf8kt.webinsert_point", "demo1.demo1"}},
 	}
 	gd := CreateGolden("127.0.0.1", "sa", "golden")
 	err := gd.Connect()
@@ -156,14 +156,14 @@ func TestGetHistoryDataAlignHeadAndTail(t *testing.T) {
 	}
 	defer gd.DisConnect()
 	for i, tt := range tests {
-		datas, errs, err := gd.GetHistoryDataAlignHeadAndTail(tt.bgtime, tt.endtime, tt.interver, tt.names...)
+		datas, err := gd.GetHistoryDataAlignHeadAndTail(tt.bgtime, tt.endtime, tt.interver, tt.names...)
 		if err != nil {
 			t.Error(err.Error())
 		} else {
-			t.Logf("第%d行,变量数:%d;E=%s", i, len(datas), errs)
+			t.Logf("第%d行--------", i)
 			for k, dv := range datas {
-				t.Logf("变量名:%s,数据总数:%d,开始时间:%d:%s,结束时间:%d:%s", k, len(dv), tt.bgtime, time.Unix(tt.bgtime/1e9, tt.bgtime%1e9/1e6), tt.endtime, time.Unix(tt.endtime/1e9, tt.endtime%1e9/1e6))
-				for j, v := range dv {
+				t.Logf("变量名:%s,数据总数:%d,开始时间:%d:%s,结束时间:%d:%s", k, len(dv.HisRtsd), tt.bgtime, time.Unix(tt.bgtime/1e9, tt.bgtime%1e9/1e6), tt.endtime, time.Unix(tt.endtime/1e9, tt.endtime%1e9/1e6))
+				for j, v := range dv.HisRtsd {
 					t.Logf("%d:%s:%+v", j, time.Unix(v.Time/1e3, v.Time%1e3*1e6), v)
 				}
 			}
@@ -171,6 +171,7 @@ func TestGetHistoryDataAlignHeadAndTail(t *testing.T) {
 	}
 }
 
+/*
 func TestGetTagListInTables(t *testing.T) {
 	tests := []struct {
 		names []string

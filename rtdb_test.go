@@ -1,11 +1,10 @@
 package goldengo
 
-import (
-	//"math/rand"
-	"testing"
-	//"time"
-)
+//"math/rand"
+//"testing"
+//"time"
 
+/*
 func TestGetVersion(t *testing.T) {
 	gd := new(RTDBService)
 	version, _ := gd.GetAPIVersion()
@@ -42,7 +41,6 @@ func TestConnect(t *testing.T) {
 	}
 }
 
-/*
 func TestSearch(t *testing.T) {
 	tests := []struct {
 		tagmask    string
