@@ -2,16 +2,61 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/bkzy-wangjp/goldengo"
+	"github.com/kardianos/service"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 	"gopkg.in/ini.v1"
 )
 
 func main() {
+	svcConfig := &service.Config{
+		Name:        "GoldenSim",
+		DisplayName: "GoldenSim",
+		Description: "Golden Data Source Simulation",
+	}
+
+	prg := &program{}
+	s, err := service.New(prg, svcConfig)
+	if err != nil {
+		fmt.Println("New Sevice Error:[%s]", err.Error())
+	}
+	if len(os.Args) > 1 {
+		if os.Args[1] == "install" {
+			err := s.Install()
+			if err != nil {
+				fmt.Printf("安装服务时遇到错误:[%s]\n", err.Error())
+			} else {
+				fmt.Println("服务安装成功")
+			}
+			return
+		}
+
+		if os.Args[1] == "remove" {
+			err := s.Uninstall()
+			if err != nil {
+				fmt.Printf("卸载服务时遇到错误:[%s]\n", err.Error())
+			} else {
+				fmt.Println("服务卸载成功")
+			}
+			return
+		}
+	}
+
+	if err = s.Run(); err != nil {
+		fmt.Println("运行启动失败")
+	}
+}
+func mainrun() {
 	fmt.Println("庚顿实时数据库 数据源模拟器 版本[V1.0]")
 	cfg, err := ini.Load("config.ini")
 	if err != nil {
@@ -40,15 +85,17 @@ func main() {
 	}
 	fmt.Printf("数据库地址:[%s:%d]\n用户名:[%s],密码:[%s]\n模拟更新周期:[%d]秒,每批次最多更新数量:[%d]\n",
 		host, port, username, password, period, count)
-	gd := goldengo.CreateGolden(host, username, password, port)
-
-	err = gd.Connect()
+	gdpool := goldengo.NewGoldenPool(host, username, password, port, 50)
+	gd, err := gdpool.GetConnect()
 	if err != nil {
 		fmt.Printf("连接数据库错误:[%s]\n", err.Error())
 	} else {
 		fmt.Printf("连接数据库成功\n")
 	}
-	defer gd.DisConnect()
+	defer func() {
+		gd.DisConnect(gdpool)
+		gdpool.RemovePool()
+	}()
 	v, err := gd.HostTime()
 	if err != nil {
 		fmt.Printf("获取时间时错误:[%s]\n", err.Error())
@@ -60,7 +107,8 @@ func main() {
 		err = gd.GetTables(true)
 		if err != nil {
 			fmt.Printf("获取数据库信息失败:[%s]", err.Error())
-			gd.Connect()
+			gd.DisConnect(gdpool)
+			gd, _ = gdpool.GetConnect()
 		} else {
 			bufcnt := 0
 			ids := make([]int, count)
@@ -113,4 +161,105 @@ func GetSimValue(point goldengo.GoldenBasePoint) (valf float64, vali int64) {
 
 	return valf, vali
 
+}
+
+/****************************************************
+功能:字符串转码,将bgk码转换为utf8码
+输入:[s] 原始字符串
+输出:转码后的字符串
+说明:
+时间:2020年6月11日
+编辑:wang_jp
+****************************************************/
+func GbkToUtf8(s []byte) []byte {
+	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
+	d, e := ioutil.ReadAll(reader)
+	if e != nil {
+		return nil
+	}
+	var bstr []byte
+	for _, c := range d {
+		if c > 0 {
+			bstr = append(bstr, c)
+		}
+	}
+	return bstr
+}
+
+/****************************************************
+功能:判断进程中是否有指定的应用程序
+输入:应用程序名称
+输出:存在输出true，不存在输出false
+说明:
+时间:2020年6月11日
+编辑:wang_jp
+****************************************************/
+func IsExeRuning(strExeName string) bool {
+	cmd := exec.Command("tasklist") //列出所有任务列表
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return false
+	}
+	outstr := string(GbkToUtf8(out.Bytes()))
+	if strings.Contains(strings.ToLower(outstr), strings.ToLower(strExeName)) {
+		return true
+	} else {
+		return false
+	}
+}
+
+/****************************************************
+功能:判断服务是否存在
+输入:[serviceName] 服务的名称
+	[state] 查找的服务的状态,active:运行着的服务;inactive:停止的服务;all:所有的服务
+输出:存在输出true，不存在输出false
+说明:
+时间:2020年6月11日
+编辑:wang_jp
+****************************************************/
+func IsSeviceExist(serviceName string, state string) bool {
+	cmd := new(exec.Cmd)
+	switch state {
+	case "inactive":
+		cmd = exec.Command("sc", "query", "type=service", "state=inactive") //列出所有停止的任务列表
+	case "all":
+		cmd = exec.Command("sc", "query", "type=service", "state=all") //列出所有的任务列表
+	default:
+		cmd = exec.Command("sc", "query", "type=service") //列出所有运行的任务列表
+	}
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return false
+	}
+	outstr := string(GbkToUtf8(out.Bytes()))
+	fmt.Println(outstr)
+	if strings.Contains(strings.ToLower(outstr), strings.ToLower(serviceName)) {
+		return true
+	} else {
+		return false
+	}
+}
+
+type program struct{}
+
+func (p *program) Start(s service.Service) error {
+	go p.run()
+	return nil
+}
+
+func (p *program) run() {
+	mainrun()
+}
+
+func (p *program) Stop(s service.Service) error {
+	return nil
 }

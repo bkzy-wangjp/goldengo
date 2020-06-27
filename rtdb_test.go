@@ -1,8 +1,10 @@
 package goldengo
 
+//import (
 //"math/rand"
-//"testing"
+//	"testing"
 //"time"
+//)
 
 /*
 func TestGetVersion(t *testing.T) {

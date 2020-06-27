@@ -5,12 +5,9 @@ import (
 	"math"
 	"strings"
 	"time"
-)
 
-//庚顿数据库结构
-type Golden struct {
-	RTDBService
-}
+	"github.com/astaxie/beego/logs"
+)
 
 //时间序列数据
 type RealTimeSeriesData struct {
@@ -337,6 +334,11 @@ func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfulln
 编辑:wang_jp
 *******************************************************************************/
 func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string]HisData, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical(err)
+		}
+	}()
 	datas := make(map[string][]RealTimeSeriesData)
 	errs := make(map[string]error, len(tagnames))
 	newdata_afterEnd := make(map[string]bool)
@@ -558,7 +560,7 @@ func (g *Golden) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoi
 	tagidmap := make(map[int]string)
 	for _, fullname := range tagnames { //遍历变量名
 		names := strings.Split(fullname, ".") //拆分为表名和tag名
-		if len(names) == 2 {                  //拆分出来的结果长度负荷要求
+		if len(names) == 2 {                  //拆分出来的结果长度符合要求
 			//搜索标签点
 			ids, err := g.Search(names[1], names[0], nullstring, nullstring, nullstring, nullstring, 2)
 			if err == nil && len(ids) > 0 { //搜索到了结果

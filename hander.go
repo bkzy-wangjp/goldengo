@@ -18,12 +18,19 @@ import (
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"github.com/astaxie/beego/logs"
 )
 
 /*******************************************************************************
 // 获取API版本号
 *******************************************************************************/
 func (s *RTDBService) GetAPIVersion() (string, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var major int32
 	var minor int32
 	var beta int32
@@ -66,6 +73,11 @@ func CreateRTDB(hostname, username, password string, port ...int) *RTDBService {
 - 备注:在调用所有的接口函数之前，必须先调用本函数建立同Golden服务器的连接。
 *******************************************************************************/
 func (s *RTDBService) Connect() error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	host, _ := syscall.BytePtrFromString(s.HostName)
 	p := int32(s.Port) //默认端口号
 	code, _, _ := go_connect.Call(uintptr(unsafe.Pointer(host)), uintptr(p), uintptr(unsafe.Pointer(&s.Handle)))
@@ -84,7 +96,12 @@ func (s *RTDBService) Connect() error {
 - 备注:完成对 GOLDEN 的访问后调用本函数断开连接。
   连接一旦断开，则需要重新连接后才能调用其他的接口函数。
 *******************************************************************************/
-func (s *RTDBService) DisConnect() error {
+func (s *RTDBService) disConnect() error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	code, _, _ := go_disconnect.Call(uintptr(s.Handle))
 	return FormatErrMsg(code)
 }
@@ -97,6 +114,11 @@ func (s *RTDBService) DisConnect() error {
 - 返回:登录正确返回nil，错误返回错误码
 /*******************************************************************************/
 func (s *RTDBService) login(user string, password string) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	usr, _ := syscall.BytePtrFromString(user)
 	pad, _ := syscall.BytePtrFromString(password)
 	code, _, _ := go_login.Call(uintptr(s.Handle), uintptr(unsafe.Pointer(usr)), uintptr(unsafe.Pointer(pad)), uintptr(unsafe.Pointer(&s.Priv)))
@@ -109,6 +131,11 @@ func (s *RTDBService) login(user string, password string) error {
 - 返回:[hosttime]     整型，输出，Golden服务器的当前UTC时间，表示距离1970年1月1日08:00:00的秒数。
 /*******************************************************************************/
 func (s *RTDBService) HostTime() (int64, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var hosttime int32 = 0
 	ecode, _, _ := go_host_time.Call(uintptr(s.Handle), uintptr(unsafe.Pointer(&hosttime)))
 	return int64(hosttime), FormatErrMsg(ecode)
@@ -138,6 +165,11 @@ func (s *RTDBService) HostTime() (int64, error) {
  	多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 *******************************************************************************/
 func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument string, mode int) ([]int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	_tagmask, _ := syscall.BytePtrFromString(tagmask)
 	_tablemask, _ := syscall.BytePtrFromString(tablemask)
 	_source, _ := syscall.BytePtrFromString(source)
@@ -177,6 +209,11 @@ func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument 
 - 备注:
 *******************************************************************************/
 func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int, []int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	count := len(table_dot_tags) //标签点个数(即table_dot_tags、ids、types、classof、use_ms 的长度
 	var isms []int
 	var oids []int
@@ -197,7 +234,7 @@ func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int,
 			tag := Utf8ToGbk([]byte(tagstr))
 			tags[i] = &tag[0]
 		}
-
+		//fmt.Sprintf("查询标签点时的标签列表:[%+v]\n", table_dot_tags) //=============================
 		code, _, _ = gob_find_points.Call(
 			uintptr(s.Handle),
 			uintptr(unsafe.Pointer(&count)),
@@ -234,6 +271,11 @@ func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int,
 - 备注:本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) GetSnapshots(ids []int) ([]int64, []float64, []int64, []int, []error, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = int32(len(ids))
 	var pids []int32
 	for _, id := range ids {
@@ -289,6 +331,11 @@ func (s *RTDBService) GetSnapshots(ids []int) ([]int64, []float64, []int64, []in
  本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) PutSnapshots(ids []int, datatimes []int64, values []float64, states []int64, qualities []int16) ([]error, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = int32(len(ids))
 	if count > 0 {
 		var pids []int32
@@ -334,6 +381,11 @@ func (s *RTDBService) PutSnapshots(ids []int, datatimes []int64, values []float6
 备注:bgtime可以大于endtime,此时前者表示结束时间，后者表示起始时间。
 *******************************************************************************/
 func (s *RTDBService) ArchivedValuesCount(id int, bgtime, endtime int64) (int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = 0
 	sec1, ms1 := splitUnixNanoSec(bgtime)
 	sec2, ms2 := splitUnixNanoSec(endtime)
@@ -368,6 +420,11 @@ func (s *RTDBService) ArchivedValuesCount(id int, bgtime, endtime int64) (int, e
     本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) GetArchivedValues(id int, bgtime int64, endtime int64) ([]int64, []float64, []int64, []int16, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	count, err := s.ArchivedValuesCount(id, bgtime, endtime) //读取历史数据数量
 
 	//整型数组，输入/输出，输入时第一个元素表示起始时间秒数，最后一个元素表示结束时间
@@ -427,6 +484,11 @@ func (s *RTDBService) GetArchivedValues(id int, bgtime int64, endtime int64) ([]
     本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) GetInterpoValues(id, cnt int, bgtime int64, endtime int64) ([]int64, []float64, []int64, []int16, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	count := int32(cnt)
 	//整型数组，输入/输出，输入时第一个元素表示起始时间秒数，最后一个元素表示结束时间
 	//秒数，如果为 0，表示直到数据的最后时间；输出时表示对应的历史数值时间秒数。
@@ -486,6 +548,11 @@ func (s *RTDBService) GetInterpoValues(id, cnt int, bgtime int64, endtime int64)
  备注:本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) GetSingleValue(id, mode int, datetime int64) (int64, float64, int64, int16, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	sec, ms := splitUnixNanoSec(datetime)
 	var values float64
 	var states int64
@@ -525,6 +592,11 @@ func (s *RTDBService) GetSingleValue(id, mode int, datetime int64) (int64, float
   	本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) SummaryEx(id int, bgtime, endtime int64) (int64, int64, float64, float64, float64, float64, float64, int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = 0
 	sec1, ms1 := splitUnixNanoSec(bgtime)
 	sec2, ms2 := splitUnixNanoSec(endtime)
@@ -575,6 +647,11 @@ func (s *RTDBService) SummaryEx(id int, bgtime, endtime int64) (int64, int64, fl
    		本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 *******************************************************************************/
 func (s *RTDBService) GetPlotValues(id, interval int, bgtime, endtime int64) ([]int64, []float64, []int64, []int16, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	if interval == 0 { //不可为0
 		interval = 10
 	}
@@ -629,6 +706,11 @@ func (s *RTDBService) GetPlotValues(id, interval int, bgtime, endtime int64) ([]
     【【【【【【【测试未通过:写入的数据始终为0】】】】】】
 *******************************************************************************/
 func (s *RTDBService) putSingleValue(id int, datatime int64, value float64, state int64, quality int16) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	sec, ms := splitUnixNanoSec(datatime)
 	code, _, _ := goh_put_single_value.Call(
 		uintptr(s.Handle),
@@ -662,6 +744,11 @@ func (s *RTDBService) putSingleValue(id int, datatime int64, value float64, stat
   	如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 *******************************************************************************/
 func (s *RTDBService) PutArchivedValues(ids []int, datatimes []int64, values []float64, states []int64, qualities []int16) ([]error, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = int32(len(ids))
 	var pids []int32
 	for _, id := range ids {
@@ -703,6 +790,11 @@ func (s *RTDBService) PutArchivedValues(ids []int, datatimes []int64, values []f
   count 参数可为空指针，对应的信息将不再返回。
 *******************************************************************************/
 func (s *RTDBService) FlushArchivedValues(id int) (int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = 0
 	ecode, _, _ := goh_flush_archived_values.Call(
 		uintptr(s.Handle),
@@ -722,6 +814,11 @@ func (s *RTDBService) FlushArchivedValues(id int) (int, error) {
 - 备注:选项设置后在下一次调用 api 时才生效。
 *******************************************************************************/
 func (s *RTDBService) SetOption(apiType int, value int) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	go_set_option.Call(uintptr(int32(apiType)), uintptr(int32(value)))
 }
 
@@ -733,6 +830,11 @@ func (s *RTDBService) SetOption(apiType int, value int) {
 * 备注:
 *******************************************************************************/
 func (s *RTDBService) GetTablesCount() (int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = 0
 	code, _, _ := gob_tables_count.Call(
 		uintptr(s.Handle),
@@ -749,6 +851,11 @@ func (s *RTDBService) GetTablesCount() (int, error) {
 - 时间:2020年5月14日
 *******************************************************************************/
 func (s *RTDBService) GetTables(needpointmsg ...bool) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	count, err := s.GetTablesCount()
 	if err != nil {
 		return fmt.Errorf("获取表数量时错误:[%s]", err.Error())
@@ -795,6 +902,11 @@ func (s *RTDBService) GetTables(needpointmsg ...bool) error {
 - 时间:2020年5月14日
 *******************************************************************************/
 func (t *GoldenTable) GetTableSizeById(handle int32) (int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var size int32 = 0
 	ecode, _, _ := gob_get_table_size_by_id.Call(
 		uintptr(handle),
@@ -814,6 +926,11 @@ func (t *GoldenTable) GetTableSizeById(handle int32) (int, error) {
 - 时间:2020年5月14日
 *******************************************************************************/
 func (t *GoldenTable) GetPointIds(handle int32, tablename ...string) ([]int, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var nullstring string
 	tbname := fmt.Sprintf("%s", t.Name)
 	if len(tablename) > 0 {
@@ -865,6 +982,11 @@ func (t *GoldenTable) GetPointIds(handle int32, tablename ...string) ([]int, err
 - 时间:2020年6月1日
 *******************************************************************************/
 func (t *GoldenTable) GetTablePropertyByName(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var table C.GOLDEN_TABLE
 	table.name = string2C80chars(t.Name)
 	code, _, _ := gob_get_table_property_by_name.Call(
@@ -888,6 +1010,11 @@ func (t *GoldenTable) GetTablePropertyByName(handle int32) error {
 - 时间:2020年6月1日
 *******************************************************************************/
 func (t *GoldenTable) GetTablePropertyById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var table C.GOLDEN_TABLE
 	table.id = C.int(t.Id)
 	code, _, _ := gob_get_table_property_by_id.Call(
@@ -912,6 +1039,11 @@ func (t *GoldenTable) GetTablePropertyById(handle int32) error {
 - 时间:2020年5月14日
 *******************************************************************************/
 func (s *RTDBService) GetTablesProperty(tableid int) (GoldenTable, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var table C.GOLDEN_TABLE
 	var gtb GoldenTable
 	table.id = C.int(tableid)
@@ -944,6 +1076,11 @@ func (s *RTDBService) GetTablesProperty(tableid int) (GoldenTable, error) {
 - 时间:2020年5月14日
 *******************************************************************************/
 func (s *RTDBService) GetPointPropterty(ids ...int) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	count := int32(len(ids))
 	if count > 0 {
 		bases := make([]C.GOLDEN_POINT, count)
@@ -992,6 +1129,11 @@ func (s *RTDBService) GetPointPropterty(ids ...int) error {
 - 时间:2020年5月14日
 *******************************************************************************/
 func (s *RTDBService) GetSinglePointPropterty(id int) (GoldenPoint, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = 1
 	bases := make([]C.GOLDEN_POINT, count)
 	scans := make([]C.GOLDEN_SCAN_POINT, count)
@@ -1030,6 +1172,11 @@ func (s *RTDBService) GetSinglePointPropterty(id int) (GoldenPoint, error) {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (p *GoldenPoint) GetPointProptertyById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	var count int32 = 1
 	bases := make([]C.GOLDEN_POINT, count)
 	scans := make([]C.GOLDEN_SCAN_POINT, count)
@@ -1068,6 +1215,11 @@ changedate、changer、createdate、creator 字段由系统维护，其余字段
 * 时间:2020年5月26日
 *******************************************************************************/
 func (p *GoldenPoint) UpdatePointById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	bases := new(C.GOLDEN_POINT)
 	scans := new(C.GOLDEN_SCAN_POINT)
 	calcs := new(C.GOLDEN_CALC_POINT)
@@ -1094,10 +1246,14 @@ func (p *GoldenPoint) UpdatePointById(handle int32) error {
 * 参数:[handle]   数据库访问句柄
 * 输出:[error] 错误信息
 * 备注:需设置除 id, createdate, creator, changedate, changer 字段外的其它字段
-	所有信息中不可含有非ASCII码字符，包括描述信息，这些信息不能正确传递
 * 时间:2020年5月27日
 *******************************************************************************/
 func (p *GoldenPoint) InsertPoint(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	bases := new(C.GOLDEN_POINT)
 	scans := new(C.GOLDEN_SCAN_POINT)
 	calcs := new(C.GOLDEN_CALC_POINT)
@@ -1127,6 +1283,11 @@ func (p *GoldenPoint) InsertPoint(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (p *GoldenPoint) RemovePointById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	ecode, _, _ := gob_remove_point_by_id.Call(
 		uintptr(handle),
 		uintptr(int32(p.Base.Id)),
@@ -1144,6 +1305,11 @@ func (p *GoldenPoint) RemovePointById(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) RemoveTableById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	ecode, _, _ := gob_remove_table_by_id.Call(
 		uintptr(handle),
 		uintptr(int32(t.Id)),
@@ -1161,6 +1327,11 @@ func (t *GoldenTable) RemoveTableById(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) RemoveTableByName(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	tbname := string2C80chars(t.Name)
 	ecode, _, _ := gob_remove_table_by_name.Call(
 		uintptr(handle),
@@ -1179,6 +1350,11 @@ func (t *GoldenTable) RemoveTableByName(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) UpdateTableNameById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	newname := string2C80chars(t.Name)
 	ecode, _, _ := gob_update_table_name.Call(
 		uintptr(handle),
@@ -1214,6 +1390,11 @@ func (t *GoldenTable) UpdateTableNameByOldName(handle int32, newname string) err
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) UpdateTableDescById(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	desc := string2C100chars(t.Desc)
 	ecode, _, _ := gob_update_table_desc_by_id.Call(
 		uintptr(handle),
@@ -1233,6 +1414,11 @@ func (t *GoldenTable) UpdateTableDescById(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) UpdateTableDescByName(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	name := string2C80chars(t.Name)
 	desc := string2C100chars(t.Desc)
 	ecode, _, _ := gob_update_table_desc_by_name.Call(
@@ -1253,6 +1439,11 @@ func (t *GoldenTable) UpdateTableDescByName(handle int32) error {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (t *GoldenTable) AppendTable(handle int32) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	gdt := new(C.GOLDEN_TABLE)
 	gdt.name = string2C80chars(t.Name)
 	gdt.desc = string2C100chars(t.Desc)
@@ -1530,6 +1721,11 @@ func goCalcPoint2CCalcPoint(g GoldenCalcPoint) *C.GOLDEN_CALC_POINT {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (p *GoldenPoint) appendPointWithJson(handle int32, pointjson string) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	json_str, _ := syscall.BytePtrFromString(pointjson)
 	json_str_size := len(pointjson)
 	var id int32
@@ -1558,6 +1754,11 @@ func (p *GoldenPoint) appendPointWithJson(handle int32, pointjson string) error 
 * 备注:
 *******************************************************************************/
 func (s *RTDBService) RemovePointsById(ids ...int) (int, map[int]error, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Critical("%#v", err)
+		}
+	}()
 	errmaps := make(map[int]error)
 	var theids []int32
 	for _, id := range ids {

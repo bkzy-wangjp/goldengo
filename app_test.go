@@ -1,6 +1,7 @@
 package goldengo
 
 import (
+	//"fmt"
 	"testing"
 	"time"
 )
@@ -137,7 +138,7 @@ func TestGetHistorySingleByName(t *testing.T) {
 		}
 	}
 }
-*/
+
 func TestGetHistoryDataAlignHeadAndTail(t *testing.T) {
 	tests := []struct {
 		bgtime   int64
@@ -171,7 +172,6 @@ func TestGetHistoryDataAlignHeadAndTail(t *testing.T) {
 	}
 }
 
-/*
 func TestGetTagListInTables(t *testing.T) {
 	tests := []struct {
 		names []string
@@ -228,3 +228,35 @@ func TestGetTagPointInfoByName(t *testing.T) {
 }
 
 */
+
+func TestGoldenPool(t *testing.T) {
+	pool := NewGoldenPool("127.0.0.1", "sa", "golden", 6327, 50) //建立庚顿连接池
+	defer pool.RemovePool()
+	go func() {
+		for {
+			time.Sleep(100 * time.Millisecond)
+			t.Logf("当前工作者数量:%d,请求数量:%d", len(pool.Worker), pool.RequestCnt)
+		}
+	}()
+	for i := 0; i < 100; i++ {
+		go func(k int) {
+			gd, err := pool.GetConnect()
+			if err != nil {
+				t.Error(err)
+			} else {
+				st, _ := time.Parse("2006-01-02 15:04:05", "2020-06-23 01:00:00")
+				et, _ := time.Parse("2006-01-02 15:04:05", "2020-06-24 01:00:00")
+				hd, err := gd.GetHistoryDataAlignHeadAndTail(st.UnixNano(), et.UnixNano(), 0, "Micbox3-m2mk.x1_asl_asl-xc1_MF2_MKⅠ4_MY2-001_sum:1", "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-002_sum:1")
+				t.Logf("第%d个:%+v,Error:%v", k, hd, err)
+				time.Sleep(time.Duration(k) * 100 * time.Millisecond)
+				gd.DisConnect(pool)
+			}
+		}(i)
+	}
+
+	for {
+		if pool.RequestCnt == 0 && len(pool.Worker) == 0 {
+			break
+		}
+	}
+}
