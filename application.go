@@ -53,6 +53,45 @@ func CreateGolden(hostname, username, password string, port ...int) *Golden {
 	return rtdb
 }
 
+// func (g *Golden) RunFindPoints(tagfullnames ...string) ([]int, []int, []int, []int, error) {
+// 	st := time.Now()
+// 	type points struct {
+// 		Ids   []int
+// 		Types []int
+// 		Class []int
+// 		Isms  []int
+// 		Err   error
+// 	}
+// 	findpoint := func(p chan points, tags ...string) {
+// 		ids, types, classofs, ismss, err := g.FindPoints(tags...)
+// 		var pt points
+// 		pt.Ids = ids
+// 		pt.Types = types
+// 		pt.Class = classofs
+// 		pt.Isms = ismss
+// 		pt.Err = err
+// 		p <- pt
+// 	}
+// 	pts := make(chan points)
+// 	defer close(pts)
+// 	go func(p chan points, tags ...string) {
+// 		pt := make(chan points)
+// 		defer close(pt)
+// 		go findpoint(pt, tags...)
+// 		select {
+// 		case re := <-pt:
+// 			p <- re
+// 		case <-time.After(10 * time.Second):
+// 			var re points
+// 			re.Err = fmt.Errorf("FindPoints(%v) timeout", tags)
+// 			p <- re
+// 		}
+// 	}(pts, tagfullnames...)
+// 	pt := <-pts
+// 	fmt.Printf("耗时:%f秒,%+v\n", time.Since(st).Seconds(), pt) //==========================================================
+// 	return pt.Ids, pt.Types, pt.Class, pt.Isms, pt.Err
+// }
+
 /*******************************************************************************
 - 功能: 通过变量全名获取快照值
 - 参数:

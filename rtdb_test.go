@@ -1,18 +1,18 @@
 package goldengo
 
-//import (
-//"math/rand"
-//	"testing"
-//"time"
-//)
+import (
+	//"math/rand"
+	"testing"
+	//"time"
+)
 
-/*
 func TestGetVersion(t *testing.T) {
 	gd := new(RTDBService)
 	version, _ := gd.GetAPIVersion()
 	t.Logf("Golden API Vsersion:%s", version)
 }
 
+/*
 func TestConnect(t *testing.T) {
 	tests := []struct {
 		host string
@@ -435,28 +435,23 @@ func TestGetTables(t *testing.T) {
 }
 
 func TestGetPointPropterty(t *testing.T) {
-	gd := CreateRTDB("127.0.0.1", "sa", "golden")
-	err := gd.Connect()
+	gd := CreateRTDB("zjs-t3.vicp.net", "sa", "golden", 56732)
+	//gd := CreateRTDB("127.0.0.1", "sa", "golden", 6327)
+	err := gd.connect()
 	if err != nil {
 		t.Error(err.Error())
 	}
-	defer gd.DisConnect()
-	err = gd.GetPointPropterty(1, 2, 3, 4)
+	defer gd.disConnect()
+	err = gd.GetTables(true)
 	if err != nil {
 		t.Error(err.Error())
 	} else {
-		for i, p := range gd.Points {
-			t.Logf("变量点id=%d,变量描述:%s", i, p.Base.Desc)
-			p.PlatEx.Id = int64(i)
-			p.PlatEx.HHv = 123.456
-			p.PlatEx.Hv = 345.678
-			p.PlatEx.Lv = 123.643
-			p.PlatEx.LLv = 789.123
-			p.Base.Desc = "测试信号"
-			if e := p.UpdatePointById(gd.Handle); e != nil {
-				t.Error(e.Error())
-			}
+		for i, tb := range gd.Tables {
+			t.Logf("表=%d,表信息:%+v", i, tb)
 		}
+		//for i, p := range gd.Points {
+		//	t.Logf("变量点id=%d,变量描述:%s", i, p.Base.Desc)
+		//}
 	}
 }
 

@@ -72,7 +72,7 @@ func CreateRTDB(hostname, username, password string, port ...int) *RTDBService {
 	[error]        错误信息
 - 备注:在调用所有的接口函数之前，必须先调用本函数建立同Golden服务器的连接。
 *******************************************************************************/
-func (s *RTDBService) Connect() error {
+func (s *RTDBService) connect() error {
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Critical("%#v", err)
@@ -220,6 +220,7 @@ func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int,
 	var otypes []int
 	var oclassof []int
 	var code uintptr
+	//var lasterr error
 	if count > 0 {
 		tags := make([]*byte, count)
 		ids := make([]int32, count)
@@ -244,7 +245,7 @@ func (s *RTDBService) FindPoints(table_dot_tags ...string) ([]int, []int, []int,
 			uintptr(unsafe.Pointer(&classof[0])),
 			uintptr(unsafe.Pointer(&use_ms[0])),
 		)
-
+		//fmt.Printf("Code:%+v,R2:%+v,LastErr:+%v\n", code, r2, lasterr) //========================
 		for i, ms := range use_ms {
 			isms = append(isms, int(ms))
 			oids = append(oids, int(ids[i]))
@@ -877,19 +878,43 @@ func (s *RTDBService) GetTables(needpointmsg ...bool) error {
 	s.Tables = make(map[int]GoldenTable, count) //重置表
 	s.Points = make(map[int]GoldenPoint)        //重置标签点
 	for _, id := range s.TableIds {
+		tryCnt := 0
+	readtable:
 		tb, err := s.GetTablesProperty(id) //获取标签点表的属性
 		if err != nil {
-			return fmt.Errorf("获取标签点表属性时错误:[%s]", err.Error())
+			//return fmt.Errorf("获取标签点表属性时错误:[%s]", err.Error())
+			tb.Id = id
+			if strings.Contains(err.Error(), "0xFFFF2016") || strings.Contains(err.Error(), "0xFFFF2017") || strings.Contains(err.Error(), "0xFFFF2002") {
+				tryCnt++
+				if tryCnt < 10 {
+					goto readtable
+				} else {
+					tb.Err = fmt.Errorf("获取标签点表属性时通讯错误,并且重试超过规定次数:[%s]", err.Error())
+				}
+			} else {
+				tb.Err = fmt.Errorf("获取标签点表属性时错误:[%s]", err.Error())
+			}
 		}
-		s.Tables[int(id)] = tb
-		if len(needpointmsg) > 0 { //需要标签点信息
+		tryCnt = 0
+		if len(needpointmsg) > 0 && len(tb.PointIds) > 0 { //需要标签点信息
 			if needpointmsg[0] {
+			readpoint:
 				err = s.GetPointPropterty(tb.PointIds...) //获取变量点属性
 				if err != nil {
-					return fmt.Errorf("获取标签点属性时错误:[%s]", err.Error())
+					if strings.Contains(err.Error(), "0xFFFF2016") || strings.Contains(err.Error(), "0xFFFF2017") || strings.Contains(err.Error(), "0xFFFF2002") {
+						tryCnt++
+						if tryCnt < 10 {
+							goto readpoint
+						} else {
+							tb.Err = fmt.Errorf("获取标签点属性时通讯错误,并且重试超过规定次数:[%s]", err.Error())
+						}
+					} else {
+						tb.Err = fmt.Errorf("获取标签点属性时错误:[%s]", err.Error())
+					}
 				}
 			}
 		}
+		s.Tables[int(id)] = tb
 	}
 	return nil
 }

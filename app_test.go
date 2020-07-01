@@ -1,7 +1,7 @@
 package goldengo
 
 import (
-	//"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -230,33 +230,48 @@ func TestGetTagPointInfoByName(t *testing.T) {
 */
 
 func TestGoldenPool(t *testing.T) {
-	pool := NewGoldenPool("127.0.0.1", "sa", "golden", 6327, 50) //建立庚顿连接池
+	pool, err := NewGoldenPool("localhost", "sa", "golden", 6327, 50) //建立庚顿连接池
+	if err != nil {
+		t.Error(err)
+	}
 	defer pool.RemovePool()
-	go func() {
-		for {
-			time.Sleep(100 * time.Millisecond)
-			t.Logf("当前工作者数量:%d,请求数量:%d", len(pool.Worker), pool.RequestCnt)
-		}
-	}()
-	for i := 0; i < 100; i++ {
-		go func(k int) {
-			gd, err := pool.GetConnect()
-			if err != nil {
-				t.Error(err)
-			} else {
-				st, _ := time.Parse("2006-01-02 15:04:05", "2020-06-23 01:00:00")
-				et, _ := time.Parse("2006-01-02 15:04:05", "2020-06-24 01:00:00")
-				hd, err := gd.GetHistoryDataAlignHeadAndTail(st.UnixNano(), et.UnixNano(), 0, "Micbox3-m2mk.x1_asl_asl-xc1_MF2_MKⅠ4_MY2-001_sum:1", "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-002_sum:1")
-				t.Logf("第%d个:%+v,Error:%v", k, hd, err)
-				time.Sleep(time.Duration(k) * 100 * time.Millisecond)
-				gd.DisConnect(pool)
-			}
-		}(i)
-	}
+	//st, _ := time.Parse("2006-01-02 15:04:05", "2020-06-23 01:00:00")
+	//et, _ := time.Parse("2006-01-02 15:04:05", "2020-06-23 09:00:00")
+	var table_dot_tags []string
+	table_dot_tags = append(table_dot_tags, "test.test001")
+	table_dot_tags = append(table_dot_tags, "test.test002")
+	table_dot_tags = append(table_dot_tags, "test.test003")
+	//table_dot_tags = append(table_dot_tags, "Micbox3-m2mk.x1_asl_asl-xc1_MF2_MKⅠ4_MY2-001_sum:1")
+	//table_dot_tags = append(table_dot_tags, "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-002_sum:1")
 
-	for {
-		if pool.RequestCnt == 0 && len(pool.Worker) == 0 {
-			break
+	var wg sync.WaitGroup
+	len1 := 100
+	len2 := 100
+	// go func() {
+	// 	for {
+	// 		fmt.Printf("%s 当前连接数:%d,当前可用句柄数:%d,当前请求数:%d\n",
+	// 			time.Now().Format("2006-01-02 15:04:05.000"), len(pool.Worker), len(pool.Handel), len(pool.Req))
+	// 		time.Sleep(1 * time.Second)
+	// 	}
+	// }()
+	for k := 0; k < len1; k++ {
+		for i := 0; i < len2; i++ {
+			go func(k int) {
+				wg.Add(1)
+				gd, err := pool.GetConnect()
+				if err != nil {
+					t.Error(err)
+				} else {
+					//hd, err := gd.GetHistoryDataAlignHeadAndTail(st.UnixNano(), et.UnixNano(), 0, "Micbox1-2.x1_asl_asl-xc1_MF1_MKⅠ3_MY1-002_sum:1", "Micbox3-m2mk.x1_asl_asl-xc1_MF2_MKⅠ4_MY2-001_sum:1")
+					ids, _, _, _, err := gd.FindPoints(table_dot_tags...)
+					gd.DisConnect(pool)
+					t.Logf("%s 第%d个:%+v,Handel:%d,当前连接数:%d,可用句柄数:%d,当前请求数:%d,Error:%v\n",
+						time.Now().Format("2006-01-02 15:04:05.000"), k, ids, gd.Handle, len(pool.Worker), len(pool.Handel), len(pool.Req), err)
+				}
+				wg.Done()
+			}(k*len2 + i)
 		}
+		wg.Wait()
 	}
+	t.Log("测试结束")
 }

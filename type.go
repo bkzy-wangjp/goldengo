@@ -25,6 +25,7 @@ type GoldenTable struct {
 	Name     string //表名称
 	Desc     string //表描述
 	PointIds []int  //标签点ID列表
+	Err      error  //错误信息
 }
 type GoldenPoint struct {
 	Base   GoldenBasePoint //基本属性
