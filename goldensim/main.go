@@ -9,22 +9,26 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bkzy-wangjp/goldengo"
+	"github.com/bkzy-wangjp/miclog"
 	"github.com/kardianos/service"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gopkg.in/ini.v1"
 )
 
+var Log *miclog.MicLog
+
 func main() {
+	Log = miclog.NewMicLog("log", "SimLog", 50*1024, 30)
 	svcConfig := &service.Config{
 		Name:        "GoldenSim",
 		DisplayName: "GoldenSim",
 		Description: "Golden Data Source Simulation",
 	}
-
 	prg := &program{}
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
@@ -51,13 +55,20 @@ func main() {
 			return
 		}
 	}
-
+	Log.WriteLog("------------程序启动------------", false)
 	if err = s.Run(); err != nil {
-		fmt.Println("运行启动失败")
+		msg := fmt.Sprintf("程序启动失败:[%s]", err.Error())
+		Log.WriteLog(msg, false)
 	}
 }
 func mainrun() {
+	defer func() {
+		if err := recover(); err != nil {
+			Log.WriteLog(fmt.Sprintf("发生错误:[%v]", err), true)
+		}
+	}()
 	fmt.Println("庚顿实时数据库 数据源模拟器 版本[V1.0]")
+	//WriteLog("Msg", "庚顿实时数据库 数据源模拟器 版本[V1.0]", false)
 	cfg, err := ini.Load("config.ini")
 	if err != nil {
 		fmt.Printf("读取配置文件失败: %s\n", err.Error())
@@ -79,18 +90,24 @@ func mainrun() {
 	if err != nil {
 		period = 10
 	}
+	//每批次更新点数
 	count, err := cfg.Section("GoldenSim").Key("point").Int()
 	if err != nil {
 		count = 100
 	}
-	fmt.Printf("数据库地址:[%s:%d]\n用户名:[%s],密码:[%s]\n模拟更新周期:[%d]秒,每批次最多更新数量:[%d]\n",
-		host, port, username, password, period, count)
-	gdpool := goldengo.NewGoldenPool(host, username, password, port, 50)
+	Log.WriteLog(fmt.Sprintf("数据库地址:[%s:%d]\n用户名:[%s],密码:[%s]\n模拟更新周期:[%d]秒,每批次最多更新数量:[%d]\n",
+		host, port, username, password, period, count), true)
+	gdpool, err := goldengo.NewGoldenPool(host, username, password, port, 50)
+	if err != nil {
+		Log.WriteLog(fmt.Sprintf("创建庚顿连接池错误:[%s]", err.Error()), true)
+	} else {
+		Log.WriteLog(fmt.Sprintf("创建庚顿连接池成功"), true)
+	}
 	gd, err := gdpool.GetConnect()
 	if err != nil {
-		fmt.Printf("连接数据库错误:[%s]\n", err.Error())
+		Log.WriteLog(fmt.Sprintf("获取庚顿连接句柄错误:[%s]", err.Error()), true)
 	} else {
-		fmt.Printf("连接数据库成功\n")
+		Log.WriteLog(fmt.Sprintf("获取庚顿连接句柄成功"), true)
 	}
 	defer func() {
 		gd.DisConnect(gdpool)
@@ -98,24 +115,27 @@ func mainrun() {
 	}()
 	v, err := gd.HostTime()
 	if err != nil {
-		fmt.Printf("获取时间时错误:[%s]\n", err.Error())
+		Log.WriteLog(fmt.Sprintf("获取时间时错误:[%s]", err.Error()), true)
 	}
-	fmt.Printf("数据库时间:[%s]\n", time.Unix(v, 0))
-
+	Log.WriteLog(fmt.Sprintf("数据库时间:[%s]", time.Unix(v, 0)), true)
+	var wg sync.WaitGroup
 	for {
 		sttime := time.Now()
 		err = gd.GetTables(true)
 		if err != nil {
-			fmt.Printf("获取数据库信息失败:[%s]", err.Error())
+			Log.WriteLog(fmt.Sprintf("获取数据库信息失败:[%s]", err.Error()), true)
 			gd.DisConnect(gdpool)
-			gd, _ = gdpool.GetConnect()
+			gd, err = gdpool.GetConnect()
+			if err != nil {
+				Log.WriteLog(fmt.Sprintf("重新获取庚顿连接句柄失败:[%s]", err.Error()), true)
+			}
 		} else {
-			bufcnt := 0
-			ids := make([]int, count)
-			valf := make([]float64, count)
-			vali := make([]int64, count)
-			dqus := make([]int16, count)
-			dtimes := make([]int64, count)
+			bufcnt := 0                    //点数计数器
+			ids := make([]int, count)      //id切片
+			valf := make([]float64, count) //浮点数值切片
+			vali := make([]int64, count)   //整数切片
+			dqus := make([]int16, count)   //质量码
+			dtimes := make([]int64, count) //时间
 			for _, point := range gd.Points {
 				ids[bufcnt] = point.Base.Id
 				valf[bufcnt], vali[bufcnt] = GetSimValue(point.Base)
@@ -123,15 +143,26 @@ func mainrun() {
 				dtimes[bufcnt] = time.Now().UnixNano()
 				bufcnt++
 				if bufcnt == count {
-					go gd.PutSnapshots(ids, dtimes, valf, vali, dqus)
+					wg.Add(1)
+					go func(id []int, dtime []int64, vf []float64, vi []int64, qlt []int16) {
+						defer wg.Done()
+						golden := new(goldengo.Golden)
+						err := golden.GetConnect(gdpool)
+						if err == nil {
+							golden.PutSnapshots(id, dtime, vf, vi, qlt)
+							golden.DisConnect(gdpool)
+						}
+					}(ids, dtimes, valf, vali, dqus)
 					bufcnt = 0
 				}
 			}
 			if bufcnt > 0 {
-				go gd.PutSnapshots(ids[:bufcnt], dtimes[:bufcnt], valf[:bufcnt], vali[:bufcnt], dqus[:bufcnt])
+				gd.PutSnapshots(ids[:bufcnt], dtimes[:bufcnt], valf[:bufcnt], vali[:bufcnt], dqus[:bufcnt])
 				bufcnt = 0
 			}
-			fmt.Printf("[%s]:更新标签点总数:[%d],耗时[%f]秒\n", time.Now().Format("2006-01-02 15:04:05"), len(gd.Points), time.Since(sttime).Seconds())
+			wg.Wait()
+			msg := fmt.Sprintf("更新标签点总数:[%d],耗时[%f]秒", len(gd.Points), time.Since(sttime).Seconds())
+			Log.WriteLog(msg, true)
 		}
 		time.Sleep(time.Duration(period) * time.Second)
 	}

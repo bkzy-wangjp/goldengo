@@ -375,7 +375,7 @@ func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfulln
 func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string]HisData, error) {
 	defer func() {
 		if err := recover(); err != nil {
-			logs.Critical(err)
+			logs.Critical("Golden.GetHistoryDataAlignHeadAndTail 中捕获的错误信息:%#v", err)
 		}
 	}()
 	datas := make(map[string][]RealTimeSeriesData)
