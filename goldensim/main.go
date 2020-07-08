@@ -14,7 +14,6 @@ import (
 
 	"github.com/bkzy-wangjp/goldengo"
 	"github.com/bkzy-wangjp/miclog"
-	"github.com/kardianos/service"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gopkg.in/ini.v1"
@@ -23,50 +22,13 @@ import (
 var Log *miclog.MicLog
 
 func main() {
-	Log = miclog.NewMicLog("log", "SimLog", 50*1024, 30)
-	svcConfig := &service.Config{
-		Name:        "GoldenSim",
-		DisplayName: "GoldenSim",
-		Description: "Golden Data Source Simulation",
-	}
-	prg := &program{}
-	s, err := service.New(prg, svcConfig)
-	if err != nil {
-		fmt.Println("New Sevice Error:[%s]", err.Error())
-	}
-	if len(os.Args) > 1 {
-		if os.Args[1] == "install" {
-			err := s.Install()
-			if err != nil {
-				fmt.Printf("安装服务时遇到错误:[%s]\n", err.Error())
-			} else {
-				fmt.Println("服务安装成功")
-			}
-			return
-		}
-
-		if os.Args[1] == "remove" {
-			err := s.Uninstall()
-			if err != nil {
-				fmt.Printf("卸载服务时遇到错误:[%s]\n", err.Error())
-			} else {
-				fmt.Println("服务卸载成功")
-			}
-			return
-		}
-	}
-	Log.WriteLog("------------程序启动------------", false)
-	if err = s.Run(); err != nil {
-		msg := fmt.Sprintf("程序启动失败:[%s]", err.Error())
-		Log.WriteLog(msg, false)
-	}
-}
-func mainrun() {
 	defer func() {
 		if err := recover(); err != nil {
 			Log.WriteLog(fmt.Sprintf("发生错误:[%v]", err), true)
 		}
 	}()
+	Log = new(miclog.MicLog)
+
 	fmt.Println("庚顿实时数据库 数据源模拟器 版本[V1.0]")
 	//WriteLog("Msg", "庚顿实时数据库 数据源模拟器 版本[V1.0]", false)
 	cfg, err := ini.Load("config.ini")
@@ -95,7 +57,7 @@ func mainrun() {
 	if err != nil {
 		count = 100
 	}
-	Log.WriteLog(fmt.Sprintf("数据库地址:[%s:%d]\n用户名:[%s],密码:[%s]\n模拟更新周期:[%d]秒,每批次最多更新数量:[%d]\n",
+	Log.WriteLog(fmt.Sprintf("数据库地址:[%s:%d]\n用户名:[%s],密码:[%s]\n模拟更新周期:[%d]秒,每批次最多更新数量:[%d]",
 		host, port, username, password, period, count), true)
 	gdpool, err := goldengo.NewGoldenPool(host, username, password, port, 50)
 	if err != nil {
@@ -130,42 +92,68 @@ func mainrun() {
 				Log.WriteLog(fmt.Sprintf("重新获取庚顿连接句柄失败:[%s]", err.Error()), true)
 			}
 		} else {
-			bufcnt := 0                    //点数计数器
-			ids := make([]int, count)      //id切片
-			valf := make([]float64, count) //浮点数值切片
-			vali := make([]int64, count)   //整数切片
-			dqus := make([]int16, count)   //质量码
-			dtimes := make([]int64, count) //时间
+			bufcnt := 0                //点数计数器
+			totalcnt := 0              //总点数计
+			pointLen := len(gd.Points) //总点数
+			var ids []int              //id切片
+			var valf []float64         //浮点数值切片
+			var vali []int64           //整数切片
+			var dqus []int16           //质量码
+			var dtimes []int64         //时间
+			//pcntchan := make(chan int, pointLen/count)
 			for _, point := range gd.Points {
-				ids[bufcnt] = point.Base.Id
-				valf[bufcnt], vali[bufcnt] = GetSimValue(point.Base)
-				dqus[bufcnt] = 0
-				dtimes[bufcnt] = time.Now().UnixNano()
+				ids = append(ids, point.Base.Id)
+				fv, iv := GetSimValue(point.Base)
+				valf = append(valf, fv)
+				vali = append(vali, iv)
+				dqus = append(dqus, 0)
+				dtimes = append(dtimes, time.Now().UnixNano())
 				bufcnt++
-				if bufcnt == count {
+				totalcnt++
+				if bufcnt == count || totalcnt == pointLen {
 					wg.Add(1)
 					go func(id []int, dtime []int64, vf []float64, vi []int64, qlt []int16) {
-						defer wg.Done()
+						defer func() {
+							wg.Done()
+							if err := recover(); err != nil {
+								Log.WriteLog(fmt.Sprintf("发生错误:[%v]", err), true)
+							}
+						}()
 						golden := new(goldengo.Golden)
 						err := golden.GetConnect(gdpool)
 						if err == nil {
-							golden.PutSnapshots(id, dtime, vf, vi, qlt)
+							perr, err := golden.PutSnapshots(id, dtime, vf, vi, qlt)
 							golden.DisConnect(gdpool)
+							if err != nil {
+								Log.WriteLog(fmt.Sprintf("写快照遇到错误:[]%s", err.Error()), true)
+							} else {
+								for i, e := range perr {
+									if e != nil {
+										Log.WriteLog(fmt.Sprintf("写标签点[%d]快照遇到错误:[%s]", id[i], e.Error()), true)
+									}
+								}
+							}
+						} else {
+							Log.WriteLog(fmt.Sprintf("获取连接句柄错误:[]%s", err.Error()), true)
 						}
 					}(ids, dtimes, valf, vali, dqus)
 					bufcnt = 0
+					ids = make([]int, 0)      //id切片
+					valf = make([]float64, 0) //浮点数值切片
+					vali = make([]int64, 0)   //整数切片
+					dqus = make([]int16, 0)   //质量码
+					dtimes = make([]int64, 0) //时间
 				}
 			}
-			if bufcnt > 0 {
-				gd.PutSnapshots(ids[:bufcnt], dtimes[:bufcnt], valf[:bufcnt], vali[:bufcnt], dqus[:bufcnt])
-				bufcnt = 0
-			}
 			wg.Wait()
-			msg := fmt.Sprintf("更新标签点总数:[%d],耗时[%f]秒", len(gd.Points), time.Since(sttime).Seconds())
+			msg := fmt.Sprintf("标签点总数:[%d],更新耗时[%f]秒", totalcnt, time.Since(sttime).Seconds())
 			Log.WriteLog(msg, true)
 		}
 		time.Sleep(time.Duration(period) * time.Second)
 	}
+}
+func mainrun() {
+
 }
 
 func GetSimValue(point goldengo.GoldenBasePoint) (valf float64, vali int64) {
@@ -278,19 +266,4 @@ func IsSeviceExist(serviceName string, state string) bool {
 	} else {
 		return false
 	}
-}
-
-type program struct{}
-
-func (p *program) Start(s service.Service) error {
-	go p.run()
-	return nil
-}
-
-func (p *program) run() {
-	mainrun()
-}
-
-func (p *program) Stop(s service.Service) error {
-	return nil
 }

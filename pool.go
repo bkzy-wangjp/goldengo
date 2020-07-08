@@ -2,6 +2,7 @@ package goldengo
 
 import (
 	"strings"
+	"sync"
 )
 
 //庚顿数据库结构
@@ -14,6 +15,7 @@ type GoldenPool struct {
 	Worker   chan int   //工作通道
 	Req      chan int   //请求队列
 	Handel   chan int32 //连接池句柄
+	Tenant   sync.Map   //注册的租户map,key为Handel,value为租户字符串
 	size     int        //工作池大小
 	hostname string     //主机IP
 	username string     //用户名
@@ -54,19 +56,23 @@ func NewGoldenPool(hostname, username, password string, port, cap int) (*GoldenP
 		password: password,              //密码
 		port:     port,                  //端口号
 	}
+	var err error
 	for i := 0; i < cap; i++ { //创建句柄连接池
 		g := new(Golden)
 		g.HostName = hostname
 		g.UserName = username
 		g.Password = password
 		g.Port = port
-		err := g.connect()
-		if err != nil { //如果有错误
-			return nil, err //返回错误信息
+		g.Handle = -1
+		if err != nil {
+			e := g.connect()
+			if e != nil { //如果有错误
+				err = e //记录错误信息
+			}
 		}
 		pool.Handel <- g.Handle //将句柄压入连接池
 	}
-	return pool, nil
+	return pool, err
 }
 
 /*******************************************************************************
@@ -88,15 +94,47 @@ func (p *GoldenPool) RemovePool() {
 }
 
 /*******************************************************************************
-- 功能:请求一个庚顿连接句柄
+- 功能:显示租户信息
 - 参数:无
+- 输出:[Handel,TenantName]结构体组
+- 备注:
+- 时间: 2020年6月27日
+*******************************************************************************/
+func (p *GoldenPool) ShowTenant() interface{} {
+	type tenant struct {
+		Handel     int
+		TenantName string
+	}
+	var tenants []tenant
+	p.Tenant.Range(func(k, v interface{}) bool {
+		t := tenant{
+			Handel:     k.(int),
+			TenantName: v.(string),
+		}
+		tenants = append(tenants, t)
+		return true
+	})
+	return tenants
+}
+
+/*******************************************************************************
+- 功能:请求一个庚顿连接句柄
+- 参数:[tenant string]可选的租户名称
 - 输出:
 	[*Golden] 庚顿数据库连接指针
 	[error] 错误信息
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func (p *GoldenPool) GetConnect() (*Golden, error) {
+func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
+	var tenantstr string //租户名称
+	for i, str := range tenant {
+		if i != 0 {
+			tenantstr += "."
+		}
+		tenantstr += str
+	}
+
 	p.Req <- 1
 	g := new(Golden)
 	select { //有资源就分配资源，没有资源就阻塞等待
@@ -115,9 +153,14 @@ func (p *GoldenPool) GetConnect() (*Golden, error) {
 		if stringContains(err.Error(), "0xFFFF2005", "0xFFFFA746", "0xFFFFA745") {
 			err = g.connect() //重新创建句柄
 			if err != nil {   //创建连接失败
+				g.Handle = 0x0FFFFFFF
 				g.DisConnect(p) //释放资源
 			}
 		}
+	}
+
+	if g.Handle != 0 {
+		p.Tenant.Store(g.Handle, tenantstr) //记录租户名称
 	}
 	return g, err
 }
@@ -130,8 +173,16 @@ func (p *GoldenPool) GetConnect() (*Golden, error) {
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func (g *Golden) GetConnect(p *GoldenPool) error {
-	if g.Handle <= 0 {
+func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
+	if g.Handle <= 0 { //是否已经获取了句柄
+		var tenantstr string //租户名称
+		for i, str := range tenant {
+			if i != 0 {
+				tenantstr += "."
+			}
+			tenantstr += str
+		}
+
 		p.Req <- 1
 		select { //有资源就分配资源，没有资源就阻塞等待
 		case p.Worker <- 1: //有资源可分配
@@ -149,12 +200,16 @@ func (g *Golden) GetConnect(p *GoldenPool) error {
 			if stringContains(err.Error(), "0xFFFF2005", "0xFFFFA746", "0xFFFFA745") {
 				err = g.connect() //重新创建句柄
 				if err != nil {   //创建连接失败
+					g.Handle = 0x0FFFFFFF
 					g.DisConnect(p) //释放资源
 				}
 			}
 		}
+		if g.Handle != 0 {
+			p.Tenant.Store(g.Handle, tenantstr) //记录租户名称
+		}
 		return err
-	} else {
+	} else { //已经获取了句柄
 		return nil
 	}
 }
@@ -168,9 +223,10 @@ func (g *Golden) GetConnect(p *GoldenPool) error {
 *******************************************************************************/
 func (g *Golden) DisConnect(p *GoldenPool) {
 	if g.Handle > 0 { //有资源的时候才准许释放
-		<-p.Worker           //释放连接资源
-		p.Handel <- g.Handle //归还句柄到连接池
-		g.Handle = 0         //复位
+		<-p.Worker                //释放连接资源
+		p.Handel <- g.Handle      //归还句柄到连接池
+		p.Tenant.Delete(g.Handle) //删除租户记录
+		g.Handle = 0              //复位
 	}
 }
 

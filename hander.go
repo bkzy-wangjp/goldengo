@@ -328,6 +328,7 @@ func (s *RTDBService) GetSnapshots(ids []int) ([]int64, []float64, []int64, []in
      [qualities] 短整型数组，输入，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY
 -返回:
      [errors]    错误信息数组，输出，写入实时数据的返回值列表，参考golden_error.h
+    [error]    错误信息
 -备注:用户须保证 ids、datatimes、ms、values、states、qualities的长度一致。
  本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 *******************************************************************************/
