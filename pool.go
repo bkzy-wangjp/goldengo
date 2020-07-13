@@ -102,13 +102,13 @@ func (p *GoldenPool) RemovePool() {
 *******************************************************************************/
 func (p *GoldenPool) ShowTenant() interface{} {
 	type tenant struct {
-		Handel     int
+		Handel     int32
 		TenantName string
 	}
 	var tenants []tenant
 	p.Tenant.Range(func(k, v interface{}) bool {
 		t := tenant{
-			Handel:     k.(int),
+			Handel:     k.(int32),
 			TenantName: v.(string),
 		}
 		tenants = append(tenants, t)
