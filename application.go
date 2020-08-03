@@ -468,6 +468,10 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
 			} else {
+				errs[tag] = fmt.Errorf("变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
+					tag, time.Unix(bginTime/1e9, bginTime%1e9),
+					time.Unix(endTime/1e9, endTime%1e9),
+					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
 				bghd.Time = bginTime / 1e6
 				hisdata = append(hisdata, bghd)
 				bghd.Time = endTime / 1e6
