@@ -1272,6 +1272,7 @@ func (p *GoldenPoint) UpdatePointById(handle int32) error {
 * 参数:[handle]   数据库访问句柄
 * 输出:[error] 错误信息
 * 备注:需设置除 id, createdate, creator, changedate, changer 字段外的其它字段
+	返回id字段
 * 时间:2020年5月27日
 *******************************************************************************/
 func (p *GoldenPoint) InsertPoint(handle int32) error {
@@ -1296,7 +1297,7 @@ func (p *GoldenPoint) InsertPoint(handle int32) error {
 		uintptr(unsafe.Pointer(scans)),
 		uintptr(unsafe.Pointer(calcs)),
 	)
-
+	p.Base.Id = int(bases.id)
 	return FormatErrMsg(ecode)
 }
 

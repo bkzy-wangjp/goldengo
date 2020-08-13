@@ -410,7 +410,7 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 				errs[tag] = fmt.Errorf("读取变量[%s]从[%s]到[%s]的历史存档数据时错误:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9), time.Unix(endTime/1e9, endTime%1e9), err.Error())
 			}
 		} else {
-			count := (endTime - bginTime) / int64(Interval) / 1e9
+			count := (endTime-bginTime)/int64(Interval)/1e9 + 1
 			histime, hisreal, hisint, hisq, err = g.GetInterpoValues(ids[i], int(count), bginTime, endTime) //根据Id读取历史数据
 			if err != nil {
 				errs[tag] = fmt.Errorf("读取变量[%s]从[%s]到[%s]的等间隔插值历史存档数据时错误:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9), time.Unix(endTime/1e9, endTime%1e9), err.Error())
