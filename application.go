@@ -709,3 +709,87 @@ func (g *Golden) SetSnapShotBatch(tagnames []string, datavalues []float64, quali
 
 	return err
 }
+
+/*******************************************************************************
+功能:根据标签点名写历史值
+输入:[tagname]   标签点全名
+	[datavalue] 数值
+	[qualitie]  质量码
+	[datatime]  可选的时间,UnixNano。省略时采用当前服务器时间
+输出:
+说明:
+时间:2020年8月14日
+编辑:wang_jp
+*******************************************************************************/
+func (g *Golden) SetArchivedValue(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
+	timestemp := time.Now().UnixNano()
+	if len(datatime) > 0 {
+		timestemp = datatime[0]
+	}
+	var dt []int64
+	var df []float64
+	var dv []int64
+	var dq []int16
+
+	ids, dtypes, _, _, err := g.FindPoints(tagname) //根据变量名读取基本信息
+	if err != nil || len(ids) == 0 {
+		return fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagname, err.Error())
+	}
+	if ids[0] == 0 {
+		return fmt.Errorf("变量名[%s]在实时数据库中不存在", tagname)
+	}
+	dt = append(dt, timestemp)
+	dq = append(dq, int16(qualitie))
+	if dtypes[0] < 9 {
+		dv = append(dv, int64(math.Ceil(datavalue)))
+		df = append(df, 0)
+	} else {
+		dv = append(dv, 0)
+		df = append(df, datavalue)
+	}
+	_, err = g.PutArchivedValues(ids, dt, df, dv, dq)
+
+	return err
+}
+
+/*******************************************************************************
+功能:根据标签点名批量写历史值
+输入:[tagnames]   标签点全名.同一个标签点标识可以出现多次，但它们的时间戳必需是递增的
+	[datavalues] 数值
+	[qualities]  质量码
+	[datatimes]  时间,UnixNano
+输出:
+说明:
+时间:2020年8月14日
+编辑:wang_jp
+*******************************************************************************/
+func (g *Golden) SetArchivedValuesBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
+	var df []float64
+	var dv []int64
+	var dq []int16
+	cnt := len(tagnames)
+	if cnt != len(datavalues) || cnt != len(qualities) || cnt != len(datatimes) {
+		return fmt.Errorf("输入参数数组的长度不一致")
+	}
+	ids, dtypes, _, _, err := g.FindPoints(tagnames...) //根据变量名读取基本信息
+	if err != nil || len(ids) == 0 {
+		return fmt.Errorf("通过变量全名[%s]获取变量在实时数据库中的ID失败:[%s]", tagnames, err.Error())
+	}
+	for i, tag := range tagnames {
+		if ids[i] == 0 {
+			return fmt.Errorf("变量名[%s]在实时数据库中不存在", tag)
+		}
+		dq = append(dq, int16(qualities[i]))
+		if dtypes[i] < 9 {
+			dv = append(dv, int64(math.Ceil(datavalues[i])))
+			df = append(df, 0)
+		} else {
+			dv = append(dv, 0)
+			df = append(df, datavalues[i])
+		}
+	}
+
+	_, err = g.PutArchivedValues(ids, datatimes, df, dv, dq)
+
+	return err
+}
