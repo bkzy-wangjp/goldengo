@@ -420,10 +420,10 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 		var bghd RealTimeSeriesData                                                //开始时间点之前的一个历史数据
 		bgtime, bgreal, bgint, bgq, bgerr := g.GetSingleValue(ids[i], 1, bginTime) //根据Id读取历史时刻单值数据
 		if bgerr != nil {
-			bgerr = fmt.Errorf("读取变量[%s]的时间点[%s]数据失败:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6), bgerr.Error())
+			bgerr = fmt.Errorf("No data was found.读取变量[%s]的时间点[%s]数据失败:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6), bgerr.Error())
 		} else {
 			if bgtime == 0 {
-				bgerr = fmt.Errorf("变量[%s]在时间点[%s](含)之前没有数据", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6))
+				bgerr = fmt.Errorf("No data was found.变量[%s]在时间点[%s](含)之前没有数据", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6))
 			} else {
 				bghd.Quality = int(bgq)
 				bghd.Time = bgtime
@@ -463,12 +463,12 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 			}
 		} else { //没有读到历史数据
 			if bgerr != nil {
-				errs[tag] = fmt.Errorf("%s;变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
+				errs[tag] = fmt.Errorf("%s;No data was found.变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
 					bgerr.Error(), tag, time.Unix(bginTime/1e9, bginTime%1e9),
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
 			} else {
-				errs[tag] = fmt.Errorf("变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
+				errs[tag] = fmt.Errorf("No data was found.变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
 					tag, time.Unix(bginTime/1e9, bginTime%1e9),
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
