@@ -264,6 +264,48 @@ func (g *Golden) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string)
 }
 
 /*******************************************************************************
+- 功能: 通过变量全名获取历史数据统计信息
+- 参数:
+	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
+    [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
+	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+- 输出:
+	[max_time]    整形,最大值对应的Unix毫秒时间.如果为 0,则表示无最大值
+	[min_time]    整形,最小值对应的Unix毫秒时间.如果为 0,则表示无最小值
+    [max_value]   双精度浮点型，输出，表示统计时间段内的最大数值。
+    [min_value]   双精度浮点型，输出，表示统计时间段内的最小数值。
+    [total_value] 双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+    [calc_avg]    双精度浮点型，输出，表示统计时间段内的算术平均值。
+    [power_avg]   双精度浮点型，输出，表示统计时间段内的加权平均值。
+    [count]       整型，输出，表示统计时间段内用于计算统计值的数据个数。
+    [error]       错误信息
+- 备注:如果输出的最大值或最小值的时间戳秒值为 0，则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+  	本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
+- 时间: 2020年12月04日
+*******************************************************************************/
+func (g *Golden) GetHistorySummaryByName(bgtime, endtime int64, tagfullname string) (int64,
+	int64, float64, float64, float64, float64, float64, int, error) {
+	ids, _, _, _, err := g.FindPoints(tagfullname) //根据变量名读取基本信息
+	if err != nil {
+		return 0, 0, 0., 0., 0., 0., 0., 0, err
+	}
+	tagid := 0
+	for _, id := range ids { //校验ID,不能为0
+		if id == 0 {
+			return 0, 0, 0., 0., 0., 0., 0., 0, fmt.Errorf("Variable name [%s] does not exist.[没有在数据库中找到匹配变量名[%s]的变量]",
+				tagfullname, tagfullname)
+		}
+		tagid = id
+	}
+	if tagid > 0 {
+		return g.SummaryEx(tagid, bgtime, endtime)
+	} else {
+		return 0, 0, 0., 0., 0., 0., 0., 0, fmt.Errorf("Variable name [%s] does not exist.[没有在数据库中找到匹配变量名[%s]的变量]",
+			tagfullname, tagfullname)
+	}
+}
+
+/*******************************************************************************
 - 功能: 通过变量全名获取单个时间点的历史数据值
 - 参数:
 	[mode]   整型，输入，取值 GOLDEN_NEXT(0)、GOLDEN_PREVIOUS(1)、GOLDEN_EXACT(2)、
