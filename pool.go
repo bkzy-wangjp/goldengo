@@ -150,7 +150,11 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
 	_, err := g.HostTime() //测试句柄
 	if err != nil {
 		//无效的句柄\远程主机强迫关闭了一个现有的连接\你的主机中的软件中止了一个已建立的连接
-		if stringContains(err.Error(), "0xFFFF2005", "0xFFFFA746", "0xFFFFA745") {
+		if stringContains(err.Error(), "0xFFFF2005",
+			"0xFFFFA746",
+			"0xFFFFA745",
+			"0xFFFFA736",
+			"0xFFFFC010") {
 			err = g.connect() //重新创建句柄
 			if err != nil {   //创建连接失败
 				g.Handle = 0x0FFFFFFF
