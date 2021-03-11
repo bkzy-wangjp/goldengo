@@ -1,10 +1,8 @@
 package goldengo
 
-import (
-	"sync"
-	"testing"
-	"time"
-)
+//"sync"
+//"testing"
+//"time"
 
 /*
 func TestUseNewEncoder(t *testing.T) {
@@ -228,7 +226,7 @@ func TestGetTagPointInfoByName(t *testing.T) {
 }
 
 */
-
+/*
 func TestGoldenPool(t *testing.T) {
 	pool, err := NewGoldenPool("localhost", "sa", "golden", 6327, 50) //建立庚顿连接池
 	if err != nil {
@@ -275,3 +273,4 @@ func TestGoldenPool(t *testing.T) {
 	}
 	t.Log("测试结束")
 }
+*/

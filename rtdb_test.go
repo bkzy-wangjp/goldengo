@@ -12,7 +12,6 @@ func TestGetVersion(t *testing.T) {
 	t.Logf("Golden API Vsersion:%s", version)
 }
 
-/*
 func TestConnect(t *testing.T) {
 	tests := []struct {
 		host string
@@ -21,7 +20,6 @@ func TestConnect(t *testing.T) {
 		port int
 	}{
 		{"127.0.0.1", "sa", "golden", 6327},
-		{"zjs-t3.vicp.net", "sa", "golden", 56732},
 	}
 
 	for _, tt := range tests {
@@ -30,19 +28,20 @@ func TestConnect(t *testing.T) {
 		gd.UserName = tt.user
 		gd.Password = tt.pswd
 		gd.Port = tt.port
-		err := gd.Connect()
+		err := gd.connect()
 		if err != nil {
 			t.Error(err.Error())
 		} else {
 			t.Logf("Handle:%d,Priv:%d", gd.Handle, gd.Priv)
 			stm, _ := gd.HostTime()
 			t.Logf("服务器时间:%d", stm)
-			t.Log(gd.DisConnect())
+			t.Log(gd.disConnect())
 		}
 
 	}
 }
 
+/*
 func TestSearch(t *testing.T) {
 	tests := []struct {
 		tagmask    string

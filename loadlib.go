@@ -2,6 +2,10 @@ package goldengo
 
 import (
 	"C"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -55,8 +59,8 @@ var (
 )
 
 func init() {
-
-	dll := syscall.MustLoadDLL("static/dll/goldenapi64.dll")
+	dllpath := filepath.Join(GetProjectAbsPath(), "static", "dll", "goldenapi64.dll")
+	dll := syscall.MustLoadDLL(dllpath)
 
 	go_get_api_version = dll.MustFindProc("go_get_api_version")
 	go_set_option = dll.MustFindProc("go_set_option")
@@ -99,4 +103,22 @@ func init() {
 	gob_update_table_desc_by_id = dll.MustFindProc("gob_update_table_desc_by_id")     //根据表 ID 更新表描述
 	gob_update_table_desc_by_name = dll.MustFindProc("gob_update_table_desc_by_name") //根据表名称更新表描述
 	gob_append_table = dll.MustFindProc("gob_append_table")                           //插入新表
+}
+
+//获取程序的绝对路径
+func GetProjectAbsPath() (projectAbsPath string) {
+	programPath, _ := filepath.Abs(os.Args[0])
+	if strings.Contains(programPath, "Temp") { //含有temp路径为测试路径
+		projectAbsPath = ""
+		return projectAbsPath
+	}
+	var dirs []string
+	if strings.Contains(programPath, "/") {
+		dirs = strings.Split(programPath, "/")
+	} else if strings.Contains(programPath, "\\") {
+		dirs = strings.Split(programPath, "\\")
+	}
+	projectAbsPath = path.Join(dirs[:len(dirs)-1]...)
+
+	return projectAbsPath
 }
