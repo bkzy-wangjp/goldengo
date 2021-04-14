@@ -11,7 +11,7 @@ GOLDEN_POINT setPointType(GOLDEN_POINT p,int tp){
 	return p;
 }
 */
-import "C" //注意:import "C"与上面的C代码之间不能有空行
+import "C" //注意:import C与上面的C代码之间不能有空行
 import (
 	"fmt"
 	"strconv"
@@ -191,7 +191,7 @@ func (s *RTDBService) Search(tagmask, tablemask, source, unit, desc, instrument 
 		uintptr(unsafe.Pointer(&count)),
 	)
 	oids := make([]int, count)
-	for i, _ := range oids {
+	for i := range oids {
 		oids[i] = int(ids[i])
 	}
 	return oids, FormatErrMsg(code)
@@ -306,7 +306,7 @@ func (s *RTDBService) GetSnapshots(ids []int) ([]int64, []float64, []int64, []in
 			uintptr(unsafe.Pointer(&errs[0])),
 		)
 
-		for i, _ := range ids {
+		for i := range ids {
 			datetimes[i] = int64(secondes[i])*1000 + int64(ms[i])
 			errors[i] = FormatErrMsg(uintptr(errs[i]))
 			qual = append(qual, int(qualities[i]))
@@ -958,11 +958,11 @@ func (t *GoldenTable) GetPointIds(handle int32, tablename ...string) ([]int, err
 		}
 	}()
 	var nullstring string
-	tbname := fmt.Sprintf("%s", t.Name)
+	tbname := t.Name
 	if len(tablename) > 0 {
 		tbname = ""
 		for i, name := range tablename {
-			tbname += fmt.Sprintf("%s", name)
+			tbname += name
 			if i+1 < len(tablename) {
 				tbname += " "
 			}
@@ -1246,15 +1246,15 @@ func (p *GoldenPoint) UpdatePointById(handle int32) error {
 			logs.Critical("%#v", err)
 		}
 	}()
-	bases := new(C.GOLDEN_POINT)
-	scans := new(C.GOLDEN_SCAN_POINT)
-	calcs := new(C.GOLDEN_CALC_POINT)
+	//bases := new(C.GOLDEN_POINT)
+	//scans := new(C.GOLDEN_SCAN_POINT)
+	//calcs := new(C.GOLDEN_CALC_POINT)
 
 	pscan := p.Scan
 	pscan.Padding = p.PlatEx.SetToScanPadding()
-	bases = goBasePoint2CBasePoint(p.Base)
-	scans = goScanPoint2CScanPoint(pscan)
-	calcs = goCalcPoint2CCalcPoint(p.Calc)
+	bases := goBasePoint2CBasePoint(p.Base)
+	scans := goScanPoint2CScanPoint(pscan)
+	calcs := goCalcPoint2CCalcPoint(p.Calc)
 
 	ecode, _, _ := gob_update_point_property.Call(
 		uintptr(handle),
@@ -1281,15 +1281,15 @@ func (p *GoldenPoint) InsertPoint(handle int32) error {
 			logs.Critical("%#v", err)
 		}
 	}()
-	bases := new(C.GOLDEN_POINT)
-	scans := new(C.GOLDEN_SCAN_POINT)
-	calcs := new(C.GOLDEN_CALC_POINT)
+	//bases := new(C.GOLDEN_POINT)
+	//scans := new(C.GOLDEN_SCAN_POINT)
+	//calcs := new(C.GOLDEN_CALC_POINT)
 
 	pscan := p.Scan
 	pscan.Padding = p.PlatEx.SetToScanPadding()
-	bases = goBasePoint2CBasePoint(p.Base)
-	scans = goScanPoint2CScanPoint(pscan)
-	calcs = goCalcPoint2CCalcPoint(p.Calc)
+	bases := goBasePoint2CBasePoint(p.Base)
+	scans := goScanPoint2CScanPoint(pscan)
+	calcs := goCalcPoint2CCalcPoint(p.Calc)
 
 	ecode, _, _ := gob_insert_point.Call(
 		uintptr(handle),
@@ -1506,33 +1506,28 @@ func (p *PointMicPlatEx) GetFromScanPadding(padding []byte) {
 					if e == nil {
 						p.Id = id
 					}
-					break
 				case 1:
 					fv, e := strconv.ParseFloat(pe, 64)
 					if e == nil {
 						p.LLv = fv
 					}
-					break
 				case 2:
 					fv, e := strconv.ParseFloat(pe, 64)
 					if e == nil {
 						p.Lv = fv
 					}
-					break
 				case 3:
 					fv, e := strconv.ParseFloat(pe, 64)
 					if e == nil {
 						p.Hv = fv
 					}
-					break
 				case 4:
 					fv, e := strconv.ParseFloat(pe, 64)
 					if e == nil {
 						p.HHv = fv
 					}
-					break
 				default:
-					break
+
 				}
 			}
 		}
@@ -1548,8 +1543,7 @@ func (p *PointMicPlatEx) GetFromScanPadding(padding []byte) {
 * 时间:2020年5月27日
 *******************************************************************************/
 func (p *PointMicPlatEx) SetToScanPadding() []byte {
-	var padding string
-	padding = fmt.Sprintf("%d,%f,%f,%f,%f", p.Id, p.LLv, p.Lv, p.Hv, p.HHv)
+	padding := fmt.Sprintf("%d,%f,%f,%f,%f", p.Id, p.LLv, p.Lv, p.Hv, p.HHv)
 	return []byte(padding)
 }
 

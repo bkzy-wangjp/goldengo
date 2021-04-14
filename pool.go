@@ -3,6 +3,7 @@ package goldengo
 import (
 	"strings"
 	"sync"
+	"time"
 )
 
 //庚顿数据库结构
@@ -12,15 +13,18 @@ type Golden struct {
 
 //庚顿工作池结构
 type GoldenPool struct {
-	Worker   chan int   //工作通道
-	Req      chan int   //请求队列
-	Handel   chan int32 //连接池句柄
-	Tenant   sync.Map   //注册的租户map,key为Handel,value为租户字符串
-	size     int        //工作池大小
-	hostname string     //主机IP
-	username string     //用户名
-	password string     //密码
-	port     int        //端口号
+	Worker     chan int   //工作通道
+	Req        chan int   //请求队列
+	Handel     chan int32 //连接池句柄
+	Tenant     sync.Map   //注册的租户map,key为Handel,value为租户字符串
+	BegineTime sync.Map   //注册的租户map,key为Handel,value为起租时间
+	size       int        //工作池大小
+	maxSec     int64      //最长租借时间(秒)
+	hostname   string     //主机IP
+	username   string     //用户名
+	password   string     //密码
+	port       int        //端口号
+	Version    string     //版本号
 }
 
 /*******************************************************************************
@@ -31,12 +35,13 @@ type GoldenPool struct {
 	[password]	密码,字符串,缺省值 golden
 	[port]      端口号,整型,缺省值 6327
 	[cap]       连接池大小,最小1,最大50
+	[max_sec]   最大租借时间(秒)
 - 输出:[*GoldenPool] 连接池指针
 	[error] 创建句柄连接池时候的错误信息
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func NewGoldenPool(hostname, username, password string, port, cap int) (*GoldenPool, error) {
+func NewGoldenPool(hostname, username, password string, port, cap int, max_sec ...int64) (*GoldenPool, error) {
 	if port == 0 {
 		port = 6327
 	}
@@ -46,15 +51,25 @@ func NewGoldenPool(hostname, username, password string, port, cap int) (*GoldenP
 	if cap > 50 {
 		cap = 50
 	}
+	var maxSec int64 = 3600
+	if len(max_sec) > 0 {
+		maxSec = max_sec[0]
+		if maxSec < 60 {
+			maxSec = 60
+		}
+	}
+
 	pool := &GoldenPool{
 		Worker:   make(chan int, cap),   //工作者通道
 		Req:      make(chan int, 10000), //请求通道数量
 		Handel:   make(chan int32, cap), //池句柄池
 		size:     cap,                   //工作池大小
+		maxSec:   maxSec,                //超时时间
 		hostname: hostname,              //Golden数据库主机名
 		username: username,              //用户名
 		password: password,              //密码
 		port:     port,                  //端口号
+		Version:  "v1.0.2101",
 	}
 	var err error
 	for i := 0; i < cap; i++ { //创建句柄连接池
@@ -72,7 +87,33 @@ func NewGoldenPool(hostname, username, password string, port, cap int) (*GoldenP
 		}
 		pool.Handel <- g.Handle //将句柄压入连接池
 	}
+	go pool.Run()
 	return pool, err
+}
+
+/*******************************************************************************
+- 功能:连接池运行
+- 参数:无
+- 输出:无
+- 备注: 自动释放超时的链接
+- 时间: 2021年4月14日
+*******************************************************************************/
+func (p *GoldenPool) Run() {
+	for {
+		if len(p.Worker) > 0 {
+			p.BegineTime.Range(func(k, v interface{}) bool {
+				bgt, _ := v.(time.Time)
+				//超时资源自动释放
+				if bgt.Before(time.Now().Add(-1 * time.Second * time.Duration(p.maxSec))) {
+					g := new(Golden)
+					g.Handle, _ = k.(int32)
+					g.DisConnect(p)
+				}
+				return true
+			})
+		}
+		time.Sleep(time.Second * 60)
+	}
 }
 
 /*******************************************************************************
@@ -103,12 +144,15 @@ func (p *GoldenPool) RemovePool() {
 func (p *GoldenPool) ShowTenant() interface{} {
 	type tenant struct {
 		Handel     int32
+		BegineTime time.Time
 		TenantName string
 	}
 	var tenants []tenant
 	p.Tenant.Range(func(k, v interface{}) bool {
+		bgt, _ := p.BegineTime.Load(k)
 		t := tenant{
 			Handel:     k.(int32),
+			BegineTime: bgt.(time.Time),
 			TenantName: v.(string),
 		}
 		tenants = append(tenants, t)
@@ -164,7 +208,8 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
 	}
 
 	if g.Handle != 0 {
-		p.Tenant.Store(g.Handle, tenantstr) //记录租户名称
+		p.Tenant.Store(g.Handle, tenantstr)      //记录租户名称
+		p.BegineTime.Store(g.Handle, time.Now()) //记录起租时间
 	}
 	return g, err
 }
@@ -210,7 +255,8 @@ func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
 			}
 		}
 		if g.Handle != 0 {
-			p.Tenant.Store(g.Handle, tenantstr) //记录租户名称
+			p.Tenant.Store(g.Handle, tenantstr)      //记录租户名称
+			p.BegineTime.Store(g.Handle, time.Now()) //记录起租时间
 		}
 		return err
 	} else { //已经获取了句柄
@@ -227,10 +273,11 @@ func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
 *******************************************************************************/
 func (g *Golden) DisConnect(p *GoldenPool) {
 	if g.Handle > 0 { //有资源的时候才准许释放
-		<-p.Worker                //释放连接资源
-		p.Handel <- g.Handle      //归还句柄到连接池
-		p.Tenant.Delete(g.Handle) //删除租户记录
-		g.Handle = 0              //复位
+		<-p.Worker                    //释放连接资源
+		p.Handel <- g.Handle          //归还句柄到连接池
+		p.Tenant.Delete(g.Handle)     //删除租户记录
+		p.BegineTime.Delete(g.Handle) //删除起租时间
+		g.Handle = 0                  //复位
 	}
 }
 

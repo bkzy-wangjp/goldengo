@@ -292,7 +292,7 @@ func (g *Golden) GetHistorySummaryByName(bgtime, endtime int64, tagfullname stri
 	tagid := 0
 	for _, id := range ids { //校验ID,不能为0
 		if id == 0 {
-			return 0, 0, 0., 0., 0., 0., 0., 0, fmt.Errorf("Variable name [%s] does not exist.[没有在数据库中找到匹配变量名[%s]的变量]",
+			return 0, 0, 0., 0., 0., 0., 0., 0, fmt.Errorf("variable name [%s] does not exist.[没有在数据库中找到匹配变量名[%s]的变量]",
 				tagfullname, tagfullname)
 		}
 		tagid = id
@@ -300,7 +300,7 @@ func (g *Golden) GetHistorySummaryByName(bgtime, endtime int64, tagfullname stri
 	if tagid > 0 {
 		return g.SummaryEx(tagid, bgtime, endtime)
 	} else {
-		return 0, 0, 0., 0., 0., 0., 0., 0, fmt.Errorf("Variable name [%s] does not exist.[没有在数据库中找到匹配变量名[%s]的变量]",
+		return 0, 0, 0., 0., 0., 0., 0., 0, fmt.Errorf("variable name [%s] does not exist.[没有在数据库中找到匹配变量名[%s]的变量]",
 			tagfullname, tagfullname)
 	}
 }
@@ -462,10 +462,10 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 		var bghd RealTimeSeriesData                                                //开始时间点之前的一个历史数据
 		bgtime, bgreal, bgint, bgq, bgerr := g.GetSingleValue(ids[i], 1, bginTime) //根据Id读取历史时刻单值数据
 		if bgerr != nil {
-			bgerr = fmt.Errorf("No data was found.读取变量[%s]的时间点[%s]数据失败:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6), bgerr.Error())
+			bgerr = fmt.Errorf("no data was found.读取变量[%s]的时间点[%s]数据失败:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6), bgerr.Error())
 		} else {
 			if bgtime == 0 {
-				bgerr = fmt.Errorf("No data was found.变量[%s]在时间点[%s](含)之前没有数据", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6))
+				bgerr = fmt.Errorf("no data was found.变量[%s]在时间点[%s](含)之前没有数据", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6))
 			} else {
 				bghd.Quality = int(bgq)
 				bghd.Time = bgtime
@@ -510,7 +510,7 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
 			} else {
-				errs[tag] = fmt.Errorf("No data was found.变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
+				errs[tag] = fmt.Errorf("no data was found.变量[%s]没有读取到从[%s]到[%s]的历史数据,最后的快照数据时间是[%s]",
 					tag, time.Unix(bginTime/1e9, bginTime%1e9),
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
