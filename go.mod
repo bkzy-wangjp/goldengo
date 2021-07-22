@@ -1,4 +1,4 @@
-module github.com/bkzy-wangjp/goldengo
+module github.com/bkzy/goldengo
 
 go 1.15
 
