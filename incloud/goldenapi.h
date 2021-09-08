@@ -4,17 +4,17 @@
 #include "golden.h"
 #include "golden_error.h" 
 
-/************************************ API ���ýӿ� ************************************/
+/************************************ API 配置接口 ************************************/
 
 /**
-* ������go_get_api_version 
-* ���ܣ�ȡ�� goldenapi ��İ汾��
-* ������
-*      [major]        ���ͣ���������汾��
-*      [minor]        ���ͣ�������ΰ汾��
-*      [beta]         ���ͣ�����������汾��
-* ��ע��������صİ汾���� golden.h �ж���Ĳ�ƥ��(GOLDEN_API_XXX_VERSION)����Ӧ�ó���ʹ���˴���Ŀ⡣
-*      Ӧ���һ��������Ϣ���˳�����������ڵ���ĳЩ api ʱ�ᵼ�±�����
+* 命名：go_get_api_version 
+* 功能：取得 goldenapi 库的版本号
+* 参数：
+*      [major]        整型，输出，主版本号
+*      [minor]        整型，输出，次版本号
+*      [beta]         整型，输出，发布版本号
+* 备注：如果返回的版本号与 golden.h 中定义的不匹配(GOLDEN_API_XXX_VERSION)，则应用程序使用了错误的库。
+*      应输出一条错误信息并退出，否则可能在调用某些 api 时会导致崩溃。
 */
 GOLDENAPI
 golden_error 
@@ -26,12 +26,12 @@ go_get_api_version(
                    );
 
 /**
-* ������go_set_option 
-* ���ܣ����� api ��Ϊ����
-* ������
-*      [type]        ���ͣ����룬ѡ����𣬲μ�ö�� GOLDEN_API_OPTION
-*      [value]       ���ͣ����룬ѡ��ֵ��
-* ��ע��ѡ�����ú�����һ�ε��� api ʱ����Ч��
+* 命名：go_set_option 
+* 功能：配置 api 行为参数
+* 参数：
+*      [type]        整型，输入，选项类别，参见枚举 GOLDEN_API_OPTION
+*      [value]       整型，输入，选项值。
+* 备注：选项设置后在下一次调用 api 时才生效。
 */
 GOLDENAPI
 golden_error 
@@ -68,7 +68,7 @@ GOLDENAPI
   golden_int32 timeout=-1
   );
 
-/************************************ �������ӿ� ************************************/
+/************************************ 网络服务接口 ************************************/
 
 GOLDENAPI
   golden_error 
@@ -96,13 +96,13 @@ GOLDENAPI
   );
 
 /**
-* ������go_connect
-* ���ܣ�����ͬ GOLDEN ���ݿ����������
-* ������
-*      [hostname]     �ַ��������룬GOLDEN ����ƽ̨�������������ַ�������
-*      [port]         ���ͣ����룬ȱʡֵ 6327�����Ӷ˿�
-*      [handle]       ���ͣ���������Ӿ��
-* ��ע���ڵ������еĽӿں���֮ǰ�������ȵ��ñ���������ͬGolden�����������ӡ�
+* 命名：go_connect
+* 功能：建立同 GOLDEN 数据库的网络连接
+* 参数：
+*      [hostname]     字符串，输入，GOLDEN 数据平台服务器的网络地址或机器名
+*      [port]         整型，输入，缺省值 6327，连接端口
+*      [handle]       整型，输出，连接句柄
+* 备注：在调用所有的接口函数之前，必须先调用本函数建立同Golden服务器的连接。
 */
 GOLDENAPI
 golden_error 
@@ -114,11 +114,11 @@ go_connect(
            );
 
 /**
-* ������go_connection_count
-* ���ܣ����� GOLDEN ��������ǰ���Ӹ���
-* ������
-*      [handle]   ���Ӿ��
-*      [count]    ���ͣ���������ص�ǰ�������Ӹ���
+* 命名：go_connection_count
+* 功能：返回 GOLDEN 服务器当前连接个数
+* 参数：
+*      [handle]   连接句柄
+*      [count]    整型，输出，返回当前主机连接个数
 */
 GOLDENAPI
 golden_error 
@@ -128,14 +128,14 @@ go_connection_count(
                     golden_int32 *count
                     );
 /**
-* ������go_get_connections
-* ���ܣ��г� GOLDEN ���������������Ӿ��
-* ������
-*      [handle]    ���Ӿ��
-*      [sockets]   �������飬������������ӵ��׽��־��
-*      [count]     ���ͣ�����/����������ʾsockets�ĳ��ȣ������ʾ���ص����Ӹ���
-* ��ע���û��뱣֤����� sockets �Ŀռ��� count ���
-*      �������� count С������� count����ֻ���ز�������
+* 命名：go_get_connections
+* 功能：列出 GOLDEN 服务器的所有连接句柄
+* 参数：
+*      [handle]    连接句柄
+*      [sockets]   整型数组，输出，所有连接的套接字句柄
+*      [count]     整型，输入/输出，输入表示sockets的长度，输出表示返回的连接个数
+* 备注：用户须保证分配给 sockets 的空间与 count 相符
+*      如果输入的 count 小于输出的 count，则只返回部分连接
 */
 GOLDENAPI
 golden_error 
@@ -146,11 +146,11 @@ go_get_connections(
                    golden_int32 *count
                    );
 /**
-* ������go_get_own_connection
-* ���ܣ���ȡ��ǰ���ӵ�socket���
-* ������
-*      [handle]    ���Ӿ��
-*      [socket]   ���ͣ��������ǰ���ӵ��׽��־��
+* 命名：go_get_own_connection
+* 功能：获取当前连接的socket句柄
+* 参数：
+*      [handle]    连接句柄
+*      [socket]   整型，输出，当前连接的套接字句柄
 */
 GOLDENAPI
 golden_error
@@ -160,12 +160,12 @@ go_get_own_connection(
                 golden_int32* socket
                 );
 /**
-* ������go_get_connection_info
-* ���ܣ����� GOLDEN ������ָ�����ӵ���Ϣ
-* ������
-*      [handle]  ���Ӿ��
-*      [socket]  ���ͣ����룬ָ��������
-*      [info]    GOLDEN_HOST_CONNECT_INFO �ṹ�����룬��������ص���Ϣ
+* 命名：go_get_connection_info
+* 功能：返回 GOLDEN 服务器指定连接的信息
+* 参数：
+*      [handle]  连接句柄
+*      [socket]  整型，输入，指定的连接
+*      [info]    GOLDEN_HOST_CONNECT_INFO 结构，输入，与连接相关的信息
 */
 GOLDENAPI
 golden_error 
@@ -177,12 +177,12 @@ go_get_connection_info(
                        );
 
 /**
-* ������go_disconnect
-* ���ܣ��Ͽ�ͬ GOLDEN ����ƽ̨������
-* ������
-*      [handle]   ���Ӿ��
-* ��ע����ɶ� GOLDEN �ķ��ʺ���ñ������Ͽ����ӡ�
-*      ����һ���Ͽ�������Ҫ�������Ӻ���ܵ��������Ľӿں�����
+* 命名：go_disconnect
+* 功能：断开同 GOLDEN 数据平台的连接
+* 参数：
+*      [handle]   连接句柄
+* 备注：完成对 GOLDEN 的访问后调用本函数断开连接。
+*      连接一旦断开，则需要重新连接后才能调用其他的接口函数。
 */
 GOLDENAPI
 golden_error 
@@ -192,13 +192,13 @@ go_disconnect(
               );
 
 /**
-* ������go_login
-* ���ܣ�����Ч�ʻ���¼
-* ������
-*      [handle]    ���Ӿ��
-*      [user]      �ַ��������룬��¼�ʻ�
-*      [password]  �ַ��������룬�ʻ�����
-*      [priv]      ���ͣ�GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA ֮һ��������ʻ�Ȩ��
+* 命名：go_login
+* 功能：以有效帐户登录
+* 参数：
+*      [handle]    连接句柄
+*      [user]      字符串，输入，登录帐户
+*      [password]  字符串，输入，帐户口令
+*      [priv]      整型，GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA 之一，输出，帐户权限
 */
 GOLDENAPI
 golden_error 
@@ -211,12 +211,12 @@ go_login(
          );
 
 /**
-* ������go_get_linked_ostype
-* ���ܣ���ȡ���Ӿ�������ӵķ���������ϵͳ����
-* ������
-*      [handle]           ���Ӿ��
-*      [Golden_OS_Type]   ����ϵͳ����
-* ��ע������δ�����κη�����������GOLDEN_OS_INVALID(��ǰ֧�ֲ���ϵͳ���ͣ�windows��linux)��
+* 命名：go_get_linked_ostype
+* 功能：获取连接句柄所连接的服务器操作系统类型
+* 参数：
+*      [handle]           连接句柄
+*      [Golden_OS_Type]   操作系统类型
+* 备注：如句柄未链接任何服务器，返回GOLDEN_OS_INVALID(当前支持操作系统类型：windows、linux)。
 */
 GOLDENAPI
 golden_error
@@ -227,13 +227,13 @@ go_get_linked_ostype(
                     );
 
 /**
-* ������go_change_password
-* ���ܣ��޸��û��ʻ�����
-* ������
-*      [handle]        ���Ӿ��
-*      [user]          �ַ��������룬�����ʻ�
-*      [password]      �ַ��������룬�ʻ��¿���
-* ��ע��ֻ��ϵͳ����Ա�����޸������û������롣
+* 命名：go_change_password
+* 功能：修改用户帐户口令
+* 参数：
+*      [handle]        连接句柄
+*      [user]          字符串，输入，已有帐户
+*      [password]      字符串，输入，帐户新口令
+* 备注：只有系统管理员可以修改其它用户的密码。
 */
 GOLDENAPI
 golden_error 
@@ -245,12 +245,12 @@ go_change_password(
                    );
 
 /**
-* ������go_change_my_password
-* ���ܣ��û��޸��Լ��ʻ�����
-* ������
-*      [handle]        ���Ӿ��
-*      [old_pwd]       �ַ��������룬�ʻ�ԭ����
-*      [new_pwd]       �ַ��������룬�ʻ��¿���
+* 命名：go_change_my_password
+* 功能：用户修改自己帐户口令
+* 参数：
+*      [handle]        连接句柄
+*      [old_pwd]       字符串，输入，帐户原口令
+*      [new_pwd]       字符串，输入，帐户新口令
 */
 GOLDENAPI
 golden_error 
@@ -263,12 +263,12 @@ go_change_my_password(
 
 
 /**
-* ������go_get_priv
-* ���ܣ���ȡ����Ȩ��
-* ������
-*      [handle]    ���Ӿ��
-*      [priv]      ���ͣ�GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA ֮һ��������ʻ�Ȩ��
-* ��ע�������δ��½���ڷ��������������У���ӦȨ��Ϊ-1����ʾû���κ�Ȩ�ޡ�
+* 命名：go_get_priv
+* 功能：获取连接权限
+* 参数：
+*      [handle]    连接句柄
+*      [priv]      整型，GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA 之一，输出，帐户权限
+* 备注：如果还未登陆或不在服务器信任连接中，对应权限为-1，表示没有任何权限。
 */
 GOLDENAPI
 golden_error 
@@ -280,13 +280,13 @@ go_get_priv(
 
 
 /**
-* ������go_change_priv
-* ���ܣ��޸��û��ʻ�Ȩ��
-* ������
-*      [handle]    ���Ӿ��
-*      [user]      �ַ��������룬�����ʻ�
-*      [priv]      ���ͣ�GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA ֮һ�����룬�ʻ�Ȩ��
-* ��ע��ֻ�й���Ա���޸�Ȩ��
+* 命名：go_change_priv
+* 功能：修改用户帐户权限
+* 参数：
+*      [handle]    连接句柄
+*      [user]      字符串，输入，已有帐户
+*      [priv]      整型，GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA 之一，输入，帐户权限
+* 备注：只有管理员有修改权限
 */
 GOLDENAPI
 golden_error 
@@ -298,14 +298,14 @@ go_change_priv(
                );
 
 /**
-* ������go_add_user
-* ���ܣ������û��ʻ�
-* ������
-*      [handle]    ���Ӿ��
-*      [user]      �ַ��������룬�ʻ�
-*      [password]  �ַ��������룬�ʻ���ʼ����
-*      [priv]      ���ͣ�GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA ֮һ�����룬�ʻ�Ȩ��
-* ��ע��ֻ�й���Ա�������û�Ȩ��
+* 命名：go_add_user
+* 功能：添加用户帐户
+* 参数：
+*      [handle]    连接句柄
+*      [user]      字符串，输入，帐户
+*      [password]  字符串，输入，帐户初始口令
+*      [priv]      整型，GOLDEN_RO, GOLDEN_DW, GOLDEN_TA, GOLDEN_SA 之一，输入，帐户权限
+* 备注：只有管理员有添加用户权限
 */
 GOLDENAPI
 golden_error 
@@ -318,12 +318,12 @@ go_add_user(
             );
 
 /**
-* ������go_remove_user
-* ���ܣ�ɾ���û��ʻ�
-* ������
-*      [handle]    ���Ӿ��
-*      [user]      �ַ��������룬�ʻ���
-* ��ע��ֻ�й���Ա��ɾ���û�Ȩ��
+* 命名：go_remove_user
+* 功能：删除用户帐户
+* 参数：
+*      [handle]    连接句柄
+*      [user]      字符串，输入，帐户名
+* 备注：只有管理员有删除用户权限
 */
 GOLDENAPI
 golden_error 
@@ -334,13 +334,13 @@ go_remove_user(
                );
 
 /**
-* ������go_lock_user
-* ���ܣ����û�����û�
-* ������
-*      [handle]    ���Ӿ��
-*      [user]      �ַ��������룬�ʻ���
-*      [lock]      ���������룬�Ƿ����
-* ��ע��ֻ�й���Ա�����ý���Ȩ��
+* 命名：go_lock_user
+* 功能：启用或禁用用户
+* 参数：
+*      [handle]    连接句柄
+*      [user]      字符串，输入，帐户名
+*      [lock]      布尔，输入，是否禁用
+* 备注：只有管理员有启用禁用权限
 */
 GOLDENAPI
 golden_error
@@ -353,15 +353,15 @@ bool lock
 
 
 /**
-* ������go_get_users
-* ���ܣ���������û�
-* ������
-*      [handle]    ���Ӿ��
-*      [count]     ���ͣ�����/���������ʱ��ʾ users��privs �ĳ��ȣ����û�������
-*                  ���ʱ��ʾ�ɹ����ص��û���Ϣ������
-*      [info]      �ṹ������ָ�룬������û���Ϣ
-* ��ע���û��뱣֤����� info �Ŀռ��� count �����
-*       �������� count С���ܵ��û�������ֻ���ز����û���Ϣ��
+* 命名：go_get_users
+* 功能：获得所有用户
+* 参数：
+*      [handle]    连接句柄
+*      [count]     整型，输入/输出，输入时表示 users、privs 的长度，即用户个数；
+*                  输出时表示成功返回的用户信息个数。
+*      [info]      结构体数组指针，输出，用户信息
+* 备注：用户须保证分配给 info 的空间与 count 相符，
+*       如果输入的 count 小于总的用户数，则只返回部分用户信息。
 */
 GOLDENAPI
 golden_error 
@@ -374,18 +374,18 @@ go_get_users(
 
 
 /**
-* ������go_add_blacklist
-* ���ܣ��������Ӻ�������
-* ������
-*      [handle]    ���Ӿ��
-*      [addr]      �ַ��������룬��ֹ���Ӷε�ַ��
-*      [mask]      �ַ��������룬��ֹ���Ӷ��������롣
-*      [desc]      �ַ��������룬��ֹ���Ӷε�˵�������� 511 �ַ������ضϡ�
-* ��ע��addr �� mask �����������γ�һ��������
-*      ���Ը�������Χ�ڵ����Ӷ�������ֹ�������������ȼ������������ӣ�
-*      ��������Ӽ�λ�ں������У�Ҳλ�����������У��������ȱ���ֹ��
-*      ��Ч��������������� 1 λ�� 0 ��࣬���磺"255.255.254.0"��
-*      ��ȫ��Ϊ 1 ʱ����ʾ��������ֻ�� addr һ����ַ��������ȫ��Ϊ 0��
+* 命名：go_add_blacklist
+* 功能：添加连接黑名单项
+* 参数：
+*      [handle]    连接句柄
+*      [addr]      字符串，输入，阻止连接段地址。
+*      [mask]      字符串，输入，阻止连接段子网掩码。
+*      [desc]      字符串，输入，阻止连接段的说明，超过 511 字符将被截断。
+* 备注：addr 和 mask 进行与运算形成一个子网，
+*      来自该子网范围内的连接都将被阻止，黑名单的优先级高于信任连接，
+*      如果有连接既位于黑名单中，也位于信任连接中，则它将先被阻止。
+*      有效的子网掩码的所有 1 位于 0 左侧，例如："255.255.254.0"。
+*      当全部为 1 时，表示该子网中只有 addr 一个地址；但不能全部为 0。
 */
 GOLDENAPI
 golden_error 
@@ -399,15 +399,15 @@ go_add_blacklist(
 
 
 /**
-* ������go_update_blacklist
-* ���ܣ������������Ӻ�������
-* ������
-*      [handle]    ���Ӿ��
-*      [addr]      �ַ��������룬ԭ��ֹ���Ӷε�ַ��
-*      [mask]      �ַ��������룬ԭ��ֹ���Ӷ��������롣
-*      [addr_new]  �ַ��������룬�µ���ֹ���Ӷε�ַ��
-*      [mask_new]  �ַ��������룬�µ���ֹ���Ӷ��������롣
-*      [desc]      �ַ��������룬�µ���ֹ���Ӷε�˵�������� 511 �ַ������ضϡ�
+* 命名：go_update_blacklist
+* 功能：更新连接连接黑名单项
+* 参数：
+*      [handle]    连接句柄
+*      [addr]      字符串，输入，原阻止连接段地址。
+*      [mask]      字符串，输入，原阻止连接段子网掩码。
+*      [addr_new]  字符串，输入，新的阻止连接段地址。
+*      [mask_new]  字符串，输入，新的阻止连接段子网掩码。
+*      [desc]      字符串，输入，新的阻止连接段的说明，超过 511 字符将被截断。
 */
 GOLDENAPI
 golden_error 
@@ -422,13 +422,13 @@ go_update_blacklist(
                     );
 
 /**
-* ������go_remove_blacklist
-* ���ܣ�ɾ�����Ӻ�������
-* ������
-*      [handle]    ���Ӿ��
-*      [addr]      �ַ��������룬��ֹ���Ӷε�ַ��
-*      [mask]      �ַ��������룬��ֹ���Ӷ��������롣
-* ��ע��ֻ�� addr �� mask ��ȫ��ͬ����Ϊͬһ����ֹ���ӶΡ�
+* 命名：go_remove_blacklist
+* 功能：删除连接黑名单项
+* 参数：
+*      [handle]    连接句柄
+*      [addr]      字符串，输入，阻止连接段地址。
+*      [mask]      字符串，输入，阻止连接段子网掩码。
+* 备注：只有 addr 与 mask 完全相同才视为同一个阻止连接段。
 */
 GOLDENAPI
 golden_error 
@@ -440,18 +440,18 @@ go_remove_blacklist(
                     );
 
 /**
-* ������go_get_blacklist
-* ���ܣ�������Ӻ�����
-* ������
-*      [handle]    ���Ӿ��
-*      [addrs]     �ַ���ָ�����飬�������ֹ���Ӷε�ַ�б�
-*      [masks]     �ַ���ָ�����飬�������ֹ���Ӷ����������б�
-*      [descs]     �ַ���ָ�����飬�������ֹ���Ӷε�˵����
-*      [count]     ���ͣ�����/������û�����
-* ��ע���û��뱣֤����� addrs, masks, descs �Ŀռ��� count �����
-*      �������� count С������� count����ֻ���ز�����ֹ���ӶΣ�
-*      addrs, masks ��ÿ���ַ���ָ����ָ�������ߴ粻��С�� 32 �ֽڣ�
-*      descs ��ÿ���ַ���ָ����ָ�������ߴ粻��С�� 512 �ֽڡ�
+* 命名：go_get_blacklist
+* 功能：获得连接黑名单
+* 参数：
+*      [handle]    连接句柄
+*      [addrs]     字符串指针数组，输出，阻止连接段地址列表
+*      [masks]     字符串指针数组，输出，阻止连接段子网掩码列表
+*      [descs]     字符串指针数组，输出，阻止连接段的说明。
+*      [count]     整型，输入/输出，用户个数
+* 备注：用户须保证分配给 addrs, masks, descs 的空间与 count 相符，
+*      如果输入的 count 小于输出的 count，则只返回部分阻止连接段，
+*      addrs, masks 中每个字符串指针所指缓冲区尺寸不得小于 32 字节，
+*      descs 中每个字符串指针所指缓冲区尺寸不得小于 512 字节。
 */
 GOLDENAPI
 golden_error 
@@ -466,22 +466,22 @@ go_get_blacklist(
 
 
 /**
-* ������go_add_authorization
-* ���ܣ������������Ӷ�
-* ������
-*      [handle]    ���Ӿ��
-*      [addr]      �ַ��������룬�������Ӷε�ַ��
-*      [mask]      �ַ��������룬�������Ӷ��������롣
-*      [priv]      ���������룬�������Ӷ�ӵ�е��û�Ȩ�ޡ�
-*      [desc]      �ַ��������룬�������Ӷε�˵�������� 511 �ַ������ضϡ�
-* ��ע��addr �� mask �����������γ�һ��������
-*        ���Ը�������Χ�ڵ����Ӷ�����Ϊ�����εģ�
-*        ���Բ��õ�¼ (go_login)����ֱ�ӵ��� API�� 
-*        ����ӵ�е�Ȩ���� priv ��ָ����
-*        ��Ч��������������� 1 λ�� 0 ��࣬
-*        ���磺"255.255.254.0"����ȫ��Ϊ 1 ʱ��
-*        ��ʾ��������ֻ�� addr һ����ַ��
-*        ������ȫ��Ϊ 0��
+* 命名：go_add_authorization
+* 功能：添加信任连接段
+* 参数：
+*      [handle]    连接句柄
+*      [addr]      字符串，输入，信任连接段地址。
+*      [mask]      字符串，输入，信任连接段子网掩码。
+*      [priv]      整数，输入，信任连接段拥有的用户权限。
+*      [desc]      字符串，输入，信任连接段的说明，超过 511 字符将被截断。
+* 备注：addr 和 mask 进行与运算形成一个子网，
+*        来自该子网范围内的连接都被视为可信任的，
+*        可以不用登录 (go_login)，就直接调用 API， 
+*        它所拥有的权限在 priv 中指定。
+*        有效的子网掩码的所有 1 位于 0 左侧，
+*        例如："255.255.254.0"。当全部为 1 时，
+*        表示该子网中只有 addr 一个地址；
+*        但不能全部为 0。
 */
 GOLDENAPI
 golden_error 
@@ -496,16 +496,16 @@ go_add_authorization(
 
 
 /**
-* ������go_update_authorization
-* ���ܣ������������Ӷ�
-* ������
-*      [handle]    ���Ӿ��
-*      [addr]      �ַ��������룬ԭ�������Ӷε�ַ��
-*      [mask]      �ַ��������룬ԭ�������Ӷ��������롣
-*      [addr_new]  �ַ��������룬�µ��������Ӷε�ַ��
-*      [mask_new]  �ַ��������룬�µ��������Ӷ��������롣
-*      [priv]      ���������룬�µ��������Ӷ�ӵ�е��û�Ȩ�ޡ�
-*      [desc]      �ַ��������룬�µ��������Ӷε�˵�������� 511 �ַ������ضϡ�
+* 命名：go_update_authorization
+* 功能：更新信任连接段
+* 参数：
+*      [handle]    连接句柄
+*      [addr]      字符串，输入，原信任连接段地址。
+*      [mask]      字符串，输入，原信任连接段子网掩码。
+*      [addr_new]  字符串，输入，新的信任连接段地址。
+*      [mask_new]  字符串，输入，新的信任连接段子网掩码。
+*      [priv]      整数，输入，新的信任连接段拥有的用户权限。
+*      [desc]      字符串，输入，新的信任连接段的说明，超过 511 字符将被截断。
 */
 GOLDENAPI
 golden_error 
@@ -521,13 +521,13 @@ go_update_authorization(
                         );
 
 /**
-* ������go_remove_authorization
-* ���ܣ�ɾ���������Ӷ�
-* ������
-*      [handle]    ���Ӿ��
-*      [addr]      �ַ��������룬�������Ӷε�ַ��
-*      [mask]      �ַ��������룬�������Ӷ��������롣
-* ��ע��ֻ�� addr �� mask ��ȫ��ͬ����Ϊͬһ���������ӶΡ�
+* 命名：go_remove_authorization
+* 功能：删除信任连接段
+* 参数：
+*      [handle]    连接句柄
+*      [addr]      字符串，输入，信任连接段地址。
+*      [mask]      字符串，输入，信任连接段子网掩码。
+* 备注：只有 addr 与 mask 完全相同才视为同一个信任连接段。
 */
 GOLDENAPI
 golden_error 
@@ -539,19 +539,19 @@ go_remove_authorization(
                         );
 
 /**
-* ������go_get_authorizations
-* ���ܣ���������������Ӷ�
-* ������
-*      [handle]    ���Ӿ��
-*      [addrs]     �ַ���ָ�����飬������������Ӷε�ַ�б�
-*      [masks]     �ַ���ָ�����飬������������Ӷ����������б�
-*      [privs]     �������飬������������Ӷ�Ȩ���б�
-*      [descs]     �ַ���ָ�����飬������������Ӷε�˵����
-*      [count]     ���ͣ�����/������û�����
-* ��ע���û��뱣֤����� addrs, masks, privs, descs �Ŀռ��� count �����
-*        �������� count С������� count����ֻ���ز����������ӶΣ�
-*        addrs, masks ��ÿ���ַ���ָ����ָ�������ߴ粻��С�� 32 �ֽڣ�
-*        descs ��ÿ���ַ���ָ����ָ�������ߴ粻��С�� 512 �ֽڡ�
+* 命名：go_get_authorizations
+* 功能：获得所有信任连接段
+* 参数：
+*      [handle]    连接句柄
+*      [addrs]     字符串指针数组，输出，信任连接段地址列表
+*      [masks]     字符串指针数组，输出，信任连接段子网掩码列表
+*      [privs]     整型数组，输出，信任连接段权限列表
+*      [descs]     字符串指针数组，输出，信任连接段的说明。
+*      [count]     整型，输入/输出，用户个数
+* 备注：用户须保证分配给 addrs, masks, privs, descs 的空间与 count 相符，
+*        如果输入的 count 小于输出的 count，则只返回部分信任连接段，
+*        addrs, masks 中每个字符串指针所指缓冲区尺寸不得小于 32 字节，
+*        descs 中每个字符串指针所指缓冲区尺寸不得小于 512 字节。
 */
 GOLDENAPI
 golden_error 
@@ -565,11 +565,11 @@ go_get_authorizations(
                       golden_int32 *count
                       );
 /**
-* ������go_release_pointer
-* ���ܣ��ͷŴ�goldenapi���Զ�������char*ָ��
-* ������
-*      [handle]    ���Ӿ��
-*      [pointer]     �ַ���ָ�룬���룬���������ʱ *pointer ����Ϊ�գ����ʱ *pointerΪ��
+* 命名：go_release_pointer
+* 功能：释放从goldenapi中自动创建的char*指针
+* 参数：
+*      [handle]    连接句柄
+*      [pointer]     字符串指针，输入，输出，输入时 *pointer 不能为空，输出时 *pointer为空
 */
 GOLDENAPI
 golden_error
@@ -577,12 +577,12 @@ GOLDENAPI_CALLRULE
 go_release_pointer(golden_int32 handle, char** pointer);
 
 /**
-* ������go_host_time
-* ���ܣ���ȡ GOLDEN ��������ǰUTCʱ��
-* ������
-*      [handle]       ���Ӿ��
-*      [hosttime]     ���ͣ������Golden�������ĵ�ǰUTCʱ�䣬
-*                     ��ʾ����1970��1��1��08:00:00��������
+* 命名：go_host_time
+* 功能：获取 GOLDEN 服务器当前UTC时间
+* 参数：
+*      [handle]       连接句柄
+*      [hosttime]     整型，输出，Golden服务器的当前UTC时间，
+*                     表示距离1970年1月1日08:00:00的秒数。
 */
 GOLDENAPI
 golden_error 
@@ -593,14 +593,14 @@ go_host_time(
              );
 
 /**
-* ������go_format_timespan
-* ���ܣ�����ʱ����ֵ����ʱ���ʽ�ַ���
-* ������
-*      [str]          �ַ����������ʱ���ʽ�ַ���������: 
-*                     "1d" ��ʾʱ����Ϊ24Сʱ��
-*                     ���庬��μ� go_parse_timespan ע�͡�
-*      [timespan]     ���ͣ����룬Ҫ������ʱ����������
-* ��ע���ַ�����������С��ӦС�� 32 �ֽڡ�
+* 命名：go_format_timespan
+* 功能：根据时间跨度值生成时间格式字符串
+* 参数：
+*      [str]          字符串，输出，时间格式字符串，形如: 
+*                     "1d" 表示时间跨度为24小时。
+*                     具体含义参见 go_parse_timespan 注释。
+*      [timespan]     整型，输入，要处理的时间跨度秒数。
+* 备注：字符串缓冲区大小不应小于 32 字节。
 */
 GOLDENAPI
 golden_error 
@@ -611,23 +611,23 @@ go_format_timespan(
                    );
 
 /**
-* ������go_parse_timespan
-* ���ܣ�����ʱ���ʽ�ַ�������ʱ����ֵ
-* ������
-*      [str]          �ַ��������룬ʱ���ʽ�ַ������������£�
+* 命名：go_parse_timespan
+* 功能：根据时间格式字符串解析时间跨度值
+* 参数：
+*      [str]          字符串，输入，时间格式字符串，规则如下：
 *                     [time_span]
 *
-*                     ʱ���Ȳ��ֿ��Գ��ֶ�Σ�
-*                     ���õ�ʱ���ȴ��뼰�������£�
-*                     ?y            ?��, 1�� = 365��
-*                     ?m            ?��, 1�� = 30 ��
-*                     ?d            ?��
-*                     ?h            ?Сʱ
-*                     ?n            ?����
-*                     ?s            ?��
-*                     ���磺"1d" ��ʾʱ����Ϊ24Сʱ��
+*                     时间跨度部分可以出现多次，
+*                     可用的时间跨度代码及含义如下：
+*                     ?y            ?年, 1年 = 365日
+*                     ?m            ?月, 1月 = 30 日
+*                     ?d            ?日
+*                     ?h            ?小时
+*                     ?n            ?分钟
+*                     ?s            ?秒
+*                     例如："1d" 表示时间跨度为24小时。
 *
-*      [timespan]     ���ͣ���������ؽ����õ���ʱ����������
+*      [timespan]     整型，输出，返回解析得到的时间跨度秒数。
 */
 GOLDENAPI
 golden_error 
@@ -638,42 +638,42 @@ go_parse_timespan(
                   );
 
 /**
-* ������go_parse_time
-* ���ܣ�����ʱ���ʽ�ַ�������ʱ��ֵ
-* ������
-*      [str]          �ַ��������룬ʱ���ʽ�ַ������������£�
+* 命名：go_parse_time
+* 功能：根据时间格式字符串解析时间值
+* 参数：
+*      [str]          字符串，输入，时间格式字符串，规则如下：
 *                     base_time [[+|-] offset_time]
 *
-*                     ���� base_time ��ʾ����ʱ�䣬��������ʽ��
-*                     1. ʱ���ַ������� "2010-1-1" �� "2010-1-1 8:00:00"��
-*                     2. ʱ����룬��ʾ�ͻ������ʱ�䣻
-*                     ���õ�ʱ����뼰�������£�
-*                     td             �������
-*                     yd             �������
-*                     tm             �������
-*                     mon            ����һ���
-*                     tue            ���ܶ����
-*                     wed            ���������
-*                     thu            ���������
-*                     fri            ���������
-*                     sat            ���������
-*                     sun            ���������
-*                     3. �Ǻ�('*')����ʾ�ͻ��˵�ǰʱ�䡣
+*                     其中 base_time 表示基本时间，有三种形式：
+*                     1. 时间字符串，如 "2010-1-1" 及 "2010-1-1 8:00:00"；
+*                     2. 时间代码，表示客户端相对时间；
+*                     可用的时间代码及含义如下：
+*                     td             当天零点
+*                     yd             昨天零点
+*                     tm             明天零点
+*                     mon            本周一零点
+*                     tue            本周二零点
+*                     wed            本周三零点
+*                     thu            本周四零点
+*                     fri            本周五零点
+*                     sat            本周六零点
+*                     sun            本周日零点
+*                     3. 星号('*')，表示客户端当前时间。
 *
-*                     offset_time �ǿ�ѡ�ģ����Գ��ֶ�Σ�
-*                     ���õ�ʱ��ƫ�ƴ��뼰�������£�
-*                     [+|-] ?y            ƫ��?��, 1�� = 365��
-*                     [+|-] ?m            ƫ��?��, 1�� = 30 ��
-*                     [+|-] ?d            ƫ��?��
-*                     [+|-] ?h            ƫ��?Сʱ
-*                     [+|-] ?n            ƫ��?����
-*                     [+|-] ?s            ƫ��?��
-*                     [+|-] ?ms           ƫ��?����
-*                     ���磺"*-1d" ��ʾ��ǰʱ�̼�ȥ24Сʱ��
+*                     offset_time 是可选的，可以出现多次，
+*                     可用的时间偏移代码及含义如下：
+*                     [+|-] ?y            偏移?年, 1年 = 365日
+*                     [+|-] ?m            偏移?月, 1月 = 30 日
+*                     [+|-] ?d            偏移?日
+*                     [+|-] ?h            偏移?小时
+*                     [+|-] ?n            偏移?分钟
+*                     [+|-] ?s            偏移?秒
+*                     [+|-] ?ms           偏移?毫秒
+*                     例如："*-1d" 表示当前时刻减去24小时。
 *
-*      [datetime]     ���ͣ���������ؽ����õ���ʱ��ֵ��
-*      [ms]           �����ͣ���������ؽ����õ���ʱ�����ֵ��
-*  ��ע��ms ����Ϊ��ָ�룬��Ӧ�ĺ�����Ϣ�����ٷ��ء�
+*      [datetime]     整型，输出，返回解析得到的时间值。
+*      [ms]           短整型，输出，返回解析得到的时间毫秒值。
+*  备注：ms 可以为空指针，相应的毫秒信息将不再返回。
 */
 GOLDENAPI
 golden_error 
@@ -685,15 +685,15 @@ go_parse_time(
               );
 
 /**
-* ������go_format_message
-* ���ܣ���ȡ Golden API ���÷���ֵ�ļ������
-* ������
-*      [ecode]        �޷������ͣ����룬Golden API���ú�ķ���ֵ�����golden_error.hͷ�ļ�
-*      [message]      �ַ�������������ش�����������
-*      [name]         �ַ�������������ش����������
-*      [size]         ���ͣ����룬message �������ֽڳ���
-* ��ע���û��뱣֤����� message�� name �Ŀռ��� size ���, 
-*      name �� message ����Ϊ��ָ�룬��Ӧ����Ϣ�����ٷ��ء�
+* 命名：go_format_message
+* 功能：获取 Golden API 调用返回值的简短描述
+* 参数：
+*      [ecode]        无符号整型，输入，Golden API调用后的返回值，详见golden_error.h头文件
+*      [message]      字符串，输出，返回错误码简短描述
+*      [name]         字符串，输出，返回错误码宏名称
+*      [size]         整型，输入，message 参数的字节长度
+* 备注：用户须保证分配给 message， name 的空间与 size 相符, 
+*      name 或 message 可以为空指针，对应的信息将不再返回。
 */
 GOLDENAPI
 void  
@@ -706,15 +706,15 @@ go_format_message(
                   );
 
 /**
-* ������go_job_message
-* ���ܣ���ȡ����ļ������
-* ������
-*      [job_id]       ���ͣ����룬GOLDEN_HOST_CONNECT_INFO::job �ֶ�����ʾ��������������
-*      [desc]         �ַ����������������������
-*      [name]         �ַ����������������������
-*      [size]         ���ͣ����룬desc��name �������ֽڳ���
-* ��ע���û��뱣֤����� desc��name �Ŀռ��� size ����� 
-*      name �� message ����Ϊ��ָ�룬��Ӧ����Ϣ�����ٷ��ء�
+* 命名：go_job_message
+* 功能：获取任务的简短描述
+* 参数：
+*      [job_id]       整型，输入，GOLDEN_HOST_CONNECT_INFO::job 字段所表示的最近任务的描述
+*      [desc]         字符串，输出，返回任务描述
+*      [name]         字符串，输出，返回任务名称
+*      [size]         整型，输入，desc、name 参数的字节长度
+* 备注：用户须保证分配给 desc、name 的空间与 size 相符， 
+*      name 或 message 可以为空指针，对应的信息将不再返回。
 */
 GOLDENAPI
 void  
@@ -727,12 +727,12 @@ go_job_message(
                );
 
 /**
-* ������go_set_timeout
-* ���ܣ��������ӳ�ʱʱ��
-* ������
-*      [handle]   ���Ӿ��
-*      [socket]   ���ͣ����룬Ҫ���ó�ʱʱ�������
-*      [timeout]  ���ͣ����룬��ʱʱ�䣬��λΪ�룬0 ��ʾʼ�ձ���
+* 命名：go_set_timeout
+* 功能：设置连接超时时间
+* 参数：
+*      [handle]   连接句柄
+*      [socket]   整型，输入，要设置超时时间的连接
+*      [timeout]  整型，输入，超时时间，单位为秒，0 表示始终保持
 */
 GOLDENAPI
 golden_error 
@@ -744,12 +744,12 @@ go_set_timeout(
                );
 
 /**
-* ������go_get_timeout
-* ���ܣ�������ӳ�ʱʱ��
-* ������
-*      [handle]   ���Ӿ��
-*      [socket]   ���ͣ����룬Ҫ��ȡ��ʱʱ�������
-*      [timeout]  ���ͣ��������ʱʱ�䣬��λΪ�룬0 ��ʾʼ�ձ���
+* 命名：go_get_timeout
+* 功能：获得连接超时时间
+* 参数：
+*      [handle]   连接句柄
+*      [socket]   整型，输入，要获取超时时间的连接
+*      [timeout]  整型，输出，超时时间，单位为秒，0 表示始终保持
 */
 GOLDENAPI
 golden_error 
@@ -761,11 +761,11 @@ go_get_timeout(
                );
 
 /**
-* ������go_kill_connection
-* ���ܣ��Ͽ���֪����
-* ������
-*      [handle]    ���Ӿ��
-*      [socket]    ���ͣ����룬Ҫ�Ͽ�������
+* 命名：go_kill_connection
+* 功能：断开已知连接
+* 参数：
+*      [handle]    连接句柄
+*      [socket]    整型，输入，要断开的连接
 */
 GOLDENAPI
 golden_error 
@@ -776,14 +776,14 @@ go_kill_connection(
                    );
 
 /**
-* ������go_get_db_info1
-* ���ܣ�����ַ��������ݿ�ϵͳ����
-* ������
-*      [handle]    ���Ӿ��
-*      [index]     ���ͣ����룬Ҫȡ�õĲ����������μ�ö�� GOLDEN_DB_PARAM_INDEX��
-*      [str]       �ַ����ͣ���������ȡ�õ��ַ�������ֵ��
-*      [size]      ���ͣ����룬�ַ����������ߴ硣
-* ��ע�����ӿ�ֻ���� [GOLDEN_PARAM_STR_FIRST, GOLDEN_PARAM_STR_LAST) ��Χ֮�ڲ���������
+* 命名：go_get_db_info1
+* 功能：获得字符串型数据库系统参数
+* 参数：
+*      [handle]    连接句柄
+*      [index]     整型，输入，要取得的参数索引，参见枚举 GOLDEN_DB_PARAM_INDEX。
+*      [str]       字符串型，输出，存放取得的字符串参数值。
+*      [size]      整型，输入，字符串缓冲区尺寸。
+* 备注：本接口只接受 [GOLDEN_PARAM_STR_FIRST, GOLDEN_PARAM_STR_LAST) 范围之内参数索引。
 */
 GOLDENAPI
 golden_error 
@@ -796,13 +796,13 @@ go_get_db_info1(
                 );
 
 /**
-* ������go_get_db_info2
-* ���ܣ�����������ݿ�ϵͳ����
-* ������
-*      [handle]    ���Ӿ��
-*      [index]     ���ͣ����룬Ҫȡ�õĲ����������μ�ö�� GOLDEN_DB_PARAM_INDEX��
-*      [value]     �޷������ͣ���������ȡ�õ����Ͳ���ֵ��
-* ��ע�����ӿ�ֻ���� [GOLDEN_PARAM_INT_FIRST, GOLDEN_PARAM_INT_LAST) ��Χ֮�ڲ���������
+* 命名：go_get_db_info2
+* 功能：获得整型数据库系统参数
+* 参数：
+*      [handle]    连接句柄
+*      [index]     整型，输入，要取得的参数索引，参见枚举 GOLDEN_DB_PARAM_INDEX。
+*      [value]     无符号整型，输出，存放取得的整型参数值。
+* 备注：本接口只接受 [GOLDEN_PARAM_INT_FIRST, GOLDEN_PARAM_INT_LAST) 范围之内参数索引。
 */
 GOLDENAPI
 golden_error 
@@ -814,16 +814,16 @@ go_get_db_info2(
                 );
 
 /**
-* ������go_set_db_info1
-* ���ܣ������ַ��������ݿ�ϵͳ����
-* ������
-*      [handle]    ���Ӿ��
-*      [index]     ���ͣ����룬Ҫ���õĲ����������μ�ö�� GOLDEN_DB_PARAM_INDEX��
-*                  ���У��������г���ö��ֵ���ã�
+* 命名：go_set_db_info1
+* 功能：设置字符串型数据库系统参数
+* 参数：
+*      [handle]    连接句柄
+*      [index]     整型，输入，要设置的参数索引，参见枚举 GOLDEN_DB_PARAM_INDEX。
+*                  其中，仅以下列出的枚举值可用：
 *                  GOLDEN_PARAM_AUTO_BACKUP_PATH, 
 *                  GOLDEN_PARAM_SERVER_SENDER_IP, 
-*      [str]       �ַ����ͣ����룬�µĲ���ֵ��
-* ��ע������޸������������������� GoE_DATABASE_NEED_RESTART ��ʾ�롣
+*      [str]       字符串型，输入，新的参数值。
+* 备注：如果修改了启动参数，将返回 GoE_DATABASE_NEED_RESTART 提示码。
 */
 GOLDENAPI
 golden_error 
@@ -835,12 +835,12 @@ go_set_db_info1(
                 );
 
 /**
-* ������go_set_db_info2
-* ���ܣ������������ݿ�ϵͳ����
-* ������
-*      [handle]    ���Ӿ��
-*      [index]     ���ͣ����룬Ҫȡ�õĲ����������μ�ö�� GOLDEN_DB_PARAM_INDEX��
-*                  ���У��������г���ö��ֵ���ã�
+* 命名：go_set_db_info2
+* 功能：设置整型数据库系统参数
+* 参数：
+*      [handle]    连接句柄
+*      [index]     整型，输入，要取得的参数索引，参见枚举 GOLDEN_DB_PARAM_INDEX。
+*                  其中，仅以下列出的枚举值可用：
 *                  GOLDEN_PARAM_SERVER_IPC_SIZE, 
 *                  GOLDEN_PARAM_EQUATION_IPC_SIZE, 
 *                  GOLDEN_PARAM_HASH_TABLE_SIZE, 
@@ -865,8 +865,8 @@ go_set_db_info1(
 *                  GOLDEN_PARAM_STOP_OF_AUTO_BACKUP, 
 *                  GOLDEN_PARAM_MAX_LATENCY_OF_SNAPSHOT, 
 *                  GOLDEN_PARAM_PAGE_ALLOCATOR_RESERVE_SIZE, 
-*      [value]     �޷������ͣ����룬�µĲ���ֵ��
-* ��ע������޸������������������� GoE_DATABASE_NEED_RESTART ��ʾ�롣
+*      [value]     无符号整型，输入，新的参数值。
+* 备注：如果修改了启动参数，将返回 GoE_DATABASE_NEED_RESTART 提示码。
 */
 GOLDENAPI
 golden_error 
@@ -878,13 +878,13 @@ go_set_db_info2(
                 );
 
 /**
-* ������go_get_logical_drivers
-* ���ܣ�����߼��̷�
-* ������
-*      [handle]     ���Ӿ��
-*      [drivers]    �ַ����飬�����
-*                   �����߼��̷���ɵ��ַ�����ÿ���̷�ռһ���ַ���
-* ��ע��drivers ���ڴ�ռ����û�����ά��������Ӧ��С�� 32��
+* 命名：go_get_logical_drivers
+* 功能：获得逻辑盘符
+* 参数：
+*      [handle]     连接句柄
+*      [drivers]    字符数组，输出，
+*                   返回逻辑盘符组成的字符串，每个盘符占一个字符。
+* 备注：drivers 的内存空间由用户负责维护，长度应不小于 32。
 */
 GOLDENAPI
 golden_error 
@@ -895,11 +895,11 @@ go_get_logical_drivers(
                        );
 
 /**
-* ������go_open_path
-* ���ܣ���Ŀ¼�Ա�������е��ļ�����Ŀ¼��
-* ������
-*      [handle]       ���Ӿ��
-*      [dir]          �ַ��������룬Ҫ�򿪵�Ŀ¼
+* 命名：go_open_path
+* 功能：打开目录以便遍历其中的文件和子目录。
+* 参数：
+*      [handle]       连接句柄
+*      [dir]          字符串，输入，要打开的目录
 */
 GOLDENAPI
 golden_error 
@@ -910,18 +910,18 @@ go_open_path(
              );
 
 /**
-* ������go_read_path
-* ���ܣ���ȡĿ¼�е��ļ�����Ŀ¼
-* ������
-*      [handle]      ���Ӿ��
-*      [path]        �ַ����飬��������ص��ļ�����Ŀ¼ȫ·��
-*      [is_dir]      ����������������� 1 ΪĿ¼��0 Ϊ�ļ�
-*      [atime]       �����������Ϊ�ļ�ʱ�����ط���ʱ�� 
-*      [ctime]       �����������Ϊ�ļ�ʱ�����ؽ���ʱ�� 
-*      [mtime]       �����������Ϊ�ļ�ʱ�������޸�ʱ�� 
-*      [size]        64 λ�����������Ϊ�ļ�ʱ�������ļ���С
-* ��ע��path ���ڴ�ռ����û�����ά�����ߴ�Ӧ��С�� GOLDEN_MAX_PATH��
-*      ������ֵΪ GoE_BATCH_END ʱ��ʾĿ¼��������Ŀ¼���ļ��Ѿ�������ϡ�
+* 命名：go_read_path
+* 功能：读取目录中的文件或子目录
+* 参数：
+*      [handle]      连接句柄
+*      [path]        字符数组，输出，返回的文件、子目录全路径
+*      [is_dir]      短整数，输出，返回 1 为目录，0 为文件
+*      [atime]       整数，输出，为文件时，返回访问时间 
+*      [ctime]       整数，输出，为文件时，返回建立时间 
+*      [mtime]       整数，输出，为文件时，返回修改时间 
+*      [size]        64 位整数，输出，为文件时，返回文件大小
+* 备注：path 的内存空间由用户负责维护，尺寸应不小于 GOLDEN_MAX_PATH。
+*      当返回值为 GoE_BATCH_END 时表示目录下所有子目录和文件已经遍历完毕。
 */
 GOLDENAPI
 golden_error 
@@ -937,10 +937,10 @@ go_read_path(
              );
 
 /**
-* ������go_close_path
-* ���ܣ��رյ�ǰ������Ŀ¼
-* ������
-*      [handle]      ���Ӿ��
+* 命名：go_close_path
+* 功能：关闭当前遍历的目录
+* 参数：
+*      [handle]      连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -950,11 +950,11 @@ go_close_path(
               );
 
 /**
-* ������go_mkdir
-* ���ܣ�����Ŀ¼
-* ������
-*      [handle]       ���Ӿ��
-*      [dir]          �ַ��������룬�½�Ŀ¼��ȫ·��
+* 命名：go_mkdir
+* 功能：建立目录
+* 参数：
+*      [handle]       连接句柄
+*      [dir]          字符串，输入，新建目录的全路径
 */
 GOLDENAPI
 golden_error 
@@ -965,12 +965,12 @@ go_mkdir(
          );
 
 /**
-* ������go_get_file_size
-* ���ܣ����ָ�����������ļ��Ĵ�С
-* ������
-*      [handle]     ���Ӿ��
-*      [file]       �ַ��������룬�ļ���
-*      [size]       64 λ������������ļ���С
+* 命名：go_get_file_size
+* 功能：获得指定服务器端文件的大小
+* 参数：
+*      [handle]     连接句柄
+*      [file]       字符串，输入，文件名
+*      [size]       64 位整数，输出，文件大小
 */
 GOLDENAPI
 golden_error 
@@ -982,17 +982,17 @@ go_get_file_size(
                  );
 
 /**
-* ������go_read_file
-* ���ܣ���ȡ��������ָ���ļ�������
-* ������
-*      [handle]       ���Ӿ��
-*      [file]         �ַ��������룬Ҫ��ȡ���ݵ��ļ���
-*      [content]      �ַ����飬������ļ�����
-*      [pos]          64 λ���ͣ����룬��ȡ�ļ�����ʼλ��
-*      [size]         ���ͣ�����/�����
-*                     ����ʱ��ʾҪ��ȡ�ļ����ݵ��ֽڴ�С��
-*                     ���ʱ��ʾʵ�ʶ�ȡ���ֽ���
-* ��ע���û��뱣֤����� content �Ŀռ��� size �����
+* 命名：go_read_file
+* 功能：读取服务器端指定文件的内容
+* 参数：
+*      [handle]       连接句柄
+*      [file]         字符串，输入，要读取内容的文件名
+*      [content]      字符数组，输出，文件内容
+*      [pos]          64 位整型，输入，读取文件的起始位置
+*      [size]         整型，输入/输出，
+*                     输入时表示要读取文件内容的字节大小；
+*                     输出时表示实际读取的字节数
+* 备注：用户须保证分配给 content 的空间与 size 相符。
 */
 GOLDENAPI
 golden_error 
@@ -1007,11 +1007,11 @@ go_read_file(
 
 
 /*
-* ������go_get_max_blob_len
-* ���ܣ�ȡ�����ݿ�������blob��str���Ͳ�����󳤶�
-* ������
-*      [handle]       ���Ӿ��
-*      [len]          ���Σ�����������������ݿ�������blob��str���Ͳ�����󳤶�
+* 命名：go_get_max_blob_len
+* 功能：取得数据库允许的blob、str类型测点的最大长度
+* 参数：
+*      [handle]       连接句柄
+*      [len]          整形，输出参数，代表数据库允许的blob、str类型测点的最大长度
 */
 GOLDENAPI
 golden_error
@@ -1022,21 +1022,21 @@ go_get_max_blob_len(
                     );
 
 /*
-* ������go_format_quality
-* ���ܣ�ȡ���������Ӧ�Ķ���
-* ������
-*      [handle]       ���Ӿ��
-*      [count]        ��������������������
-*      [qualities]    �����룬�������
-*      [definitions]  ���������0~255ΪGOLDEN�����루�μ�golden.h�ļ�����256~511ΪOPC�����룬����511Ϊ�û��Զ���������
-*      [lens]         ����/�������
-*                     ����ʱ��ʾÿ����������С
-*                     ���ʱ��ʾÿ�����峤��
-* OPC�������8λ��3���ֶ��壺XX XXXX XX����Ӧ�ţ�Ʒ��λ�� ��״̬λ�� �޶�λ��
-* Ʒ��λ��00��Bad��01��Uncertain��10��N/A��11��Good��
-* ��״̬λ�򣺲�ͬƷ��λ���Ӧ���Եķ�״̬λ��
-* �޶�λ��00��Not limited��01��Low limited��10��high limited��11��Constant��
-* ������֮���ö��Ÿ����������definitions�����У�ǰ������GOLDEN��OPC����USER��ʶ��˵����ǩ�����
+* 命名：go_format_quality
+* 功能：取得质量码对应的定义
+* 参数：
+*      [handle]       连接句柄
+*      [count]        质量码个数，输入参数，
+*      [qualities]    质量码，输入参数
+*      [definitions]  输出参数，0~255为GOLDEN质量码（参加golden.h文件），256~511为OPC质量码，大于511为用户自定义质量码
+*      [lens]         输入/输出参数
+*                     输入时表示每个缓冲区大小
+*                     输出时表示每个定义长度
+* OPC质量码把8位分3部分定义：XX XXXX XX，对应着：品质位域 分状态位域 限定位域
+* 品质位域：00（Bad）01（Uncertain）10（N/A）11（Good）
+* 分状态位域：不同品质位域对应各自的分状态位域
+* 限定位域：00（Not limited）01（Low limited）10（high limited）11（Constant）
+* 三个域之间用逗号隔开，输出到definitions参数中，前面有有GOLDEN，OPC或者USER标识，说明标签点类别
 */
 GOLDENAPI
 golden_error
@@ -1050,17 +1050,17 @@ go_format_quality(
                   );
 
 /*
-* ������go_write_named_type_field_by_name
-* ���ܣ�����������Զ���������ֵ���ֶε�����
-* ������
-*      [handle]       ���Ӿ��
-*      [type_name]    �Զ������͵����ƣ����Ƴ��Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE�ĳ��ȣ����������
-*      [field_name]   �Զ�����������Ҫ�����ֶε����ƣ����Ƴ��Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE�ĳ��ȣ��������
-*      [field_type]   field_name�ֶε����ͣ�GOLDEN_TYPE��֧�ֵĻ������ͣ��������
-*      [object]       �Զ���������ֵ�Ļ�����,����/�������
-*     [object_len]   object�������ĳ���,�������
-*     [field]      ��Ҫ�����ֶ���ֵ�Ļ�����,�������
-*     [field_len]    �Զ����������ֶ���ֵ�Ļ����������ݵĳ���,�������
+* 命名：go_write_named_type_field_by_name
+* 功能：按名称填充自定义类型数值中字段的内容
+* 参数：
+*      [handle]       连接句柄
+*      [type_name]    自定义类型的名称，名称长度不能超过GOLDEN_TYPE_NAME_SIZE的长度，输入参数，
+*      [field_name]   自定义类型中需要填充的字段的名称，名称长度不能超过GOLDEN_TYPE_NAME_SIZE的长度，输入参数
+*      [field_type]   field_name字段的类型，GOLDEN_TYPE所支持的基础类型，输入参数
+*      [object]       自定义类型数值的缓冲区,输入/输出参数
+*     [object_len]   object缓冲区的长度,输入参数
+*     [field]      需要填充的字段数值的缓冲区,输入参数
+*     [field_len]    自定义类型中字段数值的缓冲区中数据的长度,输入参数
 */
 GOLDENAPI
 golden_error
@@ -1077,17 +1077,17 @@ go_write_named_type_field_by_name(
         );
 
 /*
-* ������go_write_named_type_field_by_pos
-* ���ܣ���λ������Զ���������ֵ���ֶε�����
-* ������
-*      [handle]       ���Ӿ��
-*      [type_name]    �Զ������͵����ƣ����Ƴ��Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE�ĳ��ȣ����������
-*      [field_pos]    �Զ�����������Ҫ�����ֶε�λ�ã�ָ�ֶ��������ֶ��е�λ�ã���0��ʼ���������
-*      [field_type]   field_posλ�������ֶε����ͣ�GOLDEN_TYPE��֧�ֵĻ������ͣ��������
-*      [object]       �Զ���������ֵ�Ļ�����,����/�������
-*     [object_len]   object�������ĳ���,�������
-*     [field]      ��Ҫ�����ֶ���ֵ�Ļ�����,�������
-*     [field_len]    �Զ����������ֶ���ֵ�Ļ����������ݵĳ���,�������
+* 命名：go_write_named_type_field_by_pos
+* 功能：按位置填充自定义类型数值中字段的内容
+* 参数：
+*      [handle]       连接句柄
+*      [type_name]    自定义类型的名称，名称长度不能超过GOLDEN_TYPE_NAME_SIZE的长度，输入参数，
+*      [field_pos]    自定义类型中需要填充的字段的位置，指字段在所有字段中的位置，从0开始，输入参数
+*      [field_type]   field_pos位置所在字段的类型，GOLDEN_TYPE所支持的基础类型，输入参数
+*      [object]       自定义类型数值的缓冲区,输入/输出参数
+*     [object_len]   object缓冲区的长度,输入参数
+*     [field]      需要填充的字段数值的缓冲区,输入参数
+*     [field_len]    自定义类型中字段数值的缓冲区中数据的长度,输入参数
 */
 GOLDENAPI
 golden_error
@@ -1105,17 +1105,17 @@ go_write_named_type_field_by_pos(
 
 
 /*
-* ������go_read_named_type_field_by_name
-* ���ܣ���������ȡ�Զ���������ֵ���ֶε�����
-* ������
-*      [handle]       ���Ӿ��
-*      [type_name]    �Զ������͵����ƣ����Ƴ��Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE�ĳ��ȣ����������
-*      [field_name]   �Զ�����������Ҫ��ȡ���ֶε����ƣ����Ƴ��Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE�ĳ��ȣ��������
-*      [field_type]   field_name�ֶε����ͣ�GOLDEN_TYPE��֧�ֵĻ������ͣ��������
-*      [object]       �Զ���������ֵ�Ļ�����,�������
-*     [object_len]   object�������ĳ���,�������
-*     [field]      ����ȡ���ֶε���ֵ�Ļ�����,����/�������
-*     [field_len]    field�ֶ���ֵ�������ĳ���,�������
+* 命名：go_read_named_type_field_by_name
+* 功能：按名称提取自定义类型数值中字段的内容
+* 参数：
+*      [handle]       连接句柄
+*      [type_name]    自定义类型的名称，名称长度不能超过GOLDEN_TYPE_NAME_SIZE的长度，输入参数，
+*      [field_name]   自定义类型中需要提取的字段的名称，名称长度不能超过GOLDEN_TYPE_NAME_SIZE的长度，输入参数
+*      [field_type]   field_name字段的类型，GOLDEN_TYPE所支持的基础类型，输入参数
+*      [object]       自定义类型数值的缓冲区,输入参数
+*     [object_len]   object缓冲区的长度,输入参数
+*     [field]      被读取的字段的数值的缓冲区,输入/输出参数
+*     [field_len]    field字段数值缓冲区的长度,输入参数
 */
 GOLDENAPI
 golden_error
@@ -1133,17 +1133,17 @@ go_read_named_type_field_by_name(
 
 
 /*
-* ������go_read_named_type_field_by_pos
-* ���ܣ���λ����ȡ�Զ���������ֵ���ֶε�����
-* ������
-*      [handle]       ���Ӿ��
-*      [type_name]    �Զ������͵����ƣ����Ƴ��Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE�ĳ��ȣ����������
-*      [field_pos]    �Զ�����������Ҫ��ȡ���ֶε�λ�ã�ָ�ֶ��������ֶ��е�λ�ã���0��ʼ���������
-*      [field_type]   field_posλ�������ֶε����ͣ�GOLDEN_TYPE��֧�ֵĻ������ͣ��������
-*      [object]       �Զ���������ֵ�Ļ�����,�������
-*     [object_len]   object�������ĳ���,�������
-*     [field]      ����ȡ���ֶε���ֵ�Ļ�����,����/�������
-*     [field_len]    field�ֶ���ֵ�������ĳ���,�������
+* 命名：go_read_named_type_field_by_pos
+* 功能：按位置提取自定义类型数值中字段的内容
+* 参数：
+*      [handle]       连接句柄
+*      [type_name]    自定义类型的名称，名称长度不能超过GOLDEN_TYPE_NAME_SIZE的长度，输入参数，
+*      [field_pos]    自定义类型中需要提取的字段的位置，指字段在所有字段中的位置，从0开始，输入参数
+*      [field_type]   field_pos位置所在字段的类型，GOLDEN_TYPE所支持的基础类型，输入参数
+*      [object]       自定义类型数值的缓冲区,输入参数
+*     [object_len]   object缓冲区的长度,输入参数
+*     [field]      被读取的字段的数值的缓冲区,输入/输出参数
+*     [field_len]    field字段数值缓冲区的长度,输入参数
 */
 GOLDENAPI
 golden_error
@@ -1160,14 +1160,14 @@ go_read_named_type_field_by_pos(
         );
 
 /*
-* ������go_named_type_name_field_check
-* ���ܣ�����Զ����������Ƽ��ֶ������Ƿ���Ϲ���
-* ����1. ֻ����ʹ��26��Ӣ����ĸ,����0-9���»��ߣ�
-*       2. ��������ĸ��Ϊ����ĸ��
-*       3. ��Сд�����С�
-* ������
-*      [check_name]   ��Ҫ��������
-*      [flag]         ��־0--�������ƣ����� -- �ֶ����ƣ��ݲ�����
+* 命名：go_named_type_name_field_check
+* 功能：检查自定义类型名称及字段命名是否符合规则；
+* 规则：1. 只允许使用26个英文字母,数字0-9，下划线；
+*       2. 必须以字母作为首字母；
+*       3. 大小写不敏感。
+* 参数：
+*      [check_name]   需要检查的名称
+*      [flag]         标志0--类型名称，其他 -- 字段名称，暂不启用
 */
 
 GOLDENAPI
@@ -1179,10 +1179,10 @@ go_named_type_name_field_check(
   );
 
 /*
-* ������go_judge_connect_status
-* ���ܣ��ж������Ƿ���ã�
-* ������
-*      [handle]   ���Ӿ��
+* 命名：go_judge_connect_status
+* 功能：判断连接是否可用；
+* 参数：
+*      [handle]   连接句柄
 */
 GOLDENAPI
   golden_error
@@ -1190,30 +1190,30 @@ GOLDENAPI
   go_judge_connect_status(golden_int32 handle);
 
 /**
-* ������go_format_ipaddr
-* ���ܣ�������IPת��Ϊ�ַ�����ʽ��IP
-* ������
-*      [ip]        �޷������ͣ����룬���ε�IP��ַ
-*      [ip_addr]      �ַ�����������ַ���IP��ַ������
-*      [size]         ���ͣ����룬ip_addr �������ֽڳ���
-* ��ע���û��뱣֤����� ip_addr �Ŀռ��� size ���
+* 命名：go_format_ipaddr
+* 功能：将整形IP转换为字符串形式的IP
+* 参数：
+*      [ip]        无符号整型，输入，整形的IP地址
+*      [ip_addr]      字符串，输出，字符串IP地址缓冲区
+*      [size]         整型，输入，ip_addr 参数的字节长度
+* 备注：用户须保证分配给 ip_addr 的空间与 size 相符
 */
 GOLDENAPI
 void
 GOLDENAPI_CALLRULE
 go_format_ipaddr(golden_uint32 ip, char* ip_addr, golden_int32 size);
 
-/************************************ ������ǩ����Ϣ�ӿ� ************************************/
+/************************************ 基本标签点信息接口 ************************************/
 
 /**
-* ������gob_get_equation_by_file_name
-* ���ܣ������ļ�����ȡ����ʽ
-* ������
-*      [handle]   ���Ӿ��
-*      [file_name] ���룬�ַ���������ʽ·��
-*      [equation]  ��������صķ���ʽ�����ΪGOLDEN_MAX_EQUATION_SIZE-1
+* 命名：gob_get_equation_by_file_name
+* 功能：根据文件名获取方程式
+* 参数：
+*      [handle]   连接句柄
+*      [file_name] 输入，字符串，方程式路径
+*      [equation]  输出，返回的方程式长度最长为GOLDEN_MAX_EQUATION_SIZE-1
 *	
-*��ע���û�����ʱΪequation����Ŀռ䲻��С��GOLDEN_MAX_EQUATION_SIZE
+*备注：用户调用时为equation分配的空间不得小于GOLDEN_MAX_EQUATION_SIZE
 */
 GOLDENAPI
 golden_error
@@ -1225,14 +1225,14 @@ gob_get_equation_by_file_name(
 												     );
 
 /**
-* ������gob_get_equation_by_id
-* ���ܣ���ID����ȡ����ʽ
-* ������
-*      [handle]   ���Ӿ��
-*      [id]				���룬���ͣ�����ʽID
-*      [equation] ��������صķ���ʽ�����ΪGOLDEN_MAX_EQUATION_SIZE-1
+* 命名：gob_get_equation_by_id
+* 功能：根ID径获取方程式
+* 参数：
+*      [handle]   连接句柄
+*      [id]				输入，整型，方程式ID
+*      [equation] 输出，返回的方程式长度最长为GOLDEN_MAX_EQUATION_SIZE-1
 *	
-*��ע���û�����ʱΪequation����Ŀռ䲻��С��GOLDEN_MAX_EQUATION_SIZE
+*备注：用户调用时为equation分配的空间不得小于GOLDEN_MAX_EQUATION_SIZE
 */
 GOLDENAPI
 golden_error
@@ -1245,13 +1245,13 @@ gob_get_equation_by_id(
 
 
 /**
-* ������gob_append_table
-* ���ܣ������±�
-* ������
-*      [handle]   ���Ӿ��
-*      [field]    GOLDEN_TABLE �ṹ������/���������Ϣ��
-*                 ������ʱ��type��name��desc �ֶ���Ч��
-*                 ���ʱ��id �ֶ���ϵͳ�Զ����䲢���ظ��û���
+* 命名：gob_append_table
+* 功能：添加新表
+* 参数：
+*      [handle]   连接句柄
+*      [field]    GOLDEN_TABLE 结构，输入/输出，表信息。
+*                 在输入时，type、name、desc 字段有效；
+*                 输出时，id 字段由系统自动分配并返回给用户。
 */
 GOLDENAPI
 golden_error 
@@ -1262,11 +1262,11 @@ gob_append_table(
                  );
 
 /**
-* ������gob_tables_count
-* ���ܣ�ȡ�ñ�ǩ�������
-* ������
-*      [handle]   ���Ӿ��
-*      [count]    ���ͣ��������ǩ�������
+* 命名：gob_tables_count
+* 功能：取得标签点表总数
+* 参数：
+*      [handle]   连接句柄
+*      [count]    整型，输出，标签点表总数
 */
 GOLDENAPI
 golden_error 
@@ -1277,15 +1277,15 @@ gob_tables_count(
                  );
 
 /**
-* ������gob_get_tables
-* ���ܣ�ȡ�����б�ǩ�����ID
-* ������
-*      [handle]   ���Ӿ��
-*      [ids]      �������飬�������ǩ�����id
-*      [count]    ���ͣ�����/�����
-*                 �����ʾ ids �ĳ��ȣ������ʾ��ǩ�������
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ���
-*      �������� count С������� count����ֻ���ز��ֱ�id
+* 命名：gob_get_tables
+* 功能：取得所有标签点表的ID
+* 参数：
+*      [handle]   连接句柄
+*      [ids]      整型数组，输出，标签点表的id
+*      [count]    整型，输入/输出，
+*                 输入表示 ids 的长度，输出表示标签点表个数
+* 备注：用户须保证分配给 ids 的空间与 count 相符
+*      如果输入的 count 小于输出的 count，则只返回部分表id
 */
 GOLDENAPI
 golden_error 
@@ -1297,12 +1297,12 @@ gob_get_tables(
                );
 
 /**
-* ������gob_get_table_size_by_id
-* ���ܣ����ݱ� id ��ȡ���а����ı�ǩ������
-* ������
-*      [handle]   ���Ӿ��
-*      [id]       ���ͣ����룬��ID
-*      [size]     ���ͣ���������б�ǩ������
+* 命名：gob_get_table_size_by_id
+* 功能：根据表 id 获取表中包含的标签点数量
+* 参数：
+*      [handle]   连接句柄
+*      [id]       整型，输入，表ID
+*      [size]     整型，输出，表中标签点数量
 */
 GOLDENAPI
 golden_error 
@@ -1314,12 +1314,12 @@ gob_get_table_size_by_id(
                          );
 
 /**
-* ������gob_get_table_size_by_name
-* ���ܣ����ݱ����ƻ�ȡ���а����ı�ǩ������
-* ������
-*      [handle]   ���Ӿ��
-*      [name]     �ַ��������룬������
-*      [size]     ���ͣ���������б�ǩ������
+* 命名：gob_get_table_size_by_name
+* 功能：根据表名称获取表中包含的标签点数量
+* 参数：
+*      [handle]   连接句柄
+*      [name]     字符串，输入，表名称
+*      [size]     整型，输出，表中标签点数量
 */
 GOLDENAPI
 golden_error 
@@ -1331,14 +1331,14 @@ gob_get_table_size_by_name(
                            );
 
 /**
-* ������gob_get_table_real_size_by_id
-* ���ܣ����ݱ� id ��ȡ����ʵ�ʰ����ı�ǩ������
-* ������
-*      [handle]   ���Ӿ��
-*      [id]       ���ͣ����룬��ID
-*      [size]     ���ͣ���������б�ǩ������
-* ע�⣺ͨ����API��ȡ��ǩ��������Ȼ�������˱��еı�ǩ��õ����������ܻ᲻һ�£��������ڷ����ڲ����������ȡ���첽�ķ�ʽ��
-*       һ���������ʹ��gob_get_table_size_by_id����ȡ���еı�ǩ��������
+* 命名：gob_get_table_real_size_by_id
+* 功能：根据表 id 获取表中实际包含的标签点数量
+* 参数：
+*      [handle]   连接句柄
+*      [id]       整型，输入，表ID
+*      [size]     整型，输出，表中标签点数量
+* 注意：通过此API获取标签点数量，然后搜索此表中的标签点得到的数量可能会不一致，这是由于服务内部批量建点采取了异步的方式。
+*       一般情况下请使用gob_get_table_size_by_id来获取表中的标签点数量。
 */
 GOLDENAPI
   golden_error 
@@ -1350,12 +1350,12 @@ GOLDENAPI
   );
 
 /**
-* ������gob_get_table_property_by_id
-* ���ܣ����ݱ�ǩ��� id ��ȡ������
-* ������
-*      [handle] ���Ӿ��
-*      [field]  GOLDEN_TABLE �ṹ������/�������ǩ������ԣ�
-*               ����ʱָ�� id �ֶΣ����ʱ���� type��name��desc �ֶΡ�
+* 命名：gob_get_table_property_by_id
+* 功能：根据标签点表 id 获取表属性
+* 参数：
+*      [handle] 连接句柄
+*      [field]  GOLDEN_TABLE 结构，输入/输出，标签点表属性，
+*               输入时指定 id 字段，输出时返回 type、name、desc 字段。
 */
 GOLDENAPI
 golden_error 
@@ -1366,12 +1366,12 @@ gob_get_table_property_by_id(
                              );
 
 /**
-* ������gob_get_table_property_by_name
-* ���ܣ����ݱ�����ȡ��ǩ�������
-* ������
-*      [handle] ���Ӿ��
-*      [field]  GOLDEN_TABLE �ṹ������/�������ǩ�������
-*               ����ʱָ�� name �ֶΣ����ʱ���� id��type��desc �ֶΡ�
+* 命名：gob_get_table_property_by_name
+* 功能：根据表名获取标签点表属性
+* 参数：
+*      [handle] 连接句柄
+*      [field]  GOLDEN_TABLE 结构，输入/输出，标签点表属性
+*               输入时指定 name 字段，输出时返回 id、type、desc 字段。
 */
 GOLDENAPI
 golden_error 
@@ -1382,15 +1382,15 @@ gob_get_table_property_by_name(
                                );
 
 /**
-* ������gob_insert_point
-* ���ܣ�ʹ�����������Լ�������������ǩ��
-* ������
-*      [handle] ���Ӿ��
-*      [base] GOLDEN_POINT �ṹ������/�����
-*      ����� id, createdate, creator, changedate, changer �ֶ���������ֶΣ���� id �ֶΡ�
-*      [scan] GOLDEN_SCAN_POINT �ṹ�����룬�ɼ���ǩ����չ���Լ���
-*      [calc] GOLDEN_CALC_POINT �ṹ�����룬�����ǩ����չ���Լ���
-* ��ע������½��ı�ǩ��û�ж�Ӧ����չ���Լ�������Ϊ��ָ�롣
+* 命名：gob_insert_point
+* 功能：使用完整的属性集来创建单个标签点
+* 参数：
+*      [handle] 连接句柄
+*      [base] GOLDEN_POINT 结构，输入/输出，
+*      输入除 id, createdate, creator, changedate, changer 字段外的其它字段，输出 id 字段。
+*      [scan] GOLDEN_SCAN_POINT 结构，输入，采集标签点扩展属性集。
+*      [calc] GOLDEN_CALC_POINT 结构，输入，计算标签点扩展属性集。
+* 备注：如果新建的标签点没有对应的扩展属性集，可置为空指针。
 */
 GOLDENAPI
 golden_error 
@@ -1404,15 +1404,15 @@ gob_insert_point(
 
 
 /**
-* ������gob_insert_max_point
-* ���ܣ�ʹ����󳤶ȵ��������Լ�������������ǩ��
-* ������
-*      [handle] ���Ӿ��
-*      [base] GOLDEN_POINT �ṹ������/�����
-*      ����� id, createdate, creator, changedate, changer �ֶ���������ֶΣ���� id �ֶΡ�
-*      [scan] GOLDEN_SCAN_POINT �ṹ�����룬�ɼ���ǩ����չ���Լ���
-*      [calc] GOLDEN_MAX_CALC_POINT �ṹ�����룬�����ǩ����չ���Լ���
-* ��ע������½��ı�ǩ��û�ж�Ӧ����չ���Լ�������Ϊ��ָ�롣
+* 命名：gob_insert_max_point
+* 功能：使用最大长度的完整属性集来创建单个标签点
+* 参数：
+*      [handle] 连接句柄
+*      [base] GOLDEN_POINT 结构，输入/输出，
+*      输入除 id, createdate, creator, changedate, changer 字段外的其它字段，输出 id 字段。
+*      [scan] GOLDEN_SCAN_POINT 结构，输入，采集标签点扩展属性集。
+*      [calc] GOLDEN_MAX_CALC_POINT 结构，输入，计算标签点扩展属性集。
+* 备注：如果新建的标签点没有对应的扩展属性集，可置为空指针。
 */
 GOLDENAPI
 golden_error
@@ -1425,18 +1425,18 @@ gob_insert_max_point(
 										 );
 
 /**
-* ������gob_insert_base_point
-* ����  ʹ����С�����Լ�������������ǩ��
-* ������
-*      [handle]     ���Ӿ��
-*      [tag]        �ַ��������룬��ǩ������
-*      [type]       ���ͣ����룬��ǩ���������ͣ�ȡֵ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��
-*                   GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64��
-*                   GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64��GOLDEN_COOR��GOLDEN_STRING��GOLDEN_BLOB ֮һ��
-*      [table_id]   ���ͣ����룬��ǩ�������� id
-*      [use_ms]     �����ͣ����룬��ǩ��ʱ������ȣ�0 Ϊ�룻1 Ϊ���롣
-*      [point_id]   ���ͣ��������ǩ�� id
-* ��ע����ǩ����������Խ�ȡĬ��ֵ��
+* 命名：gob_insert_base_point
+* 功能  使用最小的属性集来创建单个标签点
+* 参数：
+*      [handle]     连接句柄
+*      [tag]        字符串，输入，标签点名称
+*      [type]       整型，输入，标签点数据类型，取值 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、
+*                   GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64、
+*                   GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64、GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 之一。
+*      [table_id]   整型，输入，标签点所属表 id
+*      [use_ms]     短整型，输入，标签点时间戳精度，0 为秒；1 为毫秒。
+*      [point_id]   整型，输出，标签点 id
+* 备注：标签点的其余属性将取默认值。
 */
 GOLDENAPI
 golden_error 
@@ -1451,15 +1451,15 @@ gob_insert_base_point(
                       );
 
 /**
-* ������gob_insert_named_type_point
-* ���ܣ�ʹ�����������Լ������������Զ����������ͱ�ǩ��
-* ������
-*      [handle] ���Ӿ��
-*      [base] GOLDEN_POINT �ṹ������/�����
-*      ����� id, createdate, creator, changedate, changer �ֶ���������ֶΣ���� id �ֶΡ�
-*      [scan] GOLDEN_SCAN_POINT �ṹ�����룬�ɼ���ǩ����չ���Լ���
-*      [name] �ַ��������룬�Զ����������͵����֡�
-* ��ע������½��ı�ǩ��û�ж�Ӧ����չ���Լ�������Ϊ��ָ�롣
+* 命名：gob_insert_named_type_point
+* 功能：使用完整的属性集来创建单个自定义数据类型标签点
+* 参数：
+*      [handle] 连接句柄
+*      [base] GOLDEN_POINT 结构，输入/输出，
+*      输入除 id, createdate, creator, changedate, changer 字段外的其它字段，输出 id 字段。
+*      [scan] GOLDEN_SCAN_POINT 结构，输入，采集标签点扩展属性集。
+*      [name] 字符串，输入，自定义数据类型的名字。
+* 备注：如果新建的标签点没有对应的扩展属性集，可置为空指针。
 */
 GOLDENAPI
   golden_error 
@@ -1472,13 +1472,13 @@ GOLDENAPI
   );
 
 /**
-* ������gob_remove_point_by_id
-* ���ܣ����� id ɾ��������ǩ��
-* ������
-*      [handle] ���Ӿ��
-*      [id]     ���ͣ����룬��ǩ���ʶ
-* ��ע��ͨ�����ӿ�ɾ���ı�ǩ��Ϊ�ɻ��ձ�ǩ�㣬
-*        ����ͨ�� gob_recover_point �ӿڻָ���
+* 命名：gob_remove_point_by_id
+* 功能：根据 id 删除单个标签点
+* 参数：
+*      [handle] 连接句柄
+*      [id]     整型，输入，标签点标识
+* 备注：通过本接口删除的标签点为可回收标签点，
+*        可以通过 gob_recover_point 接口恢复。
 */
 GOLDENAPI
 golden_error 
@@ -1489,12 +1489,12 @@ gob_remove_point_by_id(
                        );
 
 /**
-* ������gob_remove_point_by_name
-* ���ܣ����ݱ�ǩ��ȫ��ɾ��������ǩ��
-* ������[handle]        ���Ӿ��
-*        [table_dot_tag]  �ַ��������룬��ǩ��ȫ���ƣ�"����.��ǩ����"
-* ��ע��ͨ�����ӿ�ɾ���ı�ǩ��Ϊ�ɻ��ձ�ǩ�㣬
-*        ����ͨ�� gob_recover_point �ӿڻָ���
+* 命名：gob_remove_point_by_name
+* 功能：根据标签点全名删除单个标签点
+* 参数：[handle]        连接句柄
+*        [table_dot_tag]  字符串，输入，标签点全名称："表名.标签点名"
+* 备注：通过本接口删除的标签点为可回收标签点，
+*        可以通过 gob_recover_point 接口恢复。
 */
 GOLDENAPI
 golden_error 
@@ -1505,18 +1505,18 @@ gob_remove_point_by_name(
                          );
 
 /**
-* ������gob_get_points_property
-* ���ܣ�������ȡ��ǩ������
-* ������
-*        [handle] ���Ӿ��
-*        [count]  ���������룬��ʾ��ǩ�������
-*        [base]   GOLDEN_POINT �ṹ���飬����/�������ǩ����������б���
-*                 ����ʱ��id �ֶ�ָ����Ҫ�õ����Եı�ǩ�㣬���ʱ�������ֶη��ر�ǩ������ֵ��
-*        [scan]   GOLDEN_SCAN_POINT �ṹ���飬������ɼ���ǩ����չ�����б�
-*        [calc]   GOLDEN_CALC_POINT �ṹ���飬����������ǩ����չ�����б�
-*        [errors] �޷����������飬�������ȡ��ǩ���Եķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤����� base��scan��calc��errors �Ŀռ��� count �����
-*        ��չ���Լ� scan��calc ��Ϊ��ָ�룬��ʱ�������ض�Ӧ����չ���Լ���
+* 命名：gob_get_points_property
+* 功能：批量获取标签点属性
+* 参数：
+*        [handle] 连接句柄
+*        [count]  整数，输入，表示标签点个数。
+*        [base]   GOLDEN_POINT 结构数组，输入/输出，标签点基本属性列表，
+*                 输入时，id 字段指定需要得到属性的标签点，输出时，其它字段返回标签点属性值。
+*        [scan]   GOLDEN_SCAN_POINT 结构数组，输出，采集标签点扩展属性列表
+*        [calc]   GOLDEN_CALC_POINT 结构数组，输出，计算标签点扩展属性列表
+*        [errors] 无符号整型数组，输出，获取标签属性的返回值列表，参考golden_error.h
+* 备注：用户须保证分配给 base、scan、calc、errors 的空间与 count 相符，
+*        扩展属性集 scan、calc 可为空指针，此时将不返回对应的扩展属性集。
 */
 GOLDENAPI
 golden_error  
@@ -1532,18 +1532,18 @@ gob_get_points_property(
 
 
 /**
-* ������gob_get_max_points_property
-* ���ܣ�����󳤶�������ȡ��ǩ������
-* ������
-*        [handle] ���Ӿ��
-*        [count]  ���������룬��ʾ��ǩ�������
-*        [base]   GOLDEN_POINT �ṹ���飬����/�������ǩ����������б���
-*                 ����ʱ��id �ֶ�ָ����Ҫ�õ����Եı�ǩ�㣬���ʱ�������ֶη��ر�ǩ������ֵ��
-*        [scan]   GOLDEN_SCAN_POINT �ṹ���飬������ɼ���ǩ����չ�����б�
-*        [calc]   GOLDEN_MAX_CALC_POINT �ṹ���飬����������ǩ����չ�����б�
-*        [errors] �޷����������飬�������ȡ��ǩ���Եķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤����� base��scan��calc��errors �Ŀռ��� count �����
-*        ��չ���Լ� scan��calc ��Ϊ��ָ�룬��ʱ�������ض�Ӧ����չ���Լ���
+* 命名：gob_get_max_points_property
+* 功能：按最大长度批量获取标签点属性
+* 参数：
+*        [handle] 连接句柄
+*        [count]  整数，输入，表示标签点个数。
+*        [base]   GOLDEN_POINT 结构数组，输入/输出，标签点基本属性列表，
+*                 输入时，id 字段指定需要得到属性的标签点，输出时，其它字段返回标签点属性值。
+*        [scan]   GOLDEN_SCAN_POINT 结构数组，输出，采集标签点扩展属性列表
+*        [calc]   GOLDEN_MAX_CALC_POINT 结构数组，输出，计算标签点扩展属性列表
+*        [errors] 无符号整型数组，输出，获取标签属性的返回值列表，参考golden_error.h
+* 备注：用户须保证分配给 base、scan、calc、errors 的空间与 count 相符，
+*        扩展属性集 scan、calc 可为空指针，此时将不返回对应的扩展属性集。
 */
 GOLDENAPI
 golden_error  
@@ -1560,27 +1560,27 @@ gob_get_max_points_property(
 
 
 /**
-* ������gob_search
-* ���ܣ��������������ı�ǩ�㣬ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [tablemask]     �ַ��������룬��ǩ����������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [mode]          ���ͣ�GOLDEN_SORT_BY_TABLE��GOLDEN_SORT_BY_TAG��GOLDEN_SORT_BY_ID ֮һ��
-*                        �������������ģʽ�����룬ȱʡֵΪGOLDEN_SORT_BY_TABLE
-*        [ids]           �������飬����������������ı�ǩ���ʶ�б�
-*        [count]         ���ͣ�����/���������ʱ��ʾ ids �ĳ��ȣ����ʱ��ʾ�������ı�ǩ�����
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ������������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��tablemask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*",
-*        ���������������ͨ���ո�ָ�������"demo_*1 demo_*2"���Ὣ����demo_*1����demo_*2�����ı�ǩ������������
+* 命名：gob_search
+* 功能：搜索符合条件的标签点，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [tablemask]     字符串，输入，标签点表名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [mode]          整型，GOLDEN_SORT_BY_TABLE、GOLDEN_SORT_BY_TAG、GOLDEN_SORT_BY_ID 之一，
+*                        搜索结果的排序模式，输入，缺省值为GOLDEN_SORT_BY_TABLE
+*        [ids]           整型数组，输出，返回搜索到的标签点标识列表
+*        [count]         整型，输入/输出，输入时表示 ids 的长度，输出时表示搜索到的标签点个数
+* 备注：用户须保证分配给 ids 的空间与 count 相符，各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*",
+*        多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 */
 GOLDENAPI
 golden_error  
@@ -1599,29 +1599,29 @@ gob_search(
           );
 
 /**
-* ������gob_search_in_batches
-* ���ܣ����������������������ı�ǩ�㣬ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [start]         ���ͣ����룬������ʼλ�ã�ָ������������ʼ������
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [tablemask]     �ַ��������룬��ǩ����������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [mode]          ���ͣ�GOLDEN_SORT_BY_TABLE��GOLDEN_SORT_BY_TAG��GOLDEN_SORT_BY_ID ֮һ��
-*                        �������������ģʽ�����룬ȱʡֵΪGOLDEN_SORT_BY_TABLE
-*        [ids]           �������飬����������������ı�ǩ���ʶ�б�
-*        [count]         ���ͣ�����/���������ʱ��ʾ ids �ĳ��ȣ����ʱ��ʾ�������ı�ǩ�����
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ������������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��tablemask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*"��
-*        ���������ı�ǩ�������ṩ��ҪСʱ����ʾ�������һ�����������ı�ǩ�� (��ȫ���������),
-*        ���������������ͨ���ո�ָ�������"demo_*1 demo_*2"���Ὣ����demo_*1����demo_*2�����ı�ǩ������������
+* 命名：gob_search_in_batches
+* 功能：分批继续搜索符合条件的标签点，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [start]         整型，输入，搜索起始位置（指满足条件的起始数）。
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [tablemask]     字符串，输入，标签点表名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [mode]          整型，GOLDEN_SORT_BY_TABLE、GOLDEN_SORT_BY_TAG、GOLDEN_SORT_BY_ID 之一，
+*                        搜索结果的排序模式，输入，缺省值为GOLDEN_SORT_BY_TABLE
+*        [ids]           整型数组，输出，返回搜索到的标签点标识列表
+*        [count]         整型，输入/输出，输入时表示 ids 的长度，输出时表示搜索到的标签点个数
+* 备注：用户须保证分配给 ids 的空间与 count 相符，各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*"。
+*        当搜索到的标签点数比提供的要小时，表示这是最后一批符合条件的标签点 (即全部搜索完毕),
+*        多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 */
 GOLDENAPI
 golden_error  
@@ -1642,41 +1642,41 @@ gob_search_in_batches(
 
 
 /**
-* ������gob_search_ex
-* ���ܣ��������������ı�ǩ�㣬ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [tablemask]     �ַ��������룬��ǩ����������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [typemask]      �ַ����������������ǩ���������ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_TYPE_NAME_SIZE,
-*                        ���õ���ͨ�������Ϳ���ʹ�� bool��uint8��datetime���ַ�����ʾ�������ִ�Сд��֧��ģ��������
-*        [classofmask]   ���ͣ������������ǩ������ȱʡ����Ϊ-1����ʾ�������������͵ı�ǩ�㣬
-*                        ��ʹ�ñ�ǩ��������Ϊ��������ʱ��������GOLDEN_CLASSö���е�һ����߶������ϡ�
-*        [timeunitmask]  ���ͣ������������ǩ���ʱ������ȣ�ȱʡ����Ϊ-1����ʾ����������ʱ������ȣ�
-*                        ��ʹ�ô�ʱ���������Ϊ��������ʱ��timeunitmask��ֵ����Ϊ0��1��0��ʾʱ�������Ϊ�룬1��ʾ����
-*        [othertypemask] ���ͣ����������ʹ��������ǩ��������Ϊ����������ȱʡ����Ϊ0����ʾ����Ϊ����������
-*                        ��ʹ�ô˲�����Ϊ��������ʱ��othertypemaskvalue��Ϊ��Ӧ������ֵ��
-*                        �˲�����ȡֵ���Բο�golden.h�ļ��е�GOLDEN_SEARCH_MASK��
+* 命名：gob_search_ex
+* 功能：搜索符合条件的标签点，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [tablemask]     字符串，输入，标签点表名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [typemask]      字符串，输入参数，标签点类型名称。缺省设置为空，长度不得超过 GOLDEN_TYPE_NAME_SIZE,
+*                        内置的普通数据类型可以使用 bool、uint8、datetime等字符串表示，不区分大小写，支持模糊搜索。
+*        [classofmask]   整型，输入参数，标签点的类别，缺省设置为-1，表示可以是任意类型的标签点，
+*                        当使用标签点类型作为搜索条件时，必须是GOLDEN_CLASS枚举中的一项或者多项的组合。
+*        [timeunitmask]  整型，输入参数，标签点的时间戳精度，缺省设置为-1，表示可以是任意时间戳精度，
+*                        当使用此时间戳精度作为搜索条件时，timeunitmask的值可以为0或1，0表示时间戳精度为秒，1表示毫秒
+*        [othertypemask] 整型，输入参数，使用其他标签点属性作为搜索条件，缺省设置为0，表示不作为搜索条件，
+*                        当使用此参数作为搜索条件时，othertypemaskvalue作为对应的搜索值，
+*                        此参数的取值可以参考golden.h文件中的GOLDEN_SEARCH_MASK。
 *        [othertypemaskvalue]
-*                        �ַ����������������ʹ��������ǩ��������Ϊ��������ʱ���˲�����Ϊ��Ӧ������ֵ��ȱʡ����Ϊ0����ʾ����Ϊ����������
-*                        ���othertypemask��ֵΪ0������GOLDEN_SEARCH_NULL����˲���������,
-*                        ��othertypemask��Ӧ�ı�ǩ������Ϊ��ֵ����ʱ��������ֵֻ֧������жϣ�
-*                        ��othertypemask��Ӧ�ı�ǩ������Ϊ�ַ�������ʱ��������ֵ֧��ģ��������
-*        [mode]          ���ͣ�GOLDEN_SORT_BY_TABLE��GOLDEN_SORT_BY_TAG��GOLDEN_SORT_BY_ID ֮һ��
-*                        �������������ģʽ�����룬ȱʡֵΪGOLDEN_SORT_BY_TABLE
-*        [ids]           �������飬����������������ı�ǩ���ʶ�б�
-*        [count]         ���ͣ�����/���������ʱ��ʾ ids �ĳ��ȣ����ʱ��ʾ�������ı�ǩ�����
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ������������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��tablemask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*",
-*        ���������������ͨ���ո�ָ�������"demo_*1 demo_*2"���Ὣ����demo_*1����demo_*2�����ı�ǩ������������
+*                        字符串，输入参数，当使用其他标签点属性作为搜索条件时，此参数作为对应的搜索值，缺省设置为0，表示不作为搜索条件，
+*                        如果othertypemask的值为0，或者GOLDEN_SEARCH_NULL，则此参数被忽略,
+*                        当othertypemask对应的标签点属性为数值类型时，此搜索值只支持相等判断，
+*                        当othertypemask对应的标签点属性为字符串类型时，此搜索值支持模糊搜索。
+*        [mode]          整型，GOLDEN_SORT_BY_TABLE、GOLDEN_SORT_BY_TAG、GOLDEN_SORT_BY_ID 之一，
+*                        搜索结果的排序模式，输入，缺省值为GOLDEN_SORT_BY_TABLE
+*        [ids]           整型数组，输出，返回搜索到的标签点标识列表
+*        [count]         整型，输入/输出，输入时表示 ids 的长度，输出时表示搜索到的标签点个数
+* 备注：用户须保证分配给 ids 的空间与 count 相符，各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*",
+*        多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 */
 GOLDENAPI
   golden_error  
@@ -1701,38 +1701,38 @@ GOLDENAPI
 
 
 /**
-* ������gob_search_points_count
-* ���ܣ��������������ı�ǩ�㣬ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [tablemask]     �ַ��������룬��ǩ����������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [typemask]      �ַ����������������ǩ���������ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_TYPE_NAME_SIZE,
-*                        ���õ���ͨ�������Ϳ���ʹ�� bool��uint8��datetime���ַ�����ʾ�������ִ�Сд��֧��ģ��������
-*        [classofmask]   ���ͣ������������ǩ������ȱʡ����Ϊ-1����ʾ�������������͵ı�ǩ�㣬
-*                        ��ʹ�ñ�ǩ��������Ϊ��������ʱ��������GOLDEN_CLASSö���е�һ����߶������ϡ�
-*        [timeunitmask]  ���ͣ������������ǩ���ʱ������ȣ�ȱʡ����Ϊ-1����ʾ����������ʱ������ȣ�
-*                        ��ʹ�ô�ʱ���������Ϊ��������ʱ��timeunitmask��ֵ����Ϊ0��1��0��ʾʱ�������Ϊ�룬1��ʾ����
-*        [othertypemask] ���ͣ����������ʹ��������ǩ��������Ϊ����������ȱʡ����Ϊ0����ʾ����Ϊ����������
-*                        ��ʹ�ô˲�����Ϊ��������ʱ��othertypemaskvalue��Ϊ��Ӧ������ֵ��
-*                        �˲�����ȡֵ���Բο�golden.h�ļ��е�GOLDEN_SEARCH_MASK��
+* 命名：gob_search_points_count
+* 功能：搜索符合条件的标签点，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [tablemask]     字符串，输入，标签点表名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [typemask]      字符串，输入参数，标签点类型名称。缺省设置为空，长度不得超过 GOLDEN_TYPE_NAME_SIZE,
+*                        内置的普通数据类型可以使用 bool、uint8、datetime等字符串表示，不区分大小写，支持模糊搜索。
+*        [classofmask]   整型，输入参数，标签点的类别，缺省设置为-1，表示可以是任意类型的标签点，
+*                        当使用标签点类型作为搜索条件时，必须是GOLDEN_CLASS枚举中的一项或者多项的组合。
+*        [timeunitmask]  整型，输入参数，标签点的时间戳精度，缺省设置为-1，表示可以是任意时间戳精度，
+*                        当使用此时间戳精度作为搜索条件时，timeunitmask的值可以为0或1，0表示时间戳精度为秒，1表示毫秒
+*        [othertypemask] 整型，输入参数，使用其他标签点属性作为搜索条件，缺省设置为0，表示不作为搜索条件，
+*                        当使用此参数作为搜索条件时，othertypemaskvalue作为对应的搜索值，
+*                        此参数的取值可以参考golden.h文件中的GOLDEN_SEARCH_MASK。
 *        [othertypemaskvalue]
-*                        �ַ����������������ʹ��������ǩ��������Ϊ��������ʱ���˲�����Ϊ��Ӧ������ֵ��ȱʡ����Ϊ0����ʾ����Ϊ����������
-*                        ���othertypemask��ֵΪ0������GOLDEN_SEARCH_NULL����˲���������,
-*                        ��othertypemask��Ӧ�ı�ǩ������Ϊ��ֵ����ʱ��������ֵֻ֧������жϣ�
-*                        ��othertypemask��Ӧ�ı�ǩ������Ϊ�ַ�������ʱ��������ֵ֧��ģ��������
-*        [count]         ���ͣ��������ʾ�������ı�ǩ�����
-* ��ע�� �������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��tablemask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*",
-*        ���������������ͨ���ո�ָ�������"demo_*1 demo_*2"���Ὣ����demo_*1����demo_*2�����ı�ǩ������������
+*                        字符串，输入参数，当使用其他标签点属性作为搜索条件时，此参数作为对应的搜索值，缺省设置为0，表示不作为搜索条件，
+*                        如果othertypemask的值为0，或者GOLDEN_SEARCH_NULL，则此参数被忽略,
+*                        当othertypemask对应的标签点属性为数值类型时，此搜索值只支持相等判断，
+*                        当othertypemask对应的标签点属性为字符串类型时，此搜索值支持模糊搜索。
+*        [count]         整型，输出，表示搜索到的标签点个数
+* 备注： 各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*",
+*        多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 */
 GOLDENAPI
   golden_error  
@@ -1755,89 +1755,89 @@ GOLDENAPI
 
 //////////////////////////////////////////////////////////////////////////
 /**
-* ������gob_get_table_field_count
-* ���ܣ���ȡ���ֶ�����
-* ������
-*        [handle]        ���Ӿ��
-*        [table_id]       GOLDEN_TABLE_NAME_ID ���ͣ����룬֧��ö����ϡ�
-*        [field_count]         ���ͣ��������ʾ��ȡ�����ֶθ���
-* ��ע�� table_id ����GOLDEN_TABLE_ID_BASE����ʾ���������ֶ���Ϣ������GOLDEN_TABLE_ID_SCAN����ʾ�ɼ������ֶ���Ϣ��
-����GOLDEN_TABLE_ID_CALC����ʾ���������ֶ���Ϣ������ GOLDEN_TABLE_ID_BASE|GOLDEN_TABLE_ID_SCAN��ͬʱ��ʾ�������� + �ɼ�������Ϣ��
+* 命名：gob_get_table_field_count
+* 功能：获取表字段数量
+* 参数：
+*        [handle]        连接句柄
+*        [table_id]       GOLDEN_TABLE_NAME_ID 类型，输入，支持枚举组合。
+*        [field_count]         整型，输出，表示获取到的字段个数
+* 备注： table_id 等于GOLDEN_TABLE_ID_BASE，显示基本属性字段信息；等于GOLDEN_TABLE_ID_SCAN，显示采集属性字段信息；
+等于GOLDEN_TABLE_ID_CALC，显示计算属性字段信息；等于 GOLDEN_TABLE_ID_BASE|GOLDEN_TABLE_ID_SCAN，同时显示基本属性 + 采集属性信息；
 */
 GOLDENAPI
 golden_error
 GOLDENAPI_CALLRULE
 gob_get_table_field_count(golden_int32 handle, int class_of, golden_int32* field_count);
 /**
-* ������gob_get_table_fields
-* ���ܣ���ȡ���ֶνṹ
-* ������
-*        [handle]        ���Ӿ��
-*        [table_id]       GOLDEN_TABLE_NAME_ID ���ͣ����룬֧��ö����ϡ�
-*        [fields]       GOLDEN_TAG_FIELD���飬�������ȡ���ֶν��塣
-*        [field_count]         ���ͣ�����/���������ʱ��ʾfields�����������������ʾ��ȡ�����ֶθ���
-* ��ע��  table_id ����GOLDEN_TABLE_ID_BASE����ʾ���������ֶ���Ϣ������GOLDEN_TABLE_ID_SCAN����ʾ�ɼ������ֶ���Ϣ��
-����GOLDEN_TABLE_ID_CALC����ʾ���������ֶ���Ϣ������ GOLDEN_TABLE_ID_BASE|GOLDEN_TABLE_ID_SCAN��ͬʱ��ʾ�������� + �ɼ�������Ϣ��
-fields��������ʱ�������field_count��
+* 命名：gob_get_table_fields
+* 功能：获取表字段结构
+* 参数：
+*        [handle]        连接句柄
+*        [table_id]       GOLDEN_TABLE_NAME_ID 类型，输入，支持枚举组合。
+*        [fields]       GOLDEN_TAG_FIELD数组，输出，获取的字段结体。
+*        [field_count]         整型，输入/输出，输入时表示fields数组数量，输出，表示获取到的字段个数
+* 备注：  table_id 等于GOLDEN_TABLE_ID_BASE，显示基本属性字段信息；等于GOLDEN_TABLE_ID_SCAN，显示采集属性字段信息；
+等于GOLDEN_TABLE_ID_CALC，显示计算属性字段信息；等于 GOLDEN_TABLE_ID_BASE|GOLDEN_TABLE_ID_SCAN，同时显示基本属性 + 采集属性信息；
+fields数量输入时必须等于field_count。
 */
 GOLDENAPI
 golden_error
 GOLDENAPI_CALLRULE
 gob_get_table_fields(golden_int32 handle, int class_of, GOLDEN_TAG_FIELD* fields, golden_int32* field_count);
 /**
-* ������gob_get_table_fields
-* ���ܣ�ͨ����ѯ������ͳ�Ʒ��ϵ�����
-* ������
-*        [handle]        ���Ӿ��
-*        [json_str]       �ַ��������������json��ѯ�����ַ�����
-*        [json_str_size]     ���ͣ����������json�ַ������ȡ�
-*        [id_count]         ���ͣ��������ʾ��ȡ���ı�ǩ�����
-* ��ע�� json_str����ѯ�������ο�mongodb��ѯ������
-"$lt"��"$lte"��"$gt"��"$gte"��"$ne"��"$in"��"$nin"��"$like"��"$nlike"��"$and"��"$or"�ֱ��Ӧ<��<=��>��>=�������ڡ������ڡ��������ڡ�ģ��������ģ���������������롢������
-{"id" : 20} ��ʾid����20��{"id" : 20 , "tag" : "abc"}��ʾid=20 && tag=abc��{"id" : {"$gte" : 18, "$lte" : 30}} ��ʾid>=18 && id<=30��
-{"id": {"$ne": 12}}��ʾid != 12��{"id" : {"$in" : [12,13,14,15]}} ��ʾid ��12,13,14,15��Χ�ڣ�
-{"tag" : {"$like" : "A%"}}��ʾƥ����A��ͷ�����ݣ�{"tag" : {"$like": "%A%"}}��ʾ����tag�м����A�����ݣ�
-{"$or" : [{"id" : 12}, {"tag" : {"$like" : "%a"}}]}��ʾid=12 || tag like "%a"��
-{"$and" : ["id" : {"$gte" : 18, "$lte" : 30}, "tag", {"$like" : "%a"}]}��ʾȡ id>=18 && id<=30 && tag like "%a"
+* 命名：gob_get_table_fields
+* 功能：通过查询条件，统计符合的数量
+* 参数：
+*        [handle]        连接句柄
+*        [json_str]       字符串，输入参数，json查询条件字符串。
+*        [json_str_size]     整型，输入参数，json字符串长度。
+*        [id_count]         整型，输出，表示获取到的标签点个数
+* 备注： json_str：查询条件，参考mongodb查询条件。
+"$lt"、"$lte"、"$gt"、"$gte"、"$ne"、"$in"、"$nin"、"$like"、"$nlike"、"$and"、"$or"分别对应<、<=、>、>=、不等于、包含于、不包含于、模糊包含、模糊不包含、条件与、条件或；
+{"id" : 20} 表示id等于20；{"id" : 20 , "tag" : "abc"}表示id=20 && tag=abc；{"id" : {"$gte" : 18, "$lte" : 30}} 表示id>=18 && id<=30；
+{"id": {"$ne": 12}}表示id != 12；{"id" : {"$in" : [12,13,14,15]}} 表示id 在12,13,14,15范围内；
+{"tag" : {"$like" : "A%"}}表示匹配以A开头的数据；{"tag" : {"$like": "%A%"}}表示搜索tag中间包含A的数据；
+{"$or" : [{"id" : 12}, {"tag" : {"$like" : "%a"}}]}表示id=12 || tag like "%a"；
+{"$and" : ["id" : {"$gte" : 18, "$lte" : 30}, "tag", {"$like" : "%a"}]}表示取 id>=18 && id<=30 && tag like "%a"
 {"$or" : [{"$and" : ["id" : {"$gte" : 18, "$lte" : 30}, "tag" : {"$like" : "%abc%"}]}, {"$and" : ["id" : {"$gte" : 80, "$lte" : 100}, "tag" : {"$nlike" : "abc%"}]}]}
-��ʾȡ ((id>=18 && id <= 30 && tag like "%abc%") || (id>=80 && id <= 100 && tag not like "abc%"))
+表示取 ((id>=18 && id <= 30 && tag like "%abc%") || (id>=80 && id <= 100 && tag not like "abc%"))
 */
 GOLDENAPI
 golden_error
 GOLDENAPI_CALLRULE
 gob_search_point_id_count(golden_int32 handle, const char* json_str, const size_t& json_str_size, golden_int32* id_count);
 /**
-* ������gob_search_point_ids
-* ���ܣ���ѯ����Ϣ���ݣ���ȡ������
-* ������
-*        [handle]        ���Ӿ��
-*        [json_str]       �ַ��������������json��ѯ�����ַ�����
-*        [json_str_size]     ���ͣ����������json�ַ������ȡ�
-*        [ids]         �������飬����������������ı�ǩ���ʶ�б�
-*        [id_count]         ���ͣ����룬���������ʱ��ʾ id_array �ĳ��ȣ����ʱ��ʾ�������ı�ǩ�����
-* ��ע�� json_str����ѯ�������ο�mongodb��ѯ������
-"$lt"��"$lte"��"$gt"��"$gte"��"$ne"��"$in"��"$nin"��"$like"��"$nlike"��"$and"��"$or"�ֱ��Ӧ<��<=��>��>=�������ڡ������ڡ��������ڡ�ģ��������ģ���������������롢������
-{"id" : 20} ��ʾid����20��{"id" : 20 , "tag" : "abc"}��ʾid=20 && tag=abc��{"id" : {"$gte" : 18, "$lte" : 30}} ��ʾid>=18 && id<=30��
-{"id": {"$ne": 12}}��ʾid != 12��{"id" : {"$in" : [12,13,14,15]}} ��ʾid ��12,13,14,15��Χ�ڣ�
-{"tag" : {"$like" : "A%"}}��ʾƥ����A��ͷ�����ݣ�{"tag" : {"$like": "%A%"}}��ʾ����tag�м����A�����ݣ�
-{"$or" : [{"id" : 12}, {"tag" : {"$like" : "%a"}}]}��ʾid=12 || tag like "%a"��
-{"$and" : ["id" : {"$gte" : 18, "$lte" : 30}, "tag", {"$like" : "%a"}]}��ʾȡ id>=18 && id<=30 && tag like "%a"
+* 命名：gob_search_point_ids
+* 功能：查询点信息数据，获取点数组
+* 参数：
+*        [handle]        连接句柄
+*        [json_str]       字符串，输入参数，json查询条件字符串。
+*        [json_str_size]     整型，输入参数，json字符串长度。
+*        [ids]         整型数组，输出，返回搜索到的标签点标识列表
+*        [id_count]         整型，输入，输出，输入时表示 id_array 的长度，输出时表示搜索到的标签点个数
+* 备注： json_str：查询条件，参考mongodb查询条件。
+"$lt"、"$lte"、"$gt"、"$gte"、"$ne"、"$in"、"$nin"、"$like"、"$nlike"、"$and"、"$or"分别对应<、<=、>、>=、不等于、包含于、不包含于、模糊包含、模糊不包含、条件与、条件或；
+{"id" : 20} 表示id等于20；{"id" : 20 , "tag" : "abc"}表示id=20 && tag=abc；{"id" : {"$gte" : 18, "$lte" : 30}} 表示id>=18 && id<=30；
+{"id": {"$ne": 12}}表示id != 12；{"id" : {"$in" : [12,13,14,15]}} 表示id 在12,13,14,15范围内；
+{"tag" : {"$like" : "A%"}}表示匹配以A开头的数据；{"tag" : {"$like": "%A%"}}表示搜索tag中间包含A的数据；
+{"$or" : [{"id" : 12}, {"tag" : {"$like" : "%a"}}]}表示id=12 || tag like "%a"；
+{"$and" : ["id" : {"$gte" : 18, "$lte" : 30}, "tag", {"$like" : "%a"}]}表示取 id>=18 && id<=30 && tag like "%a"
 {"$or" : [{"$and" : ["id" : {"$gte" : 18, "$lte" : 30}, "tag" : {"$like" : "%abc%"}]}, {"$and" : ["id" : {"$gte" : 80, "$lte" : 100}, "tag" : {"$nlike" : "abc%"}]}]}
-��ʾȡ ((id>=18 && id <= 30 && tag like "%abc%") || (id>=80 && id <= 100 && tag not like "abc%"))
+表示取 ((id>=18 && id <= 30 && tag like "%abc%") || (id>=80 && id <= 100 && tag not like "abc%"))
 */
 GOLDENAPI
 golden_error
 GOLDENAPI_CALLRULE
 gob_search_point_ids(golden_int32 handle, const char* json_str, const size_t& json_str_size, golden_int32* ids, golden_int32* id_count);
 /**
-* ������gob_append_point
-* ���ܣ��������ӵ���Ϣ
-* ������
-*        [handle]        ���Ӿ��
-*        [json_str]       �ַ��������������json�ַ�����
-*        [json_str_size]     ���ͣ����������json�ַ������ȡ�
-*        [id]         ���ͣ�������������ӳɹ��ı�ǩ����
-* ��ע�� json_str����ǩ����Ϣ��ʾ�����£�
+* 命名：gob_append_point
+* 功能：批量添加点信息
+* 参数：
+*        [handle]        连接句柄
+*        [json_str]       字符串，输入参数，json字符串；
+*        [json_str_size]     整型，输入参数，json字符串长度。
+*        [id]         整型，输出，返回添加成功的标签点编号
+* 备注： json_str：标签点信息。示例如下：
 {"tag":"456","type":3,"table":4,"desc":"456",...}
 */
 GOLDENAPI
@@ -1845,55 +1845,55 @@ golden_error
 GOLDENAPI_CALLRULE
 gob_append_point(golden_int32 handle, const char* json_str, const size_t& json_str_size, golden_int32* id);
 /**
-* ������gob_update_points
-* ���ܣ��������µ���Ϣ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]              ��ǩ����  
-*        [json_str]       �ַ��������������json�ַ�����
-*        [json_str_size]     ���ͣ����������json�ַ������ȡ�
-* ��ע�� json_str����ǩ����Ϣ��ʾ�����£�
+* 命名：gob_update_points
+* 功能：批量更新点信息
+* 参数：
+*        [handle]        连接句柄
+*        [id]              标签点编号  
+*        [json_str]       字符串，输入参数，json字符串；
+*        [json_str_size]     整型，输入参数，json字符串长度。
+* 备注： json_str：标签点信息。示例如下：
 {"id":1,"tag":"tag1","desc":"tag1 desc",...}
-��id�������ݣ� id��table��type��millisecond �ֶβ����޸ģ�
+依id更新内容， id、table、type、millisecond 字段不能修改；
 */
 GOLDENAPI
 golden_error
 GOLDENAPI_CALLRULE
 gob_update_point(golden_int32 handle, golden_int32 id, const char* json_str, const size_t& json_str_size);
 /**
-* ������gob_remove_points
-* ���ܣ�����ɾ������Ϣ
-* ������
-*        [handle]        ���Ӿ��
-*        [auto_purge]       ���ͣ�����������Ƿ��Զ�����ɾ����0Ϊ��������ɾ������0������ɾ��
-*        [ids]     �������飬���������ɾ����ǩ�����顣
-*        [id_count]         ���ͣ�����/���������ʱ��ʾ�������������ʱ��ʾɾ���ɹ�����
-*        [err_codes]         �������飬��������������Ƿ�ɹ�
-* ��ע��ids��err_codes��ʼ�����ȱ������id_count������
+* 命名：gob_remove_points
+* 功能：批量删除点信息
+* 参数：
+*        [handle]        连接句柄
+*        [auto_purge]       整型，输入参数，是否自动物理删除，0为不作物理删除，非0则物理删；
+*        [ids]     整型数组，输入参数，删除标签点数组。
+*        [id_count]         整型，输入/输出，输入时表示数组数量，输出时表示删除成功数量
+*        [err_codes]         整型数组，输出，返回添加是否成功
+* 备注：ids，err_codes初始化长度必须等于id_count数量，
 */
 GOLDENAPI
 golden_error
 GOLDENAPI_CALLRULE
 gob_remove_points(golden_int32 handle, int auto_purge, const golden_int32* ids, golden_int32* id_count, golden_error* err_codes);
 /**
-* ������gob_search_point_props
-* ���ܣ�����������ȡָ���ֶ�����
-* ������
-*        [handle]        ���Ӿ��
-*        [json_str]       �ַ��������������json�ַ�����
-*        [json_str_size]     ���ͣ����������json�ַ������ȣ�
-*        [tag_count]         ������������������ػ�ȡ����ǩ������
-*        [prop_size]         ���ͣ��������ʾ����json�ַ������ȣ�
-*        [json_props]       �ַ������飬����ʱ *json_props��ҪΪ0�����ʱjson_propsΪjson�ַ�����
-*                                 ����ʹ��go_release_pointer�ͷţ����������ڴ�й¶
-* ��ע�� json_str����ѯ������ѡ�񷵻��ֶΣ�
-* fields ʹ��*��ʾ���������ֶΣ�ʹ��base��ʾ����base���������ֶΣ�scan��ʾ����scan�ɼ������ֶΣ�calc��ʾ����calc���������ֶΡ�
-* condition ʹ�÷����μ���gob_search_point_ids�е�����������
-json_str��ʽ���£�
+* 命名：gob_search_point_props
+* 功能：根据条件获取指定字段内容
+* 参数：
+*        [handle]        连接句柄
+*        [json_str]       字符串，输入参数，json字符串；
+*        [json_str_size]     整型，输入参数，json字符串长度；
+*        [tag_count]         整数，输出参数，返回获取到标签点数量
+*        [prop_size]         整型，输出，表示返回json字符串长度；
+*        [json_props]       字符串数组，输入时 *json_props需要为0，输出时json_props为json字符串，
+*                                 必须使用go_release_pointer释放，否则会出现内存泄露
+* 备注： json_str：查询条件及选择返回字段；
+* fields 使用*表示返回所有字段，使用base表示返回base基本属性字段，scan表示返回scan采集属性字段，calc表示返回calc计算属性字段。
+* condition 使用方法参见：gob_search_point_ids中的条件描述。
+json_str格式如下：
 {"fields":["id","tag","type"],
 "condition":{}
-}��
-json_props��ʽ���£�
+}，
+json_props格式如下：
 [
   {"id":23,"tag":"tag1","type":1...},
   {"id":24,"tag":"tag2","type":3...},
@@ -1906,12 +1906,12 @@ GOLDENAPI_CALLRULE
 gob_search_point_props(golden_int32 handle, const char* json_str, const size_t& json_str_size, int* tag_count, size_t* prop_size, char** json_props);
 
 /**
-* ������gob_remove_table_by_id
-* ���ܣ����ݱ� id ɾ���������б�ǩ��
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬�� id 
-* ��ע��ɾ���ı����ɻָ���ɾ���ı�ǩ�����ͨ�� gob_recover_point �ӿڻָ���
+* 命名：gob_remove_table_by_id
+* 功能：根据表 id 删除表及表中标签点
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，表 id 
+* 备注：删除的表不可恢复，删除的标签点可以通过 gob_recover_point 接口恢复。
 */
 GOLDENAPI
 golden_error  
@@ -1922,12 +1922,12 @@ gob_remove_table_by_id(
                        );
 
 /**
-* ������gob_remove_table_by_name
-* ���ܣ����ݱ���ɾ���������б�ǩ��
-* ������
-*        [handle]        ���Ӿ��
-*        [name]          �ַ��������룬������
-* ��ע��ɾ���ı����ɻָ���ɾ���ı�ǩ�����ͨ�� gob_recover_point �ӿڻָ���
+* 命名：gob_remove_table_by_name
+* 功能：根据表名删除表及表中标签点
+* 参数：
+*        [handle]        连接句柄
+*        [name]          字符串，输入，表名称
+* 备注：删除的表不可恢复，删除的标签点可以通过 gob_recover_point 接口恢复。
 */
 GOLDENAPI
 golden_error  
@@ -1938,16 +1938,16 @@ gob_remove_table_by_name(
                          );
 
 /**
-* ������gob_update_point_property
-* ���ܣ����µ�����ǩ������
-* ������
-*        [handle]        ���Ӿ��
-*        [base] GOLDEN_POINT �ṹ�����룬������ǩ�����Լ���
-*        [scan] GOLDEN_SCAN_POINT �ṹ�����룬�ɼ���ǩ����չ���Լ���
-*        [calc] GOLDEN_CALC_POINT �ṹ�����룬�����ǩ����չ���Լ���
-* ��ע����ǩ���� base ������ id �ֶ�ָ�������� id��table��type��millisecond �ֶβ����޸ģ�
-*      changedate��changer��createdate��creator �ֶ���ϵͳά���������ֶξ����޸ģ�
-*      ���� classof �ֶΡ���������� scan��calc ��Ϊ��ָ�룬��Ӧ����չ���Խ����ֲ��䡣
+* 命名：gob_update_point_property
+* 功能：更新单个标签点属性
+* 参数：
+*        [handle]        连接句柄
+*        [base] GOLDEN_POINT 结构，输入，基本标签点属性集。
+*        [scan] GOLDEN_SCAN_POINT 结构，输入，采集标签点扩展属性集。
+*        [calc] GOLDEN_CALC_POINT 结构，输入，计算标签点扩展属性集。
+* 备注：标签点由 base 参数的 id 字段指定，其中 id、table、type、millisecond 字段不能修改，
+*      changedate、changer、createdate、creator 字段由系统维护，其余字段均可修改，
+*      包括 classof 字段。输入参数中 scan、calc 可为空指针，对应的扩展属性将保持不变。
 */
 GOLDENAPI
 golden_error 
@@ -1960,16 +1960,16 @@ gob_update_point_property(
                           );
 
 ///**
-//* ������gob_update_min_point_property
-//* ���ܣ�����С���ȸ��µ�����ǩ������
-//* ������
-//*        [handle]        ���Ӿ��
-//*        [base] GOLDEN_POINT �ṹ�����룬������ǩ�����Լ���
-//*        [scan] GOLDEN_SCAN_POINT �ṹ�����룬�ɼ���ǩ����չ���Լ���
-//*        [calc] GOLDEN_MAX_CALC_POINT �ṹ�����룬�����ǩ����չ���Լ���
-//* ��ע����ǩ���� base ������ id �ֶ�ָ�������� id��table��type��millisecond �ֶβ����޸ģ�
-//*      changedate��changer��createdate��creator �ֶ���ϵͳά���������ֶξ����޸ģ�
-//*      ���� classof �ֶΡ���������� scan��calc ��Ϊ��ָ�룬��Ӧ����չ���Խ����ֲ��䡣
+//* 命名：gob_update_min_point_property
+//* 功能：按最小长度更新单个标签点属性
+//* 参数：
+//*        [handle]        连接句柄
+//*        [base] GOLDEN_POINT 结构，输入，基本标签点属性集。
+//*        [scan] GOLDEN_SCAN_POINT 结构，输入，采集标签点扩展属性集。
+//*        [calc] GOLDEN_MAX_CALC_POINT 结构，输入，计算标签点扩展属性集。
+//* 备注：标签点由 base 参数的 id 字段指定，其中 id、table、type、millisecond 字段不能修改，
+//*      changedate、changer、createdate、creator 字段由系统维护，其余字段均可修改，
+//*      包括 classof 字段。输入参数中 scan、calc 可为空指针，对应的扩展属性将保持不变。
 //*/
 //GOLDENAPI
 //golden_error
@@ -1982,16 +1982,16 @@ gob_update_point_property(
 //															);
 
 /**
-* ������gob_update_max_point_property
-* ���ܣ�����󳤶ȸ��µ�����ǩ������
-* ������
-*        [handle]        ���Ӿ��
-*        [base] GOLDEN_POINT �ṹ�����룬������ǩ�����Լ���
-*        [scan] GOLDEN_SCAN_POINT �ṹ�����룬�ɼ���ǩ����չ���Լ���
-*        [calc] GOLDEN_MAX_CALC_POINT �ṹ�����룬�����ǩ����չ���Լ���
-* ��ע����ǩ���� base ������ id �ֶ�ָ�������� id��table��type��millisecond �ֶβ����޸ģ�
-*      changedate��changer��createdate��creator �ֶ���ϵͳά���������ֶξ����޸ģ�
-*      ���� classof �ֶΡ���������� scan��calc ��Ϊ��ָ�룬��Ӧ����չ���Խ����ֲ��䡣
+* 命名：gob_update_max_point_property
+* 功能：按最大长度更新单个标签点属性
+* 参数：
+*        [handle]        连接句柄
+*        [base] GOLDEN_POINT 结构，输入，基本标签点属性集。
+*        [scan] GOLDEN_SCAN_POINT 结构，输入，采集标签点扩展属性集。
+*        [calc] GOLDEN_MAX_CALC_POINT 结构，输入，计算标签点扩展属性集。
+* 备注：标签点由 base 参数的 id 字段指定，其中 id、table、type、millisecond 字段不能修改，
+*      changedate、changer、createdate、creator 字段由系统维护，其余字段均可修改，
+*      包括 classof 字段。输入参数中 scan、calc 可为空指针，对应的扩展属性将保持不变。
 */
 GOLDENAPI
 golden_error
@@ -2005,21 +2005,21 @@ gob_update_max_point_property(
 
 
 /**
-* ������gob_find_points
-* ���ܣ����� "����.��ǩ����" ��ʽ������ȡ��ǩ���ʶ
-* ������
-*        [handle]           ���Ӿ��
-*        [count]            ����������/���������ʱ��ʾ��ǩ�����
-*                           (��table_dot_tags��ids��types��classof��use_ms �ĳ���)��
-*                           ���ʱ��ʾ�ҵ��ı�ǩ�����
-*        [table_dot_tags]   �ַ���ָ�����飬���룬"����.��ǩ����" �б�
-*        [ids]              �������飬�������ǩ���ʶ�б�, ���� 0 ��ʾδ�ҵ�
-*        [types]            �������飬�������ǩ����������
-*        [classof]          �������飬�������ǩ�����
-*        [use_ms]           ���������飬�����ʱ������ȣ�
-*                           ���� 1 ��ʾʱ�������Ϊ���룬 Ϊ 0 ��ʾΪ�롣
-* ��ע���û��뱣֤����� table_dot_tags��ids��types��classof��use_ms �Ŀռ���count�����
-*        ���� types��classof��use_ms ��Ϊ��ָ�룬��Ӧ���ֶν����ٷ��ء�
+* 命名：gob_find_points
+* 功能：根据 "表名.标签点名" 格式批量获取标签点标识
+* 参数：
+*        [handle]           连接句柄
+*        [count]            整数，输入/输出，输入时表示标签点个数
+*                           (即table_dot_tags、ids、types、classof、use_ms 的长度)，
+*                           输出时表示找到的标签点个数
+*        [table_dot_tags]   字符串指针数组，输入，"表名.标签点名" 列表
+*        [ids]              整型数组，输出，标签点标识列表, 返回 0 表示未找到
+*        [types]            整型数组，输出，标签点数据类型
+*        [classof]          整型数组，输出，标签点类别
+*        [use_ms]           短整型数组，输出，时间戳精度，
+*                           返回 1 表示时间戳精度为毫秒， 为 0 表示为秒。
+* 备注：用户须保证分配给 table_dot_tags、ids、types、classof、use_ms 的空间与count相符，
+*        其中 types、classof、use_ms 可为空指针，对应的字段将不再返回。
 */
 GOLDENAPI
 golden_error  
@@ -2035,25 +2035,25 @@ gob_find_points(
                 );
 
 /**
-* ������gob_sort_points
-* ���ܣ����ݱ�ǩ�����ֶζԱ�ǩ���ʶ��������
-* ������
-*        [handle]           ���Ӿ��
-*        [count]            ���������룬��ʾ��ǩ�����, �� ids �ĳ���
-*        [ids]              �������飬���룬��ǩ���ʶ�б�
-*        [index]            ���ͣ����룬�����ֶ�ö�٣��μ� GOLDEN_TAG_FIELD_INDEX��
-*                           �����ݸ��ֶζ� ID ��������
-*        [flag]             ���ͣ����룬��־λ��ϣ��μ� GOLDEN_TAG_SORT_FLAG ö�٣�����
-*                           GOLDEN_SORT_FLAG_DESCEND             ��ʾ�������򣬲����ñ�ʾ�������У�
-*                           GOLDEN_SORT_FLAG_CASE_SENSITIVE      ��ʾ�����ַ��������ֶαȽ�ʱ��Сд���У������ñ�ʾ�����ִ�Сд��
-*                           GOLDEN_SORT_FLAG_RECYCLED            ��ʾ�Կɻ��ձ�ǩ�������򣬲����ñ�ʾ��������ǩ����
-*                           ��ͬ�ı�־λ��ͨ��"��"����������һ��
-*                           ���Կɻ��ձ�ǩ����ʱ�������ֶ���������ʹ�ã�
+* 命名：gob_sort_points
+* 功能：根据标签属性字段对标签点标识进行排序
+* 参数：
+*        [handle]           连接句柄
+*        [count]            整数，输入，表示标签点个数, 即 ids 的长度
+*        [ids]              整型数组，输入，标签点标识列表
+*        [index]            整型，输入，属性字段枚举，参见 GOLDEN_TAG_FIELD_INDEX，
+*                           将根据该字段对 ID 进行排序。
+*        [flag]             整型，输入，标志位组合，参见 GOLDEN_TAG_SORT_FLAG 枚举，其中
+*                           GOLDEN_SORT_FLAG_DESCEND             表示降序排序，不设置表示升序排列；
+*                           GOLDEN_SORT_FLAG_CASE_SENSITIVE      表示进行字符串类型字段比较时大小写敏感，不设置表示不区分大小写；
+*                           GOLDEN_SORT_FLAG_RECYCLED            表示对可回收标签进行排序，不设置表示对正常标签排序，
+*                           不同的标志位可通过"或"运算连接在一起，
+*                           当对可回收标签排序时，以下字段索引不可使用：
 *                               GOLDEN_TAG_INDEX_TIMESTAMP
 *                               GOLDEN_TAG_INDEX_VALUE
 *                               GOLDEN_TAG_INDEX_QUALITY
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ���, ��� ID ָ���ı�ǩ�������ڣ�
-*        ���ǩ���߱�Ҫ��������ֶ� (��ԷǼ������з���ʽ����)�����ǽ��������������β����
+* 备注：用户须保证分配给 ids 的空间与 count 相符, 如果 ID 指定的标签并不存在，
+*        或标签不具备要求排序的字段 (如对非计算点进行方程式排序)，它们将被放置在数组的尾部。
 */
 GOLDENAPI
 golden_error  
@@ -2067,12 +2067,12 @@ gob_sort_points(
                 );
 
 /**
-* ������gob_update_table_name
-* ���ܣ����ݱ� ID ���±����ơ�
-* ������
-*        [handle]    ���Ӿ��
-*        [tab_id]    ���ͣ����룬Ҫ�޸ı��ı�ʶ
-*        [name]      �ַ��������룬�µı�ǩ������ơ�
+* 命名：gob_update_table_name
+* 功能：根据表 ID 更新表名称。
+* 参数：
+*        [handle]    连接句柄
+*        [tab_id]    整型，输入，要修改表的标识
+*        [name]      字符串，输入，新的标签点表名称。
 */
 GOLDENAPI
 golden_error 
@@ -2084,12 +2084,12 @@ gob_update_table_name(
                       );
 
 /**
-* ������gob_update_table_desc_by_id
-* ���ܣ����ݱ� ID ���±�������
-* ������
-*        [handle]    ���Ӿ��
-*        [tab_id]    ���ͣ����룬Ҫ�޸ı��ı�ʶ
-*        [desc]      �ַ��������룬�µı�������
+* 命名：gob_update_table_desc_by_id
+* 功能：根据表 ID 更新表描述。
+* 参数：
+*        [handle]    连接句柄
+*        [tab_id]    整型，输入，要修改表的标识
+*        [desc]      字符串，输入，新的表描述。
 */
 GOLDENAPI
 golden_error 
@@ -2101,12 +2101,12 @@ gob_update_table_desc_by_id(
                             );
 
 /**
-* ������gob_update_table_desc_by_name
-* ���ܣ����ݱ����Ƹ��±�������
-* ������
-*        [handle]    ���Ӿ��
-*        [name]      �ַ��������룬Ҫ�޸ı������ơ�
-*        [desc]      �ַ��������룬�µı��������������ʱ���볤��Ϊ�յ��ַ�����
+* 命名：gob_update_table_desc_by_name
+* 功能：根据表名称更新表描述。
+* 参数：
+*        [handle]    连接句柄
+*        [name]      字符串，输入，要修改表的名称。
+*        [desc]      字符串，输入，新的表描述，清空描述时传入长度为空的字符串。
 */
 GOLDENAPI
 golden_error 
@@ -2118,14 +2118,14 @@ gob_update_table_desc_by_name(
                               );
 
 /**
-* ������gob_recover_point
-* ���ܣ��ָ���ɾ����ǩ��
-* ������
-*        [handle]    ���Ӿ��
-*        [table_id]  ���ͣ����룬Ҫ����ǩ��ָ����ı���ʶ
-*        [point_id]  ���ͣ����룬���ָ��ı�ǩ���ʶ
-* ��ע: ���ӿ�ֻ�Կɻ��ձ�ǩ��(ͨ���ӿ�gob_remove_point_by_id/gob_remove_point_by_tag)��Ч��
-*        �������ı�ǩ��û�����á�
+* 命名：gob_recover_point
+* 功能：恢复已删除标签点
+* 参数：
+*        [handle]    连接句柄
+*        [table_id]  整型，输入，要将标签点恢复到的表标识
+*        [point_id]  整型，输入，待恢复的标签点标识
+* 备注: 本接口只对可回收标签点(通过接口gob_remove_point_by_id/gob_remove_point_by_tag)有效，
+*        对正常的标签点没有作用。
 */
 GOLDENAPI
 golden_error 
@@ -2137,13 +2137,13 @@ gob_recover_point(
                   );
 
 /**
-* ������gob_purge_point
-* ���ܣ������ǩ��
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���������룬Ҫ����ı�ǩ���ʶ
-* ��ע: ���ӿڽ��Կɻ��ձ�ǩ��(ͨ���ӿ�gob_remove_point_by_id/gob_remove_point_by_name)��Ч��
-*      �������ı�ǩ��û�����á�
+* 命名：gob_purge_point
+* 功能：清除标签点
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整数，输入，要清除的标签点标识
+* 备注: 本接口仅对可回收标签点(通过接口gob_remove_point_by_id/gob_remove_point_by_name)有效，
+*      对正常的标签点没有作用。
 */
 GOLDENAPI
 golden_error 
@@ -2155,11 +2155,11 @@ gob_purge_point(
 
 
 /**
-* ������gob_get_recycled_points_count
-* ���ܣ���ȡ�ɻ��ձ�ǩ������
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�������ɻ��ձ�ǩ�������
+* 命名：gob_get_recycled_points_count
+* 功能：获取可回收标签点数量
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输出，可回收标签点的数量
 */
 GOLDENAPI
 golden_error 
@@ -2170,15 +2170,15 @@ gob_get_recycled_points_count(
                               );
 
 /**
-* ������gob_get_recycled_points
-* ���ܣ���ȡ�ɻ��ձ�ǩ�� id �б�
-* ������
-*        [handle]    ���Ӿ��
-*        [ids]       �������飬������ɻ��ձ�ǩ�� id
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡ��ǩ��ĸ�����
-* ��ע���û��뱣֤ ids �ĳ����� count һ��
+* 命名：gob_get_recycled_points
+* 功能：获取可回收标签点 id 列表
+* 参数：
+*        [handle]    连接句柄
+*        [ids]       整型数组，输出，可回收标签点 id
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids 的长度，
+*                    输出时表示成功获取标签点的个数。
+* 备注：用户须保证 ids 的长度与 count 一致
 */
 GOLDENAPI
 golden_error 
@@ -2190,24 +2190,24 @@ gob_get_recycled_points(
                         );
 
 /**
-* ������gob_search_recycle_points_count
-* ���ܣ�����վ���������������ı�ǩ��ĸ�����ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [fullmask]      �ַ��������룬��ǩ��ȫ�����룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE+GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��֧�ֶ�������������Կո�ָ���
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [count]         ���ͣ��������ʾ�������ı�ǩ�����
-* ��ע�� �������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��tablemask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*",
-*        ���������������ͨ���ո�ָ�������"demo_*1 demo_*2"���Ὣ����demo_*1����demo_*2�����ı�ǩ������������
+* 命名：gob_search_recycle_points_count
+* 功能：回收站中搜索符合条件的标签点的个数，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [fullmask]      字符串，输入，标签点全名掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE+GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [count]         整型，输出，表示搜索到的标签点个数
+* 备注： 各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*",
+*        多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
 */
 GOLDENAPI
 golden_error
@@ -2223,26 +2223,26 @@ const char *instrument,
 golden_int32 *count
 );
 /**
-* ������gob_search_recycled_points
-* ���ܣ��������������Ŀɻ��ձ�ǩ�㣬ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��
-*        [tablemask]     �ַ��������룬��ǩ����������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [mode]          ���ͣ�GOLDEN_SORT_BY_TABLE��GOLDEN_SORT_BY_TAG��GOLDEN_SORT_BY_ID ֮һ��
-*                        �������������ģʽ�����룬ȱʡֵΪGOLDEN_SORT_BY_TABLE
-*        [ids]           �������飬����������������ı�ǩ���ʶ�б�
-*        [count]         ���ͣ�����/���������ʱ��ʾ ids �ĳ��ȣ����ʱ��ʾ�������ı�ǩ�����
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ������������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��fullmask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*"
+* 命名：gob_search_recycled_points
+* 功能：搜索符合条件的可回收标签点，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE。
+*        [tablemask]     字符串，输入，标签点表名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [mode]          整型，GOLDEN_SORT_BY_TABLE、GOLDEN_SORT_BY_TAG、GOLDEN_SORT_BY_ID 之一，
+*                        搜索结果的排序模式，输入，缺省值为GOLDEN_SORT_BY_TABLE
+*        [ids]           整型数组，输出，返回搜索到的标签点标识列表
+*        [count]         整型，输入/输出，输入时表示 ids 的长度，输出时表示搜索到的标签点个数
+* 备注：用户须保证分配给 ids 的空间与 count 相符，各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、fullmask 为空指针，则表示使用缺省设置"*"
 */
 GOLDENAPI
 golden_error  
@@ -2261,28 +2261,28 @@ gob_search_recycled_points(
                            );
 
 /**
-* ������gob_search_recycled_points_in_batches
-* ���ܣ������������������Ŀɻ��ձ�ǩ�㣬ʹ�ñ�ǩ����ʱ֧��ͨ���
-* ������
-*        [handle]        ���Ӿ��
-*        [start]         ���ͣ����룬��������ʼλ�ã�ָ������������ʼ������
-*        [tagmask]       �ַ��������룬��ǩ���������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE��
-*        [fullmask]      �ַ��������룬����.��ǩ��ȫ�������룬֧��"*"��"?"ͨ�����ȱʡ����Ϊ"*"�����Ȳ��ó��� GOLDEN_TAG_SIZE*2��
-*        [source]        �ַ��������룬����Դ���ϣ��ַ����е�ÿ���ַ�����ʾһ������Դ��
-*                        ���ַ�����ʾ��������Դ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_DESC_SIZE��
-*        [unit]          �ַ��������룬��ǩ�㹤�̵�λ���Ӽ������̵�λ�а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ���ù��̵�λ������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_UNIT_SIZE��
-*        [desc]          �ַ��������룬��ǩ���������Ӽ��������а����ò����ı�ǩ�������������
-*                        ���ַ�����ʾ��������������������ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_SOURCE_SIZE��
-*        [instrument]    �ַ����������������ǩ���豸���ơ�ȱʡ����Ϊ�գ����Ȳ��ó��� GOLDEN_INSTRUMENT_SIZE��
-*        [mode]          ���ͣ�GOLDEN_SORT_BY_TABLE��GOLDEN_SORT_BY_TAG��GOLDEN_SORT_BY_ID ֮һ��
-*                        �������������ģʽ�����룬ȱʡֵΪGOLDEN_SORT_BY_TABLE
-*        [ids]           �������飬����������������ı�ǩ���ʶ�б�
-*        [count]         ���ͣ�����/���������ʱ��ʾ ids �ĳ��ȣ����ʱ��ʾ�������ı�ǩ�����
-* ��ע���û��뱣֤����� ids �Ŀռ��� count ������������а�������������֮��Ĺ�ϵΪ"��"�Ĺ�ϵ��
-*        �ð���ͨ����ı�ǩ����������������ʱ�������һ���ַ�����ͨ���(��"ai67*")����õ����������ٶȡ�
-*        ��� tagmask��fullmask Ϊ��ָ�룬���ʾʹ��ȱʡ����"*"
-*        ���������ı�ǩ�������ṩ��ҪСʱ����ʾ�������һ�����������ı�ǩ�� (��ȫ���������)��
+* 命名：gob_search_recycled_points_in_batches
+* 功能：分批搜索符合条件的可回收标签点，使用标签点名时支持通配符
+* 参数：
+*        [handle]        连接句柄
+*        [start]         整型，输入，搜索的起始位置（指满足条件的起始数）。
+*        [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE。
+*        [fullmask]      字符串，输入，表名.标签点全名称掩码，支持"*"和"?"通配符，缺省设置为"*"，长度不得超过 GOLDEN_TAG_SIZE*2。
+*        [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，
+*                        空字符串表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+*        [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+*                        空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超过 GOLDEN_UNIT_SIZE。
+*        [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+*                        空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+*        [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过 GOLDEN_INSTRUMENT_SIZE。
+*        [mode]          整型，GOLDEN_SORT_BY_TABLE、GOLDEN_SORT_BY_TAG、GOLDEN_SORT_BY_ID 之一，
+*                        搜索结果的排序模式，输入，缺省值为GOLDEN_SORT_BY_TABLE
+*        [ids]           整型数组，输出，返回搜索到的标签点标识列表
+*        [count]         整型，输入/输出，输入时表示 ids 的长度，输出时表示搜索到的标签点个数
+* 备注：用户须保证分配给 ids 的空间与 count 相符，各参数中包含的搜索条件之间的关系为"与"的关系，
+*        用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+*        如果 tagmask、fullmask 为空指针，则表示使用缺省设置"*"
+*        当搜索到的标签点数比提供的要小时，表示这是最后一批符合条件的标签点 (即全部搜索完毕)。
 */
 GOLDENAPI
 golden_error  
@@ -2302,15 +2302,15 @@ gob_search_recycled_points_in_batches(
                                       );
 
 /**
-* ������gob_get_recycled_point_property
-* ���ܣ���ȡ�ɻ��ձ�ǩ�������
-* ������
-*        [handle]   ���Ӿ��
-*        [base]     GOLDEN_POINT �ṹ������/�������ǩ��������ԡ�
-                    ����ʱ���� id �ֶ�ָ��Ҫȡ�õĿɻ��ձ�ǩ�㡣
-*        [scan]     GOLDEN_SCAN_POINT �ṹ���������ǩ��ɼ���չ����
-*        [calc]     GOLDEN_CALC_POINT �ṹ���������ǩ�������չ����
-* ��ע��scan��calc ��Ϊ��ָ�룬��Ӧ����չ��Ϣ�������ء�
+* 命名：gob_get_recycled_point_property
+* 功能：获取可回收标签点的属性
+* 参数：
+*        [handle]   连接句柄
+*        [base]     GOLDEN_POINT 结构，输入/输出，标签点基本属性。
+                    输入时，由 id 字段指定要取得的可回收标签点。
+*        [scan]     GOLDEN_SCAN_POINT 结构，输出，标签点采集扩展属性
+*        [calc]     GOLDEN_CALC_POINT 结构，输出，标签点计算扩展属性
+* 备注：scan、calc 可为空指针，对应的扩展信息将不返回。
 */
 GOLDENAPI
 golden_error 
@@ -2323,15 +2323,15 @@ gob_get_recycled_point_property(
                                 );
 
 /**
-* ������gob_get_recycled_max_point_property
-* ���ܣ�����󳤶Ȼ�ȡ�ɻ��ձ�ǩ�������
-* ������
-*        [handle]   ���Ӿ��
-*        [base]     GOLDEN_POINT �ṹ������/�������ǩ��������ԡ�
-                    ����ʱ���� id �ֶ�ָ��Ҫȡ�õĿɻ��ձ�ǩ�㡣
-*        [scan]     GOLDEN_SCAN_POINT �ṹ���������ǩ��ɼ���չ����
-*        [calc]     GOLDEN_MAX_CALC_POINT �ṹ���������ǩ�������չ����
-* ��ע��scan��calc ��Ϊ��ָ�룬��Ӧ����չ��Ϣ�������ء�
+* 命名：gob_get_recycled_max_point_property
+* 功能：按最大长度获取可回收标签点的属性
+* 参数：
+*        [handle]   连接句柄
+*        [base]     GOLDEN_POINT 结构，输入/输出，标签点基本属性。
+                    输入时，由 id 字段指定要取得的可回收标签点。
+*        [scan]     GOLDEN_SCAN_POINT 结构，输出，标签点采集扩展属性
+*        [calc]     GOLDEN_MAX_CALC_POINT 结构，输出，标签点计算扩展属性
+* 备注：scan、calc 可为空指针，对应的扩展信息将不返回。
 */
 GOLDENAPI
 golden_error
@@ -2345,10 +2345,10 @@ gob_get_recycled_max_point_property(
 
 
 /**
-* ������gob_clear_recycler
-* ���ܣ���ձ�ǩ�����վ
-* ������
-*        [handle]   ���Ӿ��
+* 命名：gob_clear_recycler
+* 功能：清空标签点回收站
+* 参数：
+*        [handle]   连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -2358,15 +2358,15 @@ gob_clear_recycler(
                    );
 
 /**
-* ������gob_subscribe_tags
-* ���ܣ�������ǩ�����Ը���֪ͨ����
-* ������
-*        [handle]    ���Ӿ��
-*        [callback]  gob_tags_change ���ͻص��ӿڣ����룬
-*                    �����ĵı�ǩ�������ֵ�����仯��ɾ��ʱ�����øýӿ�֪ͨ�û�,
-*                    �μ� golden.h ��ԭ�͵Ķ���
-* ��ע�����ڶ��Ĳ������Ӿ�������Ƕ����ģ������������������� api��
-*        ���򷵻� GoE_OTHER_SDK_DOING ����
+* 命名：gob_subscribe_tags
+* 功能：批量标签点属性更改通知订阅
+* 参数：
+*        [handle]    连接句柄
+*        [callback]  gob_tags_change 类型回调接口，输入，
+*                    被订阅的标签点的属性值发生变化或被删除时将调用该接口通知用户,
+*                    参见 golden.h 中原型的定义
+* 备注：用于订阅测点的连接句柄必需是独立的，不能再用来调用其它 api，
+*        否则返回 GoE_OTHER_SDK_DOING 错误。
 */
 GOLDENAPI
 golden_error 
@@ -2376,34 +2376,34 @@ gob_subscribe_tags(
                    gob_tags_change_event callback
                    );
 /**
-* ������gob_subscribe_tags_ex
-* ���ܣ���ǩ�����Ը���֪ͨ����
-* ������
-*        [handle]    ���Ӿ��
-*        [options]   ���ͣ����룬����ѡ��μ�ö��GOLDEN_OPTION
-*                    GOLDEN_O_AUTOCONN ���Ŀͻ��������ݿ�����������жϺ��Զ�����������
-*        [param]     ���룬�û�������
-*                    ��Ϊgob_tags_change_ex��param����
-*        [callback]  gob_tags_change_ex ���ͻص��ӿڣ����룬���ص��������ط�GoE_OKʱ�˳�����
-*                    ��δ����optionsΪGOLDEN_O_AUTOCONNʱ�����ĶϿ���ʹ��GOLDEN_E_DISCONNECT
-*                    ��Ϊevent_typeȡֵ���ûص��������˳����ġ�
-*                    ������optionsΪGOLDEN_O_AUTOCONNʱ�����ĶϿ���ʹ��GOLDEN_E_DISCONNECT
-*                    ��Ϊevent_typeȡֵ���ûص�����ֱ�����ӻָ���ص��������ط�GoE_OK��
-*                    �����ж��ڼ�ص���������Ƶ��Ϊ����3��
-*                    event_type����ֵ�������£�
-*                      GOLDEN_E_DATA        ��ǩ�����Է�������
-*                      GOLDEN_E_DISCONNECT  ���Ŀͻ��������ݿ�����Ͽ�
-*                      GOLDEN_E_RECOVERY    ���Ŀͻ��������ݿ����缰���Ļָ�
-*                    handle �������Ļص������Ӿ��������gob_subscribe_tags_exʱ��handle����
-*                    param  �û��Զ������������gob_subscribe_tags_exʱ��param����
-*                    count  event_typeΪGOLDEN_E_DATAʱ��ʾids������
-*                           event_typeΪ����ֵʱ��countֵΪ0
-*                    ids    event_typeΪGOLDEN_E_DATAʱ��ʾ���Ը��ĵı�ǩ��ID��������countָ��
-*                           event_typeΪ����ֵʱ��idsֵΪNULL
-*                    what   event_typeΪGOLDEN_E_DATAʱ��ʾ���Ա��ԭ�򣬲ο�GOLDEN_TAG_CHANGE_REASON
-*                           event_typeΪ����ֵʱ��whatʱֵΪ0
-* ��ע�����ڶ��Ĳ������Ӿ�������Ƕ����ģ������������������� api��
-*       ���򷵻� GoE_OTHER_SDK_DOING ����
+* 命名：gob_subscribe_tags_ex
+* 功能：标签点属性更改通知订阅
+* 参数：
+*        [handle]    连接句柄
+*        [options]   整型，输入，订阅选项，参见枚举GOLDEN_OPTION
+*                    GOLDEN_O_AUTOCONN 订阅客户端与数据库服务器网络中断后自动重连并订阅
+*        [param]     输入，用户参数，
+*                    作为gob_tags_change_ex的param参数
+*        [callback]  gob_tags_change_ex 类型回调接口，输入，当回掉函数返回非GoE_OK时退出订阅
+*                    当未设置options为GOLDEN_O_AUTOCONN时，订阅断开后使用GOLDEN_E_DISCONNECT
+*                    作为event_type取值调用回掉函数后退出订阅。
+*                    当设置options为GOLDEN_O_AUTOCONN时，订阅断开后使用GOLDEN_E_DISCONNECT
+*                    作为event_type取值调用回掉函数直到连接恢复或回掉函数返回非GoE_OK，
+*                    网络中断期间回掉函数调用频率为最少3秒
+*                    event_type参数值含义如下：
+*                      GOLDEN_E_DATA        标签点属性发生更改
+*                      GOLDEN_E_DISCONNECT  订阅客户端与数据库网络断开
+*                      GOLDEN_E_RECOVERY    订阅客户端与数据库网络及订阅恢复
+*                    handle 产生订阅回掉的连接句柄，调用gob_subscribe_tags_ex时的handle参数
+*                    param  用户自定义参数，调用gob_subscribe_tags_ex时的param参数
+*                    count  event_type为GOLDEN_E_DATA时表示ids的数量
+*                           event_type为其它值时，count值为0
+*                    ids    event_type为GOLDEN_E_DATA时表示属性更改的标签点ID，数量由count指定
+*                           event_type为其它值时，ids值为NULL
+*                    what   event_type为GOLDEN_E_DATA时表示属性变更原因，参考GOLDEN_TAG_CHANGE_REASON
+*                           event_type为其它值时，what时值为0
+* 备注：用于订阅测点的连接句柄必需是独立的，不能再用来调用其它 api，
+*       否则返回 GoE_OTHER_SDK_DOING 错误。
 */
 GOLDENAPI
 golden_error
@@ -2415,10 +2415,10 @@ void* param,
 gob_tags_change_event_ex callback
 );
 /**
-* ������gob_cancel_subscribe_tags
-* ���ܣ�ȡ����ǩ�����Ը���֪ͨ����
-* ������
-*        [handle]    ���Ӿ��
+* 命名：gob_cancel_subscribe_tags
+* 功能：取消标签点属性更改通知订阅
+* 参数：
+*        [handle]    连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -2429,15 +2429,15 @@ gob_cancel_subscribe_tags(
 
 
 /**
-* ������gob_create_named_type
-* ���ܣ������Զ�������
-* ������
-*        [handle]      ���Ӿ�����������
-*        [name]        �Զ������͵����ƣ����͵�Ψһ��ʾ,�����ظ������Ȳ��ܳ���GOLDEN_TYPE_NAME_SIZE���������
-*        [field_count]    �Զ��������а������ֶεĸ���,�������
-*        [fields]      �Զ��������а������ֶε����ԣ�GOLDEN_DATA_TYPE_FIELD�ṹ�����飬������field_count��ȣ��������
-*              GOLDEN_DATA_TYPE_FIELD�е�lengthֻ��typeΪstr��blob���͵�������Ч���������ͺ���
-* ��ע���Զ������͵Ĵ�С����ҪС������ҳ��С(С������ҳ��С��2/3������Ҫ���������ֶεĸ�����ÿ���ֶεĳ���)��
+* 命名：gob_create_named_type
+* 功能：创建自定义类型
+* 参数：
+*        [handle]      连接句柄，输入参数
+*        [name]        自定义类型的名称，类型的唯一标示,不能重复，长度不能超过GOLDEN_TYPE_NAME_SIZE，输入参数
+*        [field_count]    自定义类型中包含的字段的个数,输入参数
+*        [fields]      自定义类型中包含的字段的属性，GOLDEN_DATA_TYPE_FIELD结构的数组，个数与field_count相等，输入参数
+*              GOLDEN_DATA_TYPE_FIELD中的length只对type为str或blob类型的数据有效。其他类型忽略
+* 备注：自定义类型的大小必须要小于数据页大小(小于数据页大小的2/3，即需要合理定义字段的个数及每个字段的长度)。
 */
 GOLDENAPI
 golden_error 
@@ -2451,11 +2451,11 @@ gob_create_named_type(
     );
 
 /**
-* ������gob_get_named_types_count
-* ���ܣ���ȡ���е��Զ������͵�����
-* ������
-*        [handle]      ���Ӿ�����������
-*        [count]      �������е��Զ������͵�����������/�������
+* 命名：gob_get_named_types_count
+* 功能：获取所有的自定义类型的总数
+* 参数：
+*        [handle]      连接句柄，输入参数
+*        [count]      返回所有的自定义类型的总数，输入/输出参数
 */
 GOLDENAPI
 golden_error 
@@ -2466,15 +2466,15 @@ gob_get_named_types_count(
     );
 
 /**
-* ������gob_get_all_named_types
-* ���ܣ���ȡ���е��Զ�������
-* ������
-*        [handle]      ���Ӿ�����������
-*        [count]      �������е��Զ������͵�����������/�������������:Ϊname,field_counts����ĳ��ȣ����:��ȡ��ʵ���Զ������͵ĸ���
-*        [name]        �������е��Զ������͵����Ƶ����飬ÿ���Զ������͵����Ƶĳ��Ȳ�����GOLDEN_TYPE_NAME_SIZE������/�������
-*              ���룺name���鳤��Ҫ����count.�����ʵ�ʻ�ȡ���Զ����������Ƶ�����
-*        [field_counts]    �������е��Զ��������������ֶθ��������飬����/�������
-*              ���룺field_counts���鳤��Ҫ����count�����:ʵ��ÿ���Զ����������������ֶεĸ���������
+* 命名：gob_get_all_named_types
+* 功能：获取所有的自定义类型
+* 参数：
+*        [handle]      连接句柄，输入参数
+*        [count]      返回所有的自定义类型的总数，输入/输出参数，输入:为name,field_counts数组的长度，输出:获取的实际自定义类型的个数
+*        [name]        返回所有的自定义类型的名称的数组，每个自定义类型的名称的长度不超过GOLDEN_TYPE_NAME_SIZE，输入/输出参数
+*              输入：name数组长度要等于count.输出：实际获取的自定义类型名称的数组
+*        [field_counts]    返回所有的自定义类型所包含字段个数的数组，输入/输出参数
+*              输入：field_counts数组长度要等于count。输出:实际每个自定义类型所包含的字段的个数的数组
 */
 GOLDENAPI
 golden_error 
@@ -2487,17 +2487,17 @@ gob_get_all_named_types(
       );
 
 /**
-* ������gob_get_named_type
-* ���ܣ���ȡ�Զ������͵������ֶ�
-* ������
-*        [handle]         ���Ӿ�����������
-*        [name]           �Զ������͵����ƣ��������
-*        [field_count]    ����nameָ�����Զ������͵��ֶθ���������/�������
-*                         ���룺ָ��fields���鳤��.�����ʵ�ʵ�name�Զ������͵��ֶεĸ���
-*        [fields]         ������name��ָ�����Զ��������������ֶ�GOLDEN_DATA_TYPE_FIELD�ṹ�����飬����/�������
-*                         ���룺fields���鳤��Ҫ����count�����:GOLDEN_DATA_TYPE_FIELD�ṹ������
-*        [type_size]      �����Զ�������fields�ṹ�г����ֶε��ۼӺͣ��������
-*        [desc]           �Զ������͵��������������
+* 命名：gob_get_named_type
+* 功能：获取自定义类型的所有字段
+* 参数：
+*        [handle]         连接句柄，输入参数
+*        [name]           自定义类型的名称，输入参数
+*        [field_count]    返回name指定的自定义类型的字段个数，输入/输出参数
+*                         输入：指定fields数组长度.输出：实际的name自定义类型的字段的个数
+*        [fields]         返回由name所指定的自定义类型所包含字段GOLDEN_DATA_TYPE_FIELD结构的数组，输入/输出参数
+*                         输入：fields数组长度要等于count。输出:GOLDEN_DATA_TYPE_FIELD结构的数组
+*        [type_size]      所有自定义类型fields结构中长度字段的累加和，输出参数
+*        [desc]           自定义类型的描述，输出参数
 */
 GOLDENAPI
 golden_error 
@@ -2512,12 +2512,12 @@ gob_get_named_type(
   );
 
 /**
-* ������gob_remove_named_type
-* ���ܣ�ɾ���Զ�������
-* ������
-*        [handle]      ���Ӿ�����������
-*        [name]        �Զ������͵����ƣ��������
-*        [reserved]      �����ֶ�,��ʱ����
+* 命名：gob_remove_named_type
+* 功能：删除自定义类型
+* 参数：
+*        [handle]      连接句柄，输入参数
+*        [name]        自定义类型的名称，输入参数
+*        [reserved]      保留字段,暂时不用
 */
 GOLDENAPI
 golden_error 
@@ -2540,10 +2540,10 @@ GOLDENAPI_CALLRULE
   );
 
 /**
-* ������gob_cancel_subscribe_named_type_create_event
-* ���ܣ�ȡ���Զ������ʹ����¼�����
-* ������
-*        [handle]    ���Ӿ��
+* 命名：gob_cancel_subscribe_named_type_create_event
+* 功能：取消自定义类型创建事件订阅
+* 参数：
+*        [handle]    连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -2563,10 +2563,10 @@ gob_subscribe_named_type_remove_event_ex(
 );
 
 /**
-* ������gob_cancel_subscribe_named_type_remove_event
-* ���ܣ�ȡ���Զ�������ɾ���¼�����
-* ������
-*        [handle]    ���Ӿ��
+* 命名：gob_cancel_subscribe_named_type_remove_event
+* 功能：取消自定义类型删除事件订阅
+* 参数：
+*        [handle]    连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -2576,11 +2576,11 @@ gob_cancel_subscribe_named_type_remove_event(
     );
 
 /**
-* ������gob_query_load_memory
-* ���ܣ���ѯ��ǩ�����Լ��ص��ڴ��еĵ�ǰ����
-* ������
-*        [handle]   ���Ӿ��
-*        [load_memory_flag]     ��������ص��ڴ��еĵ�ǰ����
+* 命名：gob_query_load_memory
+* 功能：查询标签点属性加载到内存中的当前配置
+* 参数：
+*        [handle]   连接句柄
+*        [load_memory_flag]     输出，加载到内存中的当前配置
 */
 GOLDENAPI
   golden_error
@@ -2589,14 +2589,14 @@ GOLDENAPI
   golden_int32 *load_memory_flag);
 
 /**
-* ������gob_set_load_memory
-* ���ܣ����ñ�ǩ�����Լ��ص��ڴ��е�����
-* ������
-*        [handle]   ���Ӿ��
-*        [load_memory_flag]     ����/���������ʱ����ʾҪ���õļ��ص��ڴ��е�����
-*                                          ���ʱ����ʾ�ɹ����ص��ڴ��е�����
-* ��ע�����ĳЩ�����гɹ����ص��ڴ棬ĳЩ�����з����ڴ�ʧ�ܣ��ͻ᷵��GoE_OUT_OF_MEMORY��
-*       ��ʱ��Ҫ���ݷ��ص�load_memory_flag���ж��ǲ���ȫ������ʧ�ܡ�
+* 命名：gob_set_load_memory
+* 功能：设置标签点属性加载到内存中的配置
+* 参数：
+*        [handle]   连接句柄
+*        [load_memory_flag]     输入/输出，输入时，表示要设置的加载到内存中的配置
+*                                          输出时，表示成功加载到内存中的配置
+* 备注：如果某些属性列成功加载到内存，某些属性列分配内存失败，就会返回GoE_OUT_OF_MEMORY，
+*       此时还要根据返回的load_memory_flag来判断是不是全部分配失败。
 */
 GOLDENAPI
   golden_error
@@ -2606,12 +2606,12 @@ GOLDENAPI
   golden_int32 *load_memory_flag);
 
 /**
-* ������gob_query_need_memory_size
-* ���ܣ���ѯ�������ü��ص��ڴ��еı�ǩ��������ռ�õ��ڴ�
-* ������
-*        [handle]   ���Ӿ��
-*        [load_memory_flag]     ���룬������Ҫ�����ڴ������
-*        [need_memory_size]     �������Ҫռ���ڴ���ֽ�������λ��byte
+* 命名：gob_query_need_memory_size
+* 功能：查询根据配置加载到内存中的标签点属性所占用的内存
+* 参数：
+*        [handle]   连接句柄
+*        [load_memory_flag]     输入，计算需要多少内存的配置
+*        [need_memory_size]     输出，需要占用内存的字节数，单位是byte
 */
 GOLDENAPI
   golden_error
@@ -2619,19 +2619,19 @@ GOLDENAPI
   gob_query_need_memory_size(golden_int32 handle, golden_int32 *load_memory_flag, golden_int64* need_memory_size);
 
 /**
-* ������gob_get_named_type_names_property
-* ���ܣ����ݱ�ǩ��id��ѯ��ǩ������Ӧ���Զ������͵����ֺ��ֶ�����
-* ������
-*        [handle]           ���Ӿ��
-*        [count]            ����/�������ǩ�������
-*                           ����ʱ��ʾ ids��named_type_names��field_counts��errors �ĳ��ȣ�
-*                           ���ʱ��ʾ�ɹ���ȡ�Զ����������ֵı�ǩ�����
-*        [ids]              �������飬���룬��ǩ���ʶ�б�
-*        [named_type_names] �ַ������飬�������ǩ���Զ������͵�����
-*        [field_counts]     �������飬�������ǩ���Զ������͵��ֶθ���
-*        [errors]           �޷����������飬�������ȡ�Զ����������ֵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��named_type_names��field_counts��errors �ĳ����� count һ�¡�
-*        ���ӿ�ֻ����������Ϊ GOLDEN_NAMED_T �ı�ǩ����Ч��
+* 命名：gob_get_named_type_names_property
+* 功能：根据标签点id查询标签点所对应的自定义类型的名字和字段总数
+* 参数：
+*        [handle]           连接句柄
+*        [count]            输入/输出，标签点个数，
+*                           输入时表示 ids、named_type_names、field_counts、errors 的长度，
+*                           输出时表示成功获取自定义类型名字的标签点个数
+*        [ids]              整型数组，输入，标签点标识列表
+*        [named_type_names] 字符串数组，输出，标签点自定义类型的名字
+*        [field_counts]     整型数组，输出，标签点自定义类型的字段个数
+*        [errors]           无符号整型数组，输出，获取自定义类型名字的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、named_type_names、field_counts、errors 的长度与 count 一致。
+*        本接口只对数据类型为 GOLDEN_NAMED_T 的标签点有效。
 */
 GOLDENAPI
   golden_error
@@ -2646,19 +2646,19 @@ GOLDENAPI
   );
 
 /**
-* ������gob_get_recycled_named_type_names_property
-* ���ܣ����ݻ���վ��ǩ��id��ѯ��ǩ������Ӧ���Զ������͵����ֺ��ֶ�����
-* ������
-*        [handle]           ���Ӿ��
-*        [count]            ����/�������ǩ�������
-*                           ����ʱ��ʾ ids��named_type_names��field_counts��errors �ĳ��ȣ�
-*                           ���ʱ��ʾ�ɹ���ȡ�Զ����������ֵı�ǩ�����
-*        [ids]              �������飬���룬����վ��ǩ���ʶ�б�
-*        [named_type_names] �ַ������飬�������ǩ���Զ������͵�����
-*        [field_counts]     �������飬�������ǩ���Զ������͵��ֶθ���
-*        [errors]           �޷����������飬�������ȡ�Զ����������ֵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��named_type_names��field_counts��errors �ĳ����� count һ�¡�
-*        ���ӿ�ֻ����������Ϊ GOLDEN_NAMED_T �ı�ǩ����Ч��
+* 命名：gob_get_recycled_named_type_names_property
+* 功能：根据回收站标签点id查询标签点所对应的自定义类型的名字和字段总数
+* 参数：
+*        [handle]           连接句柄
+*        [count]            输入/输出，标签点个数，
+*                           输入时表示 ids、named_type_names、field_counts、errors 的长度，
+*                           输出时表示成功获取自定义类型名字的标签点个数
+*        [ids]              整型数组，输入，回收站标签点标识列表
+*        [named_type_names] 字符串数组，输出，标签点自定义类型的名字
+*        [field_counts]     整型数组，输出，标签点自定义类型的字段个数
+*        [errors]           无符号整型数组，输出，获取自定义类型名字的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、named_type_names、field_counts、errors 的长度与 count 一致。
+*        本接口只对数据类型为 GOLDEN_NAMED_T 的标签点有效。
 */
 GOLDENAPI
   golden_error
@@ -2673,12 +2673,12 @@ GOLDENAPI
   );
 
 /**
-* ������gob_get_named_type_points_count
-* ���ܣ���ȡ���Զ������͵����б�ǩ�����
-* ������
-*        [handle]           ���Ӿ�����������
-*        [name]             �Զ������͵����ƣ��������
-*        [points_count]     ����nameָ�����Զ������͵ı�ǩ��������������
+* 命名：gob_get_named_type_points_count
+* 功能：获取该自定义类型的所有标签点个数
+* 参数：
+*        [handle]           连接句柄，输入参数
+*        [name]             自定义类型的名称，输入参数
+*        [points_count]     返回name指定的自定义类型的标签点个数，输入参数
 */
 
 GOLDENAPI
@@ -2691,12 +2691,12 @@ GOLDENAPI
 
 
 /**
-* ������gob_get_base_type_points_count
-* ���ܣ���ȡ�����õĻ������͵����б�ǩ�����
-* ������
-*        [handle]           ���ͣ�������������Ӿ��
-*        [type]             ���ͣ�������������õĻ������ͣ�������ֵ�����ǳ�GOLDEN_NAME_T���������GOLDEN_TYPEö��ֵ
-*        [points_count]     ���ͣ��������������typeָ�������û������͵ı�ǩ�����
+* 命名：gob_get_base_type_points_count
+* 功能：获取该内置的基本类型的所有标签点个数
+* 参数：
+*        [handle]           整型，输入参数，连接句柄
+*        [type]             整型，输入参数，内置的基本类型，参数的值可以是除GOLDEN_NAME_T以外的所有GOLDEN_TYPE枚举值
+*        [points_count]     整型，输入参数，返回type指定的内置基本类型的标签点个数
 */
 GOLDENAPI
   golden_error
@@ -2708,16 +2708,16 @@ GOLDENAPI
   );
 
 /**
-* ������gob_modify_named_type
-* ���ܣ��޸��Զ�����������,����,�ֶ�����,�ֶ�����
-* ������
-*        [handle]             ���Ӿ�����������
-*        [name]               �Զ������͵����ƣ��������
-*        [modify_name]        Ҫ�޸ĵ��Զ����������ƣ��������
-*        [modify_desc]        Ҫ�޸ĵ��Զ������͵��������������
-*        [modify_field_name]  Ҫ�޸ĵ��Զ��������ֶε����ƣ��������
-*        [modify_field_desc]  Ҫ�޸ĵ��Զ��������ֶε��������������
-*        [field_count]        �Զ��������ֶεĸ������������
+* 命名：gob_modify_named_type
+* 功能：修改自定义类型名称,描述,字段名称,字段描述
+* 参数：
+*        [handle]             连接句柄，输入参数
+*        [name]               自定义类型的名称，输入参数
+*        [modify_name]        要修改的自定义类型名称，输入参数
+*        [modify_desc]        要修改的自定义类型的描述，输入参数
+*        [modify_field_name]  要修改的自定义类型字段的名称，输入参数
+*        [modify_field_desc]  要修改的自定义类型字段的描述，输入参数
+*        [field_count]        自定义类型字段的个数，输入参数
 */
 
 GOLDENAPI
@@ -2732,30 +2732,30 @@ GOLDENAPI
   const char* modify_field_desc[GOLDEN_DESC_SIZE],
   golden_int32 field_count);
 
-/************************************ ʵʱ���ݽӿ� ************************************/
+/************************************ 实时数据接口 ************************************/
 
 /**
-* ������gos_get_snapshots
-* ���ܣ�������ȡ��������ģ����������ֵ
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��values��states��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б�
-*        [datetimes] �������飬�����ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬�����ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [values]    ˫���ȸ��������飬�����ʵʱ��������ֵ�б���
-*                    ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬������Ӧ�Ŀ���ֵ������Ϊ 0
-*        [states]    64 λ�������飬�����ʵʱ������ֵ�б���
-*                    ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                    GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬������Ӧ�Ŀ���ֵ������Ϊ 0
-*        [qualities] ���������飬�����ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��values��states��qualities��errors �ĳ����� count һ�¡�
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_STRING��GOLDEN_BLOB �ı�ǩ����Ч��
+* 命名：gos_get_snapshots
+* 功能：批量读取开关量、模拟量快照数值
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、values、states、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表
+*        [datetimes] 整型数组，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [values]    双精度浮点型数组，输出，实时浮点型数值列表，
+*                    对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，返回相应的快照值；否则为 0
+*        [states]    64 位整型数组，输出，实时整型数值列表，
+*                    对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                    GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，返回相应的快照值；否则为 0
+*        [qualities] 短整型数组，输出，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、values、states、qualities、errors 的长度与 count 一致。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -2773,28 +2773,28 @@ gos_get_snapshots(
                   );
 
 /**
-* ������gos_put_snapshots
-* ���ܣ�����д�뿪������ģ����������ֵ
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��values��states��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ�д��ʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б���ͬһ����ǩ���ʶ���Գ��ֶ�Σ�
-*                    �����ǵ�ʱ��������ǵ����ġ�
-*        [datetimes] �������飬���룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬���룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬��ʾ��Ӧ�ĺ���ֵ���������
-*        [values]    ˫���ȸ��������飬���룬ʵʱ��������ֵ�б���
-*                    ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ�Ŀ���ֵ���������
-*        [states]    64 λ�������飬���룬ʵʱ������ֵ�б���
-*                    ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                    GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ�Ŀ���ֵ���������
-*        [qualities] ���������飬���룬ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�����д��ʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��values��states��qualities��errors �ĳ����� count һ�¡�
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_STRING��GOLDEN_BLOB �ı�ǩ����Ч��
+* 命名：gos_put_snapshots
+* 功能：批量写入开关量、模拟量快照数值
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、values、states、qualities、errors 的长度，
+*                    输出时表示成功写入实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表，同一个标签点标识可以出现多次，
+*                    但它们的时间戳必需是递增的。
+*        [datetimes] 整型数组，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，表示相应的毫秒值；否则忽略
+*        [values]    双精度浮点型数组，输入，实时浮点型数值列表，
+*                    对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的快照值；否则忽略
+*        [states]    64 位整型数组，输入，实时整型数值列表，
+*                    对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                    GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的快照值；否则忽略
+*        [qualities] 短整型数组，输入，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，写入实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、values、states、qualities、errors 的长度与 count 一致。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -2812,30 +2812,30 @@ gos_put_snapshots(
                   );
 
 /**
-* ������gos_fix_snapshots
-* ���ܣ�����д�뿪������ģ����������ֵ
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��values��states��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ�д��ʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б���ͬһ����ǩ���ʶ���Գ��ֶ�Σ�
-*                    �����ǵ�ʱ��������ǵ����ġ�
-*        [datetimes] �������飬���룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬���룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬��ʾ��Ӧ�ĺ���ֵ���������
-*        [values]    ˫���ȸ��������飬���룬ʵʱ��������ֵ�б���
-*                    ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ�Ŀ���ֵ���������
-*        [states]    64 λ�������飬���룬ʵʱ������ֵ�б���
-*                    ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                    GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ�Ŀ���ֵ���������
-*        [qualities] ���������飬���룬ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�����д��ʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��values��states��qualities��errors �ĳ����� count һ�¡�
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_STRING��GOLDEN_BLOB �ı�ǩ����Ч��
-*        ��������ʱ����뵱ǰ����ʱ�����ȫ���ʱ�����滻��ǰ���յ�ֵ��������
-*        ��������»���� gos_put_snapshots()
+* 命名：gos_fix_snapshots
+* 功能：批量写入开关量、模拟量快照数值
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、values、states、qualities、errors 的长度，
+*                    输出时表示成功写入实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表，同一个标签点标识可以出现多次，
+*                    但它们的时间戳必需是递增的。
+*        [datetimes] 整型数组，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，表示相应的毫秒值；否则忽略
+*        [values]    双精度浮点型数组，输入，实时浮点型数值列表，
+*                    对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的快照值；否则忽略
+*        [states]    64 位整型数组，输入，实时整型数值列表，
+*                    对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                    GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的快照值；否则忽略
+*        [qualities] 短整型数组，输入，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，写入实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、values、states、qualities、errors 的长度与 count 一致。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_STRING、GOLDEN_BLOB 的标签点无效。
+*        仅当输入时间戳与当前快照时间戳完全相等时，会替换当前快照的值和质量；
+*        其余情况下会调用 gos_put_snapshots()
 */
 GOLDENAPI
 golden_error 
@@ -2853,24 +2853,24 @@ gos_fix_snapshots(
                   );
 
 /**
-* ������gos_get_coor_snapshots
-* ���ܣ�������ȡ����ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��x��y��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б�
-*        [datetimes] �������飬�����ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬�����ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [x]         �����ȸ��������飬�����ʵʱ�����ͺ�������ֵ�б�
-*        [y]         �����ȸ��������飬�����ʵʱ��������������ֵ�б�
-*        [qualities] ���������飬�����ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��x��y��qualities��errors �ĳ����� count һ�¡�
-*        ���ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：gos_get_coor_snapshots
+* 功能：批量读取坐标实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、x、y、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表
+*        [datetimes] 整型数组，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [x]         单精度浮点型数组，输出，实时浮点型横坐标数值列表
+*        [y]         单精度浮点型数组，输出，实时浮点型纵坐标数值列表
+*        [qualities] 短整型数组，输出，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、x、y、qualities、errors 的长度与 count 一致。
+*        本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -2888,24 +2888,24 @@ gos_get_coor_snapshots(
                        );
 
 /**
-* ������gos_put_coor_snapshots
-* ���ܣ�����д������ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��x��y��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б�
-*        [datetimes] �������飬���룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬���룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [x]         �����ȸ��������飬���룬ʵʱ�����ͺ�������ֵ�б�
-*        [y]         �����ȸ��������飬���룬ʵʱ��������������ֵ�б�
-*        [qualities] ���������飬���룬ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�����д��ʵʱ�������ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��x��y��qualities��errors �ĳ����� count һ�¡�
-*        ���ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：gos_put_coor_snapshots
+* 功能：批量写入坐标实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、x、y、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表
+*        [datetimes] 整型数组，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [x]         单精度浮点型数组，输入，实时浮点型横坐标数值列表
+*        [y]         单精度浮点型数组，输入，实时浮点型纵坐标数值列表
+*        [qualities] 短整型数组，输入，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，写入实时坐标数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、x、y、qualities、errors 的长度与 count 一致。
+*        本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -2923,26 +2923,26 @@ gos_put_coor_snapshots(
                        );
 
 /**
-* ������gos_fix_coor_snapshots
-* ���ܣ�����д������ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��x��y��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б�
-*        [datetimes] �������飬���룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬���룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [x]         �����ȸ��������飬���룬ʵʱ�����ͺ�������ֵ�б�
-*        [y]         �����ȸ��������飬���룬ʵʱ��������������ֵ�б�
-*        [qualities] ���������飬���룬ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�����д��ʵʱ�������ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��x��y��qualities��errors �ĳ����� count һ�¡�
-*        ���ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
-*        ��������ʱ����뵱ǰ����ʱ�����ȫ���ʱ�����滻��ǰ���յ�ֵ��������
-*        ��������»���� gos_put_coor_snapshots()
+* 命名：gos_fix_coor_snapshots
+* 功能：批量写入坐标实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、x、y、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表
+*        [datetimes] 整型数组，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [x]         单精度浮点型数组，输入，实时浮点型横坐标数值列表
+*        [y]         单精度浮点型数组，输入，实时浮点型纵坐标数值列表
+*        [qualities] 短整型数组，输入，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，写入实时坐标数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、x、y、qualities、errors 的长度与 count 一致。
+*        本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
+*        仅当输入时间戳与当前快照时间戳完全相等时，会替换当前快照的值和质量；
+*        其余情况下会调用 gos_put_coor_snapshots()
 */
 GOLDENAPI
 golden_error 
@@ -2960,19 +2960,19 @@ gos_fix_coor_snapshots(
                        );
 
 /**
-* ������gos_get_blob_snapshot
-* ���ܣ���ȡ������/�ַ���ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ������ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ������ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [blob]      �ֽ������飬�����ʵʱ������/�ַ�����ֵ
-*        [len]       �����ͣ����� / �����������/�ַ�����ֵ����
-*        [quality]   �����ͣ������ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：gos_get_blob_snapshot
+* 功能：读取二进制/字符串实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [blob]      字节型数组，输出，实时二进制/字符串数值
+*        [len]       短整型，输入 / 输出，二进制/字符串数值长度
+*        [quality]   短整型，输出，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -2988,25 +2988,25 @@ gos_get_blob_snapshot(
                       );
 
 /**
-* ������gos_get_blob_snapshots
-* ���ܣ�������ȡ������/�ַ���ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��blobs��lens��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ
-*        [datetimes] �������飬�����ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬�����ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [blobs]     �ֽ���ָ�����飬�����ʵʱ������/�ַ�����ֵ
-*        [lens]      ���������飬����/�����������/�ַ�����ֵ���ȣ�
-*                    ����ʱ��ʾ��Ӧ�� blobs ָ��ָ��Ļ��������ȣ�
-*                    ���ʱ��ʾʵ�ʵõ��� blob ���ȣ���� blob �ĳ��ȴ��ڻ��������ȣ��ᱻ�ضϡ�
-*        [qualities] ���������飬�����ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：gos_get_blob_snapshots
+* 功能：批量读取二进制/字符串实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、blobs、lens、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识
+*        [datetimes] 整型数组，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [blobs]     字节型指针数组，输出，实时二进制/字符串数值
+*        [lens]      短整型数组，输入/输出，二进制/字符串数值长度，
+*                    输入时表示对应的 blobs 指针指向的缓冲区长度，
+*                    输出时表示实际得到的 blob 长度，如果 blob 的长度大于缓冲区长度，会被截断。
+*        [qualities] 短整型数组，输出，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -3024,19 +3024,19 @@ gos_get_blob_snapshots(
                        );
 
 /**
-* ������gos_put_blob_snapshot
-* ���ܣ�д�������/�ַ���ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ����룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ����룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [blob]      �ֽ������飬���룬ʵʱ������/�ַ�����ֵ
-*        [len]       �����ͣ����룬������/�ַ�����ֵ���ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [quality]   �����ͣ����룬ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：gos_put_blob_snapshot
+* 功能：写入二进制/字符串实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [blob]      字节型数组，输入，实时二进制/字符串数值
+*        [len]       短整型，输入，二进制/字符串数值长度，超过一个页大小数据将被截断。
+*        [quality]   短整型，输入，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -3052,24 +3052,24 @@ gos_put_blob_snapshot(
                       );
 
 /**
-* ������gos_put_blob_snapshots
-* ���ܣ�����д�������/�ַ���ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��blobs��lens��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ
-*        [datetimes] �������飬���룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬���룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬��ʾ��Ӧ�ĺ���ֵ���������
-*        [blobs]     �ֽ���ָ�����飬���룬ʵʱ������/�ַ�����ֵ
-*        [lens]      ���������飬���룬������/�ַ�����ֵ���ȣ�
-*                    ��ʾ��Ӧ�� blobs ָ��ָ��Ļ��������ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [qualities] ���������飬���룬ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：gos_put_blob_snapshots
+* 功能：批量写入二进制/字符串实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、blobs、lens、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识
+*        [datetimes] 整型数组，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，表示相应的毫秒值；否则忽略
+*        [blobs]     字节型指针数组，输入，实时二进制/字符串数值
+*        [lens]      短整型数组，输入，二进制/字符串数值长度，
+*                    表示对应的 blobs 指针指向的缓冲区长度，超过一个页大小数据将被截断。
+*        [qualities] 短整型数组，输入，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -3087,27 +3087,27 @@ gos_put_blob_snapshots(
                        );
 
 /**
-* ������gos_get_datetime_snapshots
-* ���ܣ�������ȡdatetime���ͱ�ǩ��ʵʱ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��dtvalues��dtlens��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ
-*        [datetimes] �������飬�����ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬�����ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [dtvalues]  �ֽ���ָ�����飬�����ʵʱdatetime��ֵ
-*        [dtlens]    ���������飬����/�����datetime��ֵ���ȣ�
-*                    ����ʱ��ʾ��Ӧ�� dtvalues ָ��ָ��Ļ��������ȣ�
-*        [qualities] ���������飬�����ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-*        [type]      �����ͣ����룬���б�ǩ�����ʾ���ͣ��硰yyyy-mm-dd hh:mm:ss.000����typeΪ1��Ĭ������1��
-*                    ��yyyy/mm/dd hh:mm:ss.000����typeΪ2 
-*                    �������type�����ձ�ǩ��������ʾ��������type������ʾ
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_DATETIME �ı�ǩ����Ч��
+* 命名：gos_get_datetime_snapshots
+* 功能：批量读取datetime类型标签点实时数据
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、dtvalues、dtlens、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识
+*        [datetimes] 整型数组，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [dtvalues]  字节型指针数组，输出，实时datetime数值
+*        [dtlens]    短整型数组，输入/输出，datetime数值长度，
+*                    输入时表示对应的 dtvalues 指针指向的缓冲区长度，
+*        [qualities] 短整型数组，输出，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+*        [type]      短整型，输入，所有标签点的显示类型，如“yyyy-mm-dd hh:mm:ss.000”的type为1，默认类型1，
+*                    “yyyy/mm/dd hh:mm:ss.000”的type为2 
+*                    如果不传type，则按照标签点属性显示，否则按照type类型显示
+* 备注：本接口只对数据类型为 GOLDEN_DATETIME 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -3126,23 +3126,23 @@ gos_get_datetime_snapshots(
                        );
 
 /**
-* ������gos_put_datetime_snapshots
-* ���ܣ���������datetime���ͱ�ǩ������
-* ������
-*        [handle]      ���Ӿ��
-*        [count]       ���ͣ�����/�������ǩ�������
-*                      ����ʱ��ʾ ids��datetimes��ms��dtvalues��dtlens��qualities��errors�ĳ��ȣ�
-*                      ���ʱ��ʾ�ɹ�д��ı�ǩ�����
-*        [ids]         �������飬���룬��ǩ���ʶ
-*        [datatimes]   �������飬���룬ʵʱֵʱ���б�
-*                      ��ʾ����1970��1��1��08:00:00������
-*        [ms]          ���������飬���룬ʵʱ��ֵʱ���б���
-*                      ����ʱ�侫��Ϊ����ı�ǩ�㣬��ʾ��Ӧ�ĺ���ֵ���������
-*        [dtvalues]    �ֽ���ָ�����飬���룬datetime��ǩ���ֵ
-*        [dtlens]      ���������飬���룬��ֵ����
-*        [qualities]   ���������飬���룬ʵʱ��ֵƷ�ʣ������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]      �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע�����ӿ�ֻ���������� GOLDEN_DATETIME �ı�ǩ����Ч��
+* 命名：gos_put_datetime_snapshots
+* 功能：批量插入datetime类型标签点数据
+* 参数：
+*        [handle]      连接句柄
+*        [count]       整型，输入/输出，标签点个数，
+*                      输入时表示 ids、datetimes、ms、dtvalues、dtlens、qualities、errors的长度，
+*                      输出时表示成功写入的标签点个数
+*        [ids]         整型数组，输入，标签点标识
+*        [datatimes]   整型数组，输入，实时值时间列表
+*                      表示距离1970年1月1日08:00:00的秒数
+*        [ms]          短整型数组，输入，实时数值时间列表，
+*                      对于时间精度为毫秒的标签点，表示相应的毫秒值；否则忽略
+*        [dtvalues]    字节型指针数组，输入，datetime标签点的值
+*        [dtlens]      短整型数组，输入，数值长度
+*        [qualities]   短整型数组，输入，实时数值品质，，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]      无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+* 备注：被接口只对数据类型 GOLDEN_DATETIME 的标签点有效。
 */
 GOLDENAPI
 golden_error
@@ -3161,21 +3161,21 @@ gos_put_datetime_snapshots(
 
 
 /**
-* ������gos_subscribe_snapshots
-* ���ܣ�������ǩ����ոı��֪ͨ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�����������ʱ��ʾ ids��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ����ĵı�ǩ����������ó��� GOLDEN_MAX_SUBSCRIBE_SNAPSHOTS��
-*        [ids]       �������飬���룬��ǩ���ʶ�б���
-*        [callback]  gos_snaps_event ���ͻص��ӿڣ����룬
-*                    �����ĵı�ǩ��Ŀ���ֵ�����仯ʱ�����øýӿڣ�
-*                    �μ� golden.h ��ԭ�͵Ķ��塣
-*        [errors]    �޷����������飬�����
-*                    д��ʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��errors �ĳ����� count һ�¡�
-*        ���ڶ��Ŀ��յ����Ӿ�������Ƕ����ģ������������������� api��
-*        ���򷵻� GoE_OTHER_SDK_DOING ����
+* 命名：gos_subscribe_snapshots
+* 功能：批量标签点快照改变的通知订阅
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，输入时表示 ids、errors 的长度，
+*                    输出时表示成功订阅的标签点个数，不得超过 GOLDEN_MAX_SUBSCRIBE_SNAPSHOTS。
+*        [ids]       整型数组，输入，标签点标识列表。
+*        [callback]  gos_snaps_event 类型回调接口，输入，
+*                    被订阅的标签点的快照值发生变化时将调用该接口，
+*                    参见 golden.h 中原型的定义。
+*        [errors]    无符号整型数组，输出，
+*                    写入实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、errors 的长度与 count 一致。
+*        用于订阅快照的连接句柄必需是独立的，不能再用来调用其它 api，
+*        否则返回 GoE_OTHER_SDK_DOING 错误。
 */
 GOLDENAPI
 golden_error 
@@ -3189,50 +3189,50 @@ gos_subscribe_snapshots(
                         );
 
 /**
-* ������gos_subscribe_snapshots_ex
-* ���ܣ�������ǩ����ոı��֪ͨ����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�����������ʱ��ʾ ids��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ����ĵı�ǩ����������ó��� GOLDEN_MAX_SUBSCRIBE_SNAPSHOTS��
-*        [ids]       �������飬���룬��ǩ���ʶ�б���
-*        [options]   ���ͣ����룬����ѡ��μ�ö��GOLDEN_OPTION
-*                    GOLDEN_O_AUTOCONN ���Ŀͻ��������ݿ�����������жϺ��Զ�����������
-*        [param]     ���룬�û�������
-*                    ��Ϊgos_data_change_ex��param����
-*        [callback]  gos_snaps_event_ex ���ͻص��ӿڣ����룬���ص��������ط�GoE_OKʱ�˳�����
-*                    ��δ����optionsΪGOLDEN_O_AUTOCONNʱ�����ĶϿ���ʹ��GOLDEN_E_DISCONNECT
-*                    ��Ϊevent_typeȡֵ���ûص��������˳����ġ�
-*                    ������optionsΪGOLDEN_O_AUTOCONNʱ�����ĶϿ���ʹ��GOLDEN_E_DISCONNECT
-*                    ��Ϊevent_typeȡֵ���ûص�����ֱ�����ӻָ���ص��������ط�GoE_OK��
-*                    �����ж��ڼ�ص���������Ƶ��Ϊ����3��
-*                    event_type����ֵ�������£�
-*                      GOLDEN_E_DATA        ��ǩ����ոı�
-*                      GOLDEN_E_DISCONNECT  ���Ŀͻ��������ݿ�����Ͽ�
-*                      GOLDEN_E_RECOVERY    ���Ŀͻ��������ݿ����缰���Ļָ�
-*                    handle �������Ļص������Ӿ��������gos_subscribe_snapshots_exʱ��handle����
-*                    param  �û��Զ������������gos_subscribe_snapshots_exʱ��param����
-*                    count  event_typeΪGOLDEN_E_DATAʱ��ʾids��datetimes,values�ȵ�����
-*                           event_typeΪ����ֵʱ��countֵΪ0
-*                    ids    event_typeΪGOLDEN_E_DATAʱ��ʾ���ոı�ı�ǩ��ID��������countָ��
-*                           event_typeΪ����ֵʱ��idsֵΪNULL
-*                    datetimes event_typeΪGOLDEN_E_DATAʱ��ʾ����ʱ�䣬������countָ��
-*                              event_typeΪ����ֵʱ��datetimesֵΪNULL
-*                    ms     event_typeΪGOLDEN_E_DATAʱ��ʾ���յĺ��룬������countָ��
-*                           event_typeΪ����ֵʱ��msֵΪNULL
-*                    values event_typeΪGOLDEN_E_DATAʱ��ʾ�����������Ϳ���ֵ��������countָ��
-*                           event_typeΪ����ֵʱ��valuesֵΪNULL
-*                    states event_typeΪGOLDEN_E_DATAʱ��ʾ�����������Ϳ���ֵ��������countָ��
-*                           event_typeΪ����ֵʱ��statesֵΪNULL
-*                    qualities event_typeΪGOLDEN_E_DATAʱ��ʾ���������룬������countָ��
-*                           event_typeΪ����ֵʱ��qualitiesֵΪNULL
-*                    errors event_typeΪGOLDEN_E_DATAʱ��ʾ���մ����룬������countָ��
-*                           event_typeΪ����ֵʱ��errorsֵΪNULL
-*        [errors]    �޷����������飬�����
-*                    д��ʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��errors �ĳ����� count һ�¡�
-*        ���ڶ��Ŀ��յ����Ӿ�������Ƕ����ģ������������������� api��
-*        ���򷵻� GoE_OTHER_SDK_DOING ����
+* 命名：gos_subscribe_snapshots_ex
+* 功能：批量标签点快照改变的通知订阅
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，输入时表示 ids、errors 的长度，
+*                    输出时表示成功订阅的标签点个数，不得超过 GOLDEN_MAX_SUBSCRIBE_SNAPSHOTS。
+*        [ids]       整型数组，输入，标签点标识列表。
+*        [options]   整型，输入，订阅选项，参见枚举GOLDEN_OPTION
+*                    GOLDEN_O_AUTOCONN 订阅客户端与数据库服务器网络中断后自动重连并订阅
+*        [param]     输入，用户参数，
+*                    作为gos_data_change_ex的param参数
+*        [callback]  gos_snaps_event_ex 类型回调接口，输入，当回掉函数返回非GoE_OK时退出订阅
+*                    当未设置options为GOLDEN_O_AUTOCONN时，订阅断开后使用GOLDEN_E_DISCONNECT
+*                    作为event_type取值调用回掉函数后退出订阅。
+*                    当设置options为GOLDEN_O_AUTOCONN时，订阅断开后使用GOLDEN_E_DISCONNECT
+*                    作为event_type取值调用回掉函数直到连接恢复或回掉函数返回非GoE_OK，
+*                    网络中断期间回掉函数调用频率为最少3秒
+*                    event_type参数值含义如下：
+*                      GOLDEN_E_DATA        标签点快照改变
+*                      GOLDEN_E_DISCONNECT  订阅客户端与数据库网络断开
+*                      GOLDEN_E_RECOVERY    订阅客户端与数据库网络及订阅恢复
+*                    handle 产生订阅回掉的连接句柄，调用gos_subscribe_snapshots_ex时的handle参数
+*                    param  用户自定义参数，调用gos_subscribe_snapshots_ex时的param参数
+*                    count  event_type为GOLDEN_E_DATA时表示ids，datetimes,values等的数量
+*                           event_type为其它值时，count值为0
+*                    ids    event_type为GOLDEN_E_DATA时表示快照改变的标签点ID，数量由count指定
+*                           event_type为其它值时，ids值为NULL
+*                    datetimes event_type为GOLDEN_E_DATA时表示快照时间，数量由count指定
+*                              event_type为其它值时，datetimes值为NULL
+*                    ms     event_type为GOLDEN_E_DATA时表示快照的毫秒，数量由count指定
+*                           event_type为其它值时，ms值为NULL
+*                    values event_type为GOLDEN_E_DATA时表示浮点数据类型快照值，数量由count指定
+*                           event_type为其它值时，values值为NULL
+*                    states event_type为GOLDEN_E_DATA时表示整形数据类型快照值，数量由count指定
+*                           event_type为其它值时，states值为NULL
+*                    qualities event_type为GOLDEN_E_DATA时表示快照质量码，数量由count指定
+*                           event_type为其它值时，qualities值为NULL
+*                    errors event_type为GOLDEN_E_DATA时表示快照错误码，数量由count指定
+*                           event_type为其它值时，errors值为NULL
+*        [errors]    无符号整型数组，输出，
+*                    写入实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、errors 的长度与 count 一致。
+*        用于订阅快照的连接句柄必需是独立的，不能再用来调用其它 api，
+*        否则返回 GoE_OTHER_SDK_DOING 错误。
 */
 GOLDENAPI
 golden_error
@@ -3247,10 +3247,10 @@ gos_snaps_event_ex callback,
 golden_error *errors
 );
 /**
-* ������gos_cancel_subscribe_snapshots
-* ���ܣ�ȡ����ǩ����ո���֪ͨ����
-* ������
-*        [handle]    ���Ӿ��
+* 命名：gos_cancel_subscribe_snapshots
+* 功能：取消标签点快照更改通知订阅
+* 参数：
+*        [handle]    连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -3260,18 +3260,18 @@ gos_cancel_subscribe_snapshots(
                                );
 
 /**
-* ������gos_get_named_type_snapshot
-* ���ܣ���ȡ�Զ������Ͳ��ĵ�������
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ������ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ������ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [object]    �ֽ������飬�����ʵʱ�Զ������ͱ�ǩ�����ֵ
-*        [length]    �����ͣ�����/������Զ������ͱ�ǩ�����ֵ����
-*        [quality]   �����ͣ������ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
+* 命名：gos_get_named_type_snapshot
+* 功能：获取自定义类型测点的单个快照
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [object]    字节型数组，输出，实时自定义类型标签点的数值
+*        [length]    短整型，输入/输出，自定义类型标签点的数值长度
+*        [quality]   短整型，输出，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
 */
 GOLDENAPI
 golden_error 
@@ -3287,24 +3287,24 @@ gos_get_named_type_snapshot(
     );
 
 /**
-* ������gos_get_named_type_snapshots
-* ���ܣ�������ȡ�Զ������Ͳ��Ŀ���
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��objects��lengths��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ
-*        [datetimes] �������飬�����ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬�����ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [objects]   ָ�����飬������Զ������ͱ�ǩ����ֵ
-*        [lengths]   ���������飬����/������Զ������ͱ�ǩ����ֵ���ȣ�
-*                    ����ʱ��ʾ��Ӧ�� objects ָ��ָ��Ļ��������ȣ�
-*                    ���ʱ��ʾʵ�ʵõ��� objects ���ȣ���� objects �ĳ��ȴ��ڻ��������ȣ��ᱻ�ضϡ�
-*        [qualities] ���������飬�����ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
+* 命名：gos_get_named_type_snapshots
+* 功能：批量获取自定义类型测点的快照
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、objects、lengths、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识
+*        [datetimes] 整型数组，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [objects]   指针数组，输出，自定义类型标签点数值
+*        [lengths]   短整型数组，输入/输出，自定义类型标签点数值长度，
+*                    输入时表示对应的 objects 指针指向的缓冲区长度，
+*                    输出时表示实际得到的 objects 长度，如果 objects 的长度大于缓冲区长度，会被截断。
+*        [qualities] 短整型数组，输出，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
 */
 GOLDENAPI
 golden_error 
@@ -3322,18 +3322,18 @@ gos_get_named_type_snapshots(
     );
 
 /**
-* ������gos_put_named_type_snapshot
-* ���ܣ�д�뵥���Զ������ͱ�ǩ��Ŀ���
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ����룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ����룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [object]    void�������飬���룬�Զ������ͱ�ǩ����ֵ
-*        [length]    �����ͣ����룬�Զ������ͱ�ǩ����ֵ���ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [quality]   �����ͣ����룬ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
+* 命名：gos_put_named_type_snapshot
+* 功能：写入单个自定义类型标签点的快照
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [object]    void类型数组，输入，自定义类型标签点数值
+*        [length]    短整型，输入，自定义类型标签点数值长度，超过一个页大小数据将被截断。
+*        [quality]   短整型，输入，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
 */
 GOLDENAPI
 golden_error 
@@ -3349,23 +3349,23 @@ gos_put_named_type_snapshot(
     );
 
 /**
-* ������gos_put_named_type_snapshots
-* ���ܣ�����д���Զ������ͱ�ǩ��Ŀ���
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��datetimes��ms��objects��lengths��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ�д��ʵʱֵ�ı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ
-*        [datetimes] �������飬���룬ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬���룬ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬��ʾ��Ӧ�ĺ���ֵ���������
-*        [objects]   void����ָ�����飬���룬�Զ������ͱ�ǩ����ֵ
-*        [lengths]   ���������飬���룬�Զ������ͱ�ǩ����ֵ���ȣ�
-*                    ��ʾ��Ӧ�� objects ָ��ָ��Ļ��������ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [qualities] ���������飬���룬ʵʱ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
+* 命名：gos_put_named_type_snapshots
+* 功能：批量写入自定义类型标签点的快照
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、datetimes、ms、objects、lengths、qualities、errors 的长度，
+*                    输出时表示成功写入实时值的标签点个数
+*        [ids]       整型数组，输入，标签点标识
+*        [datetimes] 整型数组，输入，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输入，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，表示相应的毫秒值；否则忽略
+*        [objects]   void类型指针数组，输入，自定义类型标签点数值
+*        [lengths]   短整型数组，输入，自定义类型标签点数值长度，
+*                    表示对应的 objects 指针指向的缓冲区长度，超过一个页大小数据将被截断。
+*        [qualities] 短整型数组，输入，实时数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
 */
 GOLDENAPI
 golden_error 
@@ -3381,14 +3381,14 @@ gos_put_named_type_snapshots(
     const golden_int16 *qualities, 
     golden_error *errors 
     );
-/************************************ �浵�ļ��ӿ� ************************************/
+/************************************ 存档文件接口 ************************************/
 
 /**
-* ������goa_get_archives_count
-* ���ܣ���ȡ�浵�ļ�����
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�������浵�ļ�����
+* 命名：goa_get_archives_count
+* 功能：获取存档文件数量
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输出，存档文件数量
 */
 GOLDENAPI
 golden_error 
@@ -3399,13 +3399,13 @@ goa_get_archives_count(
                        );
 
 /**
-* ������goa_create_archive
-* ���ܣ��½���ʷ�浵�ļ���׷�ӵ���ʷ���ݿ�
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ������ļ���׺��ӦΪ.rdf��
-*        [mb_size]    ���ͣ����룬�ļ����ֽڴ�С����λΪ MB��
+* 命名：goa_create_archive
+* 功能：新建历史存档文件并追加到历史数据库
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名，文件后缀名应为.rdf。
+*        [mb_size]    整型，输入，文件兆字节大小，单位为 MB。
 */
 GOLDENAPI
 golden_error 
@@ -3418,15 +3418,15 @@ goa_create_archive(
                    );
 
 /**
-* ������goa_create_ranged_archive
-* ���ܣ��½�ָ��ʱ�䷶Χ����ʷ�浵�ļ������뵽��ʷ���ݿ�
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
-*        [begin]      ���������룬��ʼʱ�䣬����1970��1��1��08:00:00������
-*        [end]        ���������룬��ֹʱ�䣬����1970��1��1��08:00:00������
-*        [mb_size]    ���ͣ����룬�ļ����ֽڴ�С����λΪ MB��
+* 命名：goa_create_ranged_archive
+* 功能：新建指定时间范围的历史存档文件并插入到历史数据库
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
+*        [begin]      整数，输入，起始时间，距离1970年1月1日08:00:00的秒数
+*        [end]        整数，输入，终止时间，距离1970年1月1日08:00:00的秒数
+*        [mb_size]    整型，输入，文件兆字节大小，单位为 MB。
 */
 GOLDENAPI
 golden_error 
@@ -3442,14 +3442,14 @@ goa_create_ranged_archive(
 
 
 /**
-* ������goa_append_archive
-* ���ܣ�׷�Ӵ����ϵ���ʷ�浵�ļ�����ʷ���ݿ⡣
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�������׺��ӦΪ.rdf��
-*        [state]      ���ͣ����룬ȡֵ GOLDEN_ACTIVED_ARCHIVE��GOLDEN_NORMAL_ARCHIVE��
-*                     GOLDEN_READONLY_ARCHIVE ֮һ����ʾ�ļ�״̬
+* 命名：goa_append_archive
+* 功能：追加磁盘上的历史存档文件到历史数据库。
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名，后缀名应为.rdf。
+*        [state]      整型，输入，取值 GOLDEN_ACTIVED_ARCHIVE、GOLDEN_NORMAL_ARCHIVE、
+*                     GOLDEN_READONLY_ARCHIVE 之一，表示文件状态
 */
 GOLDENAPI
 golden_error 
@@ -3462,12 +3462,12 @@ goa_append_archive(
                    );
 
 /**
-* ������goa_remove_archive
-* ���ܣ�����ʷ���ݿ����Ƴ���ʷ�浵�ļ���
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
+* 命名：goa_remove_archive
+* 功能：从历史数据库中移出历史存档文件。
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
 */
 GOLDENAPI
 golden_error 
@@ -3480,17 +3480,17 @@ goa_remove_archive(
 
 
 /**
-* ������goa_shift_actived
-* ���ܣ��л���ļ�
-* ������
-*        [handle]     ���Ӿ��
-* ��ע����ǰ��ļ���д��ʱ������������
-*        �ı䵱ǰ��ļ���״̬Ϊ��ͨ״̬��
-*        ��������ʷ���ݴ浵�ļ���Ѱ��δ��ʹ�ù���
-*        ���뵽ǰ��ļ����Ҳಢ��Ϊ�״̬��
-*        ���Ҳ�����ǰ��ļ��Ҳ���ļ���Ϊ�״̬��
-*        ����active_archive_ָ����ļ�����������й����У�
-*        ������֤���ж�д��������ͣ�ȴ���������ɡ�
+* 命名：goa_shift_actived
+* 功能：切换活动文件
+* 参数：
+*        [handle]     连接句柄
+* 备注：当前活动文件被写满时该事务被启动，
+*        改变当前活动文件的状态为普通状态，
+*        在所有历史数据存档文件中寻找未被使用过的
+*        插入到前活动文件的右侧并改为活动状态，
+*        若找不到则将前活动文件右侧的文件改为活动状态，
+*        并将active_archive_指向该文件。该事务进行过程中，
+*        用锁保证所有读写操作都暂停等待该事务完成。
 */
 GOLDENAPI
 golden_error 
@@ -3500,12 +3500,12 @@ goa_shift_actived(
                   );
 
 /**
-* ������goa_reactive_archive
-* ���ܣ�����ָ���浵�ļ�Ϊ��浵�ļ�
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�浵�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�浵�ļ�����
+* 命名：goa_reactive_archive
+* 功能：激活指定存档文件为活动存档文件
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，存档文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，存档文件名。
 */
 GOLDENAPI
 golden_error 
@@ -3517,14 +3517,14 @@ goa_reactive_archive(
                      );
 
 /**
-* ������goa_get_first_archive
-* ���ܣ���ȡ�׸��浵�ļ���·�������ơ�״̬����������д��ʱ�䡣
-* ������
-*        [handle]          ���Ӿ��
-*        [path]            �ַ����飬������׸��浵�ļ���Ŀ¼·������������Ϊ GOLDEN_PATH_SIZE��
-*        [file]            �ַ����飬������׸��浵�ļ������ƣ���������Ϊ GOLDEN_FILE_NAME_SIZE��
-*        [state]           ���ͣ������ȡֵ GOLDEN_INVALID_ARCHIVE��GOLDEN_ACTIVED_ARCHIVE��
-*                          GOLDEN_NORMAL_ARCHIVE��GOLDEN_READONLY_ARCHIVE ֮һ����ʾ�ļ�״̬
+* 命名：goa_get_first_archive
+* 功能：获取首个存档文件的路径、名称、状态和最早允许写入时间。
+* 参数：
+*        [handle]          连接句柄
+*        [path]            字符数组，输出，首个存档文件的目录路径，长度至少为 GOLDEN_PATH_SIZE。
+*        [file]            字符数组，输出，首个存档文件的名称，长度至少为 GOLDEN_FILE_NAME_SIZE。
+*        [state]           整型，输出，取值 GOLDEN_INVALID_ARCHIVE、GOLDEN_ACTIVED_ARCHIVE、
+*                          GOLDEN_NORMAL_ARCHIVE、GOLDEN_READONLY_ARCHIVE 之一，表示文件状态
 */
 GOLDENAPI
 golden_error 
@@ -3537,21 +3537,21 @@ goa_get_first_archive(
                       );
 
 /**
-* ������goa_get_next_archive
-* ���ܣ���ȡ��һ���浵�ļ���·�������ơ�״̬����������д��ʱ�䡣
-* ������
-*        [handle]         ���Ӿ��
-*        [path]           �ַ����飬����/�����
-*                         �����ɵ��� goa_get_first_archive ��
-*                         �ϴε��� goa_get_next_archive ���ص��ļ�Ŀ¼·����
-*                         �����һ���浵�ļ���Ŀ¼·������������Ϊ GOLDEN_PATH_SIZE��
-*        [file]           �ַ����飬����/�����
-*                         �����ɵ��� goa_get_first_archive ��
-*                         �ϴε��� goa_get_next_archive ���ص��ļ�����
-*                         �����һ���浵�ļ������ƣ���������Ϊ GOLDEN_FILE_NAME_SIZE��
-*        [state]          ���ͣ������ȡֵ GOLDEN_INVALID_ARCHIVE��GOLDEN_ACTIVED_ARCHIVE��
-*                         GOLDEN_NORMAL_ARCHIVE��GOLDEN_READONLY_ARCHIVE ֮һ����ʾ�ļ�״̬
-* ��ע���� path ��������Ϊ "END" ʱ��ʾȫ���浵�ļ��Ѿ�������ϡ�
+* 命名：goa_get_next_archive
+* 功能：获取下一个存档文件的路径、名称、状态和最早允许写入时间。
+* 参数：
+*        [handle]         连接句柄
+*        [path]           字符数组，输入/输出，
+*                         输入由调用 goa_get_first_archive 或
+*                         上次调用 goa_get_next_archive 返回的文件目录路径，
+*                         输出下一个存档文件的目录路径，长度至少为 GOLDEN_PATH_SIZE。
+*        [file]           字符数组，输入/输出，
+*                         输入由调用 goa_get_first_archive 或
+*                         上次调用 goa_get_next_archive 返回的文件名，
+*                         输出下一个存档文件的名称，长度至少为 GOLDEN_FILE_NAME_SIZE。
+*        [state]          整型，输出，取值 GOLDEN_INVALID_ARCHIVE、GOLDEN_ACTIVED_ARCHIVE、
+*                         GOLDEN_NORMAL_ARCHIVE、GOLDEN_READONLY_ARCHIVE 之一，表示文件状态
+* 备注：当 path 返回内容为 "END" 时表示全部存档文件已经遍历完毕。
 */
 GOLDENAPI
 golden_error 
@@ -3565,14 +3565,14 @@ goa_get_next_archive(
 
 
 /**
-* ������goa_get_archives
-* ���ܣ���ȡ�浵�ļ���·�������ơ�״̬����������д��ʱ�䡣
-* ������
-*        [handle]          ���Ӿ��
-*        [paths]            �ַ������飬������浵�ļ���Ŀ¼·������������Ϊ GOLDEN_PATH_SIZE��
-*        [files]            �ַ������飬������浵�ļ������ƣ���������Ϊ GOLDEN_FILE_NAME_SIZE��
-*        [states]           �������飬�����ȡֵ GOLDEN_INVALID_ARCHIVE��GOLDEN_ACTIVED_ARCHIVE��
-*                          GOLDEN_NORMAL_ARCHIVE��GOLDEN_READONLY_ARCHIVE ֮һ����ʾ�ļ�״̬
+* 命名：goa_get_archives
+* 功能：获取存档文件的路径、名称、状态和最早允许写入时间。
+* 参数：
+*        [handle]          连接句柄
+*        [paths]            字符串数组，输出，存档文件的目录路径，长度至少为 GOLDEN_PATH_SIZE。
+*        [files]            字符串数组，输出，存档文件的名称，长度至少为 GOLDEN_FILE_NAME_SIZE。
+*        [states]           整型数组，输出，取值 GOLDEN_INVALID_ARCHIVE、GOLDEN_ACTIVED_ARCHIVE、
+*                          GOLDEN_NORMAL_ARCHIVE、GOLDEN_READONLY_ARCHIVE 之一，表示文件状态
 */
 GOLDENAPI
 golden_error 
@@ -3617,14 +3617,14 @@ GOLDENAPI_CALLRULE
 goa_get_archives_status(golden_int32 handle, golden_error* status);
 
 /**
-* ������goa_get_archive_info
-* ���ܣ���ȡ�浵�ļ����丽���ļ�����ϸ��Ϣ��
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
-*        [file_id]    ���ͣ����룬�����ļ���ʶ��0 ��ʾ��ȡ���ļ���Ϣ��
-*        [info]       GOLDEN_HEADER_PAGE �ṹ��������浵�ļ���Ϣ
+* 命名：goa_get_archive_info
+* 功能：获取存档文件及其附属文件的详细信息。
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
+*        [file_id]    整型，输入，附属文件标识，0 表示获取主文件信息。
+*        [info]       GOLDEN_HEADER_PAGE 结构，输出，存档文件信息
 */
 GOLDENAPI
 golden_error 
@@ -3639,17 +3639,17 @@ goa_get_archive_info(
 
 
 /**
-* ������goa_update_archive
-* ���ܣ��޸Ĵ浵�ļ��Ŀ������
-* ������
-*        [handle]         ���Ӿ��
-*        [path]           �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]           �ַ��������룬�ļ�����
-*        [rated_capacity] ���ͣ����룬�ļ����С����λΪ MB��
-*        [ex_capacity]    ���ͣ����룬�����ļ���С����λΪ MB��
-*        [auto_merge]     �����ͣ����룬�Ƿ��Զ��ϲ������ļ���
-*        [auto_arrange]   �����ͣ����룬�Ƿ��Զ������浵�ļ���
-* ��ע: rated_capacity �� ex_capacity ������Ϊ 0����ʾ���޸Ķ�Ӧ�������
+* 命名：goa_update_archive
+* 功能：修改存档文件的可配置项。
+* 参数：
+*        [handle]         连接句柄
+*        [path]           字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]           字符串，输入，文件名。
+*        [rated_capacity] 整型，输入，文件额定大小，单位为 MB。
+*        [ex_capacity]    整型，输入，附属文件大小，单位为 MB。
+*        [auto_merge]     短整型，输入，是否自动合并附属文件。
+*        [auto_arrange]   短整型，输入，是否自动整理存档文件。
+* 备注: rated_capacity 与 ex_capacity 参数可为 0，表示不修改对应的配置项。
 */
 GOLDENAPI
 golden_error 
@@ -3665,12 +3665,12 @@ goa_update_archive(
                    );
 
 /**
-* ������goa_merge_archive
-* ���ܣ��ϲ������ļ����������ļ�
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬���ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬���ļ�����
+* 命名：goa_merge_archive
+* 功能：合并附属文件到所属主文件
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，主文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，主文件名。
 */
 GOLDENAPI
 golden_error 
@@ -3682,12 +3682,12 @@ goa_merge_archive(
                   );
 
 /**
-* ������goa_arrange_archive
-* ���ܣ������浵�ļ�����ͬһ��ǩ������ݿ�����һ������߲�ѯЧ�ʡ�
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
+* 命名：goa_arrange_archive
+* 功能：整理存档文件，将同一标签点的数据块存放在一起以提高查询效率。
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
 */
 GOLDENAPI
 golden_error 
@@ -3699,12 +3699,12 @@ goa_arrange_archive(
                     );
 
 /**
-* ������goa_reindex_archive
-* ���ܣ�Ϊ�浵�ļ������������������ڻָ����ݡ�
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
+* 命名：goa_reindex_archive
+* 功能：为存档文件重新生成索引，用于恢复数据。
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
 */
 GOLDENAPI 
 golden_error 
@@ -3716,13 +3716,13 @@ goa_reindex_archive(
                     ); 
 
 /**
-* ������goa_backup_archive
-* ���ܣ��������浵�ļ����丽���ļ���ָ��·��
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
-*        [dest]       �ַ��������룬����Ŀ¼·����������"\"��"/"��β��
+* 命名：goa_backup_archive
+* 功能：备份主存档文件及其附属文件到指定路径
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
+*        [dest]       字符串，输入，备份目录路径，必须以"\"或"/"结尾。
 */
 GOLDENAPI 
 golden_error 
@@ -3735,13 +3735,13 @@ goa_backup_archive(
                    ); 
 
 /**
-* ������goa_move_archive
-* ���ܣ����浵�ļ��ƶ���ָ��Ŀ¼
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
-*        [dest]       �ַ��������룬�ƶ�Ŀ¼·����������"\"��"/"��β��
+* 命名：goa_move_archive
+* 功能：将存档文件移动到指定目录
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
+*        [dest]       字符串，输入，移动目录路径，必须以"\"或"/"结尾。
 */
 GOLDENAPI
 golden_error
@@ -3754,12 +3754,12 @@ const char *dest
 );
 
 /**
-* ������goa_reindex_archive
-* ���ܣ�Ϊ�浵�ļ�ת��������ʽ��
-* ������
-*        [handle]     ���Ӿ��
-*        [path]       �ַ��������룬�ļ�����Ŀ¼·����������"\"��"/"��β��
-*        [file]       �ַ��������룬�ļ�����
+* 命名：goa_reindex_archive
+* 功能：为存档文件转换索引格式。
+* 参数：
+*        [handle]     连接句柄
+*        [path]       字符串，输入，文件所在目录路径，必须以"\"或"/"结尾。
+*        [file]       字符串，输入，文件名。
 */
 GOLDENAPI
 golden_error
@@ -3772,48 +3772,48 @@ const char *file
 
 
 /**
-* ������goa_query_big_job
-* ���ܣ���ѯ��������ִ�еĺ�̨�������͡�״̬�ͽ���
-* ������
-*        [handle]     ���Ӿ��
-*        [process]    ����ѯ�Ľ��̴��ţ����̵ı�ʶ�μ�ö�� GOLDEN_PROCESS_NAME, 
-*                     GOLDEN_PROCESS_HISTORIAN: ��ʷ������̣����������������ͣ�
-*                         GOLDEN_MERGE: �ϲ������ļ������ļ�; 
-*                         GOLDEN_ARRANGE: �����浵�ļ�; 
-*                         GOLDEN_REINDEX: �ؽ�����; 
-*                         GOLDEN_BACKUP: ����; 
-*                         GOLDEN_REACTIVE: ����Ϊ��浵; 
-*                     GOLDEN_PROCESS_EQUATION: ����ʽ������̣����������������ͣ�
-*                         GOLDEN_COMPUTE: ��ʷ����; 
-*                     GOLDEN_PROCESS_BASE: ��ǩ��Ϣ������̣����������������ͣ�
-*                         GOLDEN_UPDATE_TABLE: �޸ı�����; 
-*                         GOLDEN_REMOVE_TABLE: ɾ����; 
-*        [path]       �ַ������������������Ϊ GOLDEN_PATH_SIZE��
-*                     ��������������ֶα�ʾ�浵�ļ�����Ŀ¼·����
+* 命名：goa_query_big_job
+* 功能：查询进程正在执行的后台任务类型、状态和进度
+* 参数：
+*        [handle]     连接句柄
+*        [process]    所查询的进程代号，进程的标识参见枚举 GOLDEN_PROCESS_NAME, 
+*                     GOLDEN_PROCESS_HISTORIAN: 历史服务进程，具有以下任务类型：
+*                         GOLDEN_MERGE: 合并附属文件到主文件; 
+*                         GOLDEN_ARRANGE: 整理存档文件; 
+*                         GOLDEN_REINDEX: 重建索引; 
+*                         GOLDEN_BACKUP: 备份; 
+*                         GOLDEN_REACTIVE: 激活为活动存档; 
+*                     GOLDEN_PROCESS_EQUATION: 方程式服务进程，具有以下任务类型：
+*                         GOLDEN_COMPUTE: 历史计算; 
+*                     GOLDEN_PROCESS_BASE: 标签信息服务进程，具有以下任务类型：
+*                         GOLDEN_UPDATE_TABLE: 修改表名称; 
+*                         GOLDEN_REMOVE_TABLE: 删除表; 
+*        [path]       字符串，输出，长度至少为 GOLDEN_PATH_SIZE，
+*                     对以下任务，这个字段表示存档文件所在目录路径：
 *                         GOLDEN_MERGE
 *                         GOLDEN_ARRANGE
 *                         GOLDEN_REINDEX
 *                         GOLDEN_BACKUP
 *                         GOLDEN_REACTIVE
-*                     ����������������ֶα�ʾԭ���ı�����
+*                     对于以下任务，这个字段表示原来的表名：
 *                         GOLDEN_UPDATE_TABLE
 *                         GOLDEN_REMOVE_TABLE
-*                     �����������񲻿��á�
-*        [file]       �ַ������������������Ϊ GOLDEN_FILE_NAME_SIZE��
-*                     ��������������ֶα�ʾ�浵�ļ�����
+*                     对于其它任务不可用。
+*        [file]       字符串，输出，长度至少为 GOLDEN_FILE_NAME_SIZE，
+*                     对以下任务，这个字段表示存档文件名：
 *                         GOLDEN_MERGE
 *                         GOLDEN_ARRANGE
 *                         GOLDEN_REINDEX
 *                         GOLDEN_BACKUP
 *                         GOLDEN_REACTIVE
-*                     ����������������ֶα�ʾ�޸ĺ�ı�����
+*                     对于以下任务，这个字段表示修改后的表名：
 *                          GOLDEN_UPDATE_TABLE
-*                     �����������񲻿��á�
-*        [job]        �����ͣ����������ı�ʶ�μ�ö�� GOLDEN_BIG_JOB_NAME��
-*        [state]      ���ͣ�����������ִ��״̬���ο� golden_error.h
-*        [end_time]   ���ͣ��������������ʱ�䡣
-*        [progress]   �����ȸ����ͣ����������Ľ��Ȱٷֱȡ�
-* ��ע��path �� file �����ɴ���ָ�룬��Ӧ����Ϣ�����ٷ��ء�
+*                     对于其它任务不可用。
+*        [job]        短整型，输出，任务的标识参见枚举 GOLDEN_BIG_JOB_NAME。
+*        [state]      整型，输出，任务的执行状态，参考 golden_error.h
+*        [end_time]   整型，输出，任务的完成时间。
+*        [progress]   单精度浮点型，输出，任务的进度百分比。
+* 备注：path 及 file 参数可传空指针，对应的信息将不再返回。
 */
 GOLDENAPI
 golden_error 
@@ -3830,19 +3830,19 @@ goa_query_big_job(
                   );
 
 /**
-* ������goa_cancel_big_job
-* ���ܣ�ȡ����������ִ�еĺ�̨����
-* ������
-*        [handle]     ���Ӿ��
-*        [process]    ����ѯ�Ľ��̴��ţ����̵ı�ʶ�μ�ö�� GOLDEN_PROCESS_NAME,
-*                     GOLDEN_PROCESS_HISTORIAN: ��ʷ������̣����������������ͣ�
-*                         GOLDEN_MERGE: �ϲ������ļ������ļ�;
-*                         GOLDEN_ARRANGE: �����浵�ļ�;
-*                         GOLDEN_REINDEX: �ؽ�����;
-*                         GOLDEN_BACKUP: ����;
-*                         GOLDEN_REACTIVE: ����Ϊ��浵;
-* ��ע����֧��ȡ��    GOLDEN_PROCESS_EQUATION: ����ʽ�������
-*                     GOLDEN_PROCESS_BASE: ��ǩ��Ϣ�������
+* 命名：goa_cancel_big_job
+* 功能：取消进程正在执行的后台任务
+* 参数：
+*        [handle]     连接句柄
+*        [process]    所查询的进程代号，进程的标识参见枚举 GOLDEN_PROCESS_NAME,
+*                     GOLDEN_PROCESS_HISTORIAN: 历史服务进程，具有以下任务类型：
+*                         GOLDEN_MERGE: 合并附属文件到主文件;
+*                         GOLDEN_ARRANGE: 整理存档文件;
+*                         GOLDEN_REINDEX: 重建索引;
+*                         GOLDEN_BACKUP: 备份;
+*                         GOLDEN_REACTIVE: 激活为活动存档;
+* 备注：不支持取消    GOLDEN_PROCESS_EQUATION: 方程式服务进程
+*                     GOLDEN_PROCESS_BASE: 标签信息服务进程
 */
 GOLDENAPI
 golden_error
@@ -3851,21 +3851,21 @@ goa_cancel_big_job(golden_int32 handle, golden_int32 process);
 
 
 
-/************************************ ��ʷ���ݽӿ� ************************************/
+/************************************ 历史数据接口 ************************************/
 
 /**
-* ������goh_archived_values_count
-* ���ܣ���ȡ������ǩ����һ��ʱ�䷶Χ�ڵĴ洢ֵ����.
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ�����������Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ��ȡ
-*        [ms1]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ��ʼʱ���Ӧ�ĺ��룻�������
-*        [datetime2]     ���ͣ����룬��ʾ����ʱ�����������Ϊ 0����ʾ��ȡֱ���浵�����ݵ����ʱ��
-*        [ms2]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ����ʱ���Ӧ�ĺ��룻�������
-*        [count]         ���ͣ��������������ʱ�䷶Χ�ڵĴ洢ֵ����
-* ��ע���� datetime1��ms1 �γɵ�ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
+* 命名：goh_archived_values_count
+* 功能：获取单个标签点在一段时间范围内的存储值数量.
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime1]     整型，输入，表示起始时间秒数。如果为 0，表示从存档中最早时间的数据开始读取
+*        [ms1]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示起始时间对应的毫秒；否则忽略
+*        [datetime2]     整型，输入，表示结束时间秒数。如果为 0，表示读取直至存档中数据的最后时间
+*        [ms2]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示结束时间对应的毫秒；否则忽略
+*        [count]         整型，输出，返回上述时间范围内的存储值数量
+* 备注：由 datetime1、ms1 形成的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
 */
 GOLDENAPI
 golden_error 
@@ -3881,18 +3881,18 @@ goh_archived_values_count(
                           );
 
 /**
-* ������goh_archived_values_real_count
-* ���ܣ���ȡ������ǩ����һ��ʱ�䷶Χ�ڵ���ʵ�Ĵ洢ֵ����.
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ�����������Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ��ȡ
-*        [ms1]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ��ʼʱ���Ӧ�ĺ��룻�������
-*        [datetime2]     ���ͣ����룬��ʾ����ʱ�����������Ϊ 0����ʾ��ȡֱ���浵�����ݵ����ʱ��
-*        [ms2]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ����ʱ���Ӧ�ĺ��룻�������
-*        [count]         ���ͣ��������������ʱ�䷶Χ�ڵĴ洢ֵ����
-* ��ע���� datetime1��ms1 �γɵ�ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
+* 命名：goh_archived_values_real_count
+* 功能：获取单个标签点在一段时间范围内的真实的存储值数量.
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime1]     整型，输入，表示起始时间秒数。如果为 0，表示从存档中最早时间的数据开始读取
+*        [ms1]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示起始时间对应的毫秒；否则忽略
+*        [datetime2]     整型，输入，表示结束时间秒数。如果为 0，表示读取直至存档中数据的最后时间
+*        [ms2]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示结束时间对应的毫秒；否则忽略
+*        [count]         整型，输出，返回上述时间范围内的存储值数量
+* 备注：由 datetime1、ms1 形成的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
 */
 
 GOLDENAPI
@@ -3909,34 +3909,34 @@ goh_archived_values_real_count(
                               );
 
 /**
-* ������goh_get_archived_values
-* ���ܣ���ȡ������ǩ��һ��ʱ���ڵĴ�������
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ���ʱ����ʵ�ʵõ�����ֵ����
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������ʷ��������ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [states]        64 λ�������飬�������ʷ������ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_archived_values
+* 功能：读取单个标签点一段时间内的储存数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、values、states、qualities 的长度；
+*                        输出时返回实际得到的数值个数
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，历史浮点型数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史存储值；否则为 0
+*        [states]        64 位整数数组，输出，历史整型数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史存储值；否则为 0
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -3954,34 +3954,34 @@ goh_get_archived_values(
 
 
 /**
-* ������goh_get_archived_values_backward
-* ���ܣ������ȡ������ǩ��һ��ʱ���ڵĴ�������
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ���ʱ����ʵ�ʵõ�����ֵ����
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������ʷ��������ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [states]        64 λ�������飬�������ʷ������ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_archived_values_backward
+* 功能：逆向读取单个标签点一段时间内的储存数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、values、states、qualities 的长度；
+*                        输出时返回实际得到的数值个数
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，历史浮点型数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史存储值；否则为 0
+*        [states]        64 位整数数组，输出，历史整型数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史存储值；否则为 0
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -3998,31 +3998,31 @@ goh_get_archived_values_backward(
                                  );
 
 /**
-* ������goh_get_archived_coor_values
-* ���ܣ���ȡ������ǩ��һ��ʱ���ڵ������ʹ�������
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��x��y��qualities �ĳ��ȣ�
-*                        ���ʱ����ʵ�ʵõ�����ֵ����
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [x]             �����ȸ��������飬����������ͺ�������ʷ��ֵ�б�
-*        [y]             �����ȸ��������飬�������������������ʷ��ֵ�б�
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��x��y��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：goh_get_archived_coor_values
+* 功能：读取单个标签点一段时间内的坐标型储存数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、x、y、qualities 的长度；
+*                        输出时返回实际得到的数值个数
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [x]             单精度浮点型数组，输出，浮点型横坐标历史数值列表
+*        [y]             单精度浮点型数组，输出，浮点型纵坐标历史数值列表
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、x、y、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -4039,31 +4039,31 @@ goh_get_archived_coor_values(
                              );
 
 /**
-* ������goh_get_archived_coor_values_backward
-* ���ܣ������ȡ������ǩ��һ��ʱ���ڵ������ʹ�������
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��x��y��qualities �ĳ��ȣ�
-*                        ���ʱ����ʵ�ʵõ�����ֵ����
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [x]             �����ȸ��������飬����������ͺ�������ʷ��ֵ�б�
-*        [y]             �����ȸ��������飬�������������������ʷ��ֵ�б�
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��x��y��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：goh_get_archived_coor_values_backward
+* 功能：逆向读取单个标签点一段时间内的坐标型储存数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、x、y、qualities 的长度；
+*                        输出时返回实际得到的数值个数
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [x]             单精度浮点型数组，输出，浮点型横坐标历史数值列表
+*        [y]             单精度浮点型数组，输出，浮点型纵坐标历史数值列表
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、x、y、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -4081,20 +4081,20 @@ goh_get_archived_coor_values_backward(
 
 
 /**
-* ������goh_get_archived_values_in_batches
-* ���ܣ���ʼ�Էֶη��ط�ʽ��ȡһ��ʱ���ڵĴ�������
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ�����������Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ��ȡ
-*        [ms1]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ��ʼʱ���Ӧ�ĺ��룻�������
-*        [datetime2]     ���ͣ����룬��ʾ����ʱ�����������Ϊ 0����ʾ��ȡֱ���浵�����ݵ����ʱ��
-*        [ms2]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ����ʱ���Ӧ�ĺ��룻�������
-*        [count]         ���ͣ��������������ʱ�䷶Χ�ڵĴ洢ֵ����
-*        [batch_count]   ���ͣ������ÿ�ηֶη��صĳ��ȣ����ڼ������� goh_get_next_archived_values �ӿ�
-* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_archived_values_in_batches
+* 功能：开始以分段返回方式读取一段时间内的储存数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime1]     整型，输入，表示起始时间秒数。如果为 0，表示从存档中最早时间的数据开始读取
+*        [ms1]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示起始时间对应的毫秒；否则忽略
+*        [datetime2]     整型，输入，表示结束时间秒数。如果为 0，表示读取直至存档中数据的最后时间
+*        [ms2]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示结束时间对应的毫秒；否则忽略
+*        [count]         整型，输出，返回上述时间范围内的存储值数量
+*        [batch_count]   整型，输出，每次分段返回的长度，用于继续调用 goh_get_next_archived_values 接口
+* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4111,28 +4111,28 @@ goh_get_archived_values_in_batches(
                                    );
 
 /**
-* ������goh_get_next_archived_values
-* ���ܣ��ֶζ�ȡһ��ʱ���ڵĴ�������
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���Σ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ���ʱ��ʾʵ�ʵõ��Ĵ洢ֵ������
-*        [datetimes]     �������飬�������ʷ��ֵʱ���б�,
-*                        ��ʾ����1970��1��1��08:00:00������
-*        [ms]            ���������飬�������ʷ��ֵʱ���б���
-*                        ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [values]        ˫���ȸ��������飬�������ʷ��������ֵ�б���
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬������Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [states]        64 λ�������飬�������ʷ������ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬������Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count �����
-*        �� count ����С�� goh_get_archived_values_in_batches �ӿ��з��ص� batch_count ��ֵ��
-*        ������ GoE_BATCH_END ��ʾȫ�����ݻ�ȡ��ϡ�
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_next_archived_values
+* 功能：分段读取一段时间内的储存数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整形，输入/输出，
+*                        输入时表示 datetimes、ms、values、states、qualities 的长度；
+*                        输出时表示实际得到的存储值个数。
+*        [datetimes]     整型数组，输出，历史数值时间列表,
+*                        表示距离1970年1月1日08:00:00的秒数
+*        [ms]            短整型数组，输出，历史数值时间列表，
+*                        对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [values]        双精度浮点型数组，输出，历史浮点型数值列表，
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，返回相应的历史存储值；否则为 0
+*        [states]        64 位整型数组，输出，历史整型数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，返回相应的历史存储值；否则为 0
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 相符，
+*        且 count 不能小于 goh_get_archived_values_in_batches 接口中返回的 batch_count 的值，
+*        当返回 GoE_BATCH_END 表示全部数据获取完毕。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4149,24 +4149,24 @@ goh_get_next_archived_values(
                              );
 
 /**
-* ������goh_get_timed_values
-* ���ܣ���ȡ������ǩ��ĵ�������ʱ��������ʷ��ֵ��
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ����룬��ʾ datetimes��ms��values��states��qualities �ĳ��ȡ�
-*        [datetimes]     �������飬���룬��ʾ��Ҫ�ĵ�������ʱ���б���
-*                        Ϊ����1970��1��1��08:00:00������
-*        [ms]            ���������飬���룬����ʱ�侫��Ϊ����ı�ǩ�㣬
-*                        ��ʾ��Ҫ�ĵ�������ʱ���Ӧ�ĺ���ֵ��������ԡ�
-*        [values]        ˫���ȸ��������飬�������ʷ��������ֵ�б���
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬������Ӧ����ʷ��ֵ������Ϊ 0
-*        [states]        64 λ�������飬�������ʷ������ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬������Ӧ����ʷ��ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count �����
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_timed_values
+* 功能：获取单个标签点的单调递增时间序列历史插值。
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整型，输入，表示 datetimes、ms、values、states、qualities 的长度。
+*        [datetimes]     整型数组，输入，表示需要的单调递增时间列表，
+*                        为距离1970年1月1日08:00:00的秒数
+*        [ms]            短整型数组，输入，对于时间精度为毫秒的标签点，
+*                        表示需要的单调递增时间对应的毫秒值；否则忽略。
+*        [values]        双精度浮点型数组，输出，历史浮点型数值列表，
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，返回相应的历史插值；否则为 0
+*        [states]        64 位整型数组，输出，历史整型数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，返回相应的历史插值；否则为 0
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 相符，
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4183,21 +4183,21 @@ goh_get_timed_values(
                      );
 
 /**
-* ������goh_get_timed_coor_values
-* ���ܣ���ȡ���������ǩ��ĵ�������ʱ��������ʷ��ֵ��
-* ������
-*        [handle]        ���Ӿ��
-*        [pt]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ����룬��ʾ datetimes��ms��x��y��qualities �ĳ��ȡ�
-*        [datetimes]     �������飬���룬��ʾ��Ҫ�ĵ�������ʱ���б���
-*                        Ϊ����1970��1��1��08:00:00������
-*        [ms]            ���������飬���룬����ʱ�侫��Ϊ����ı�ǩ�㣬
-*                        ��ʾ��Ҫ�ĵ�������ʱ���Ӧ�ĺ���ֵ��������ԡ�
-*        [x]             �����ȸ��������飬����������ͺ�������ʷ��ֵ��ֵ�б�
-*        [y]             �����ȸ��������飬�������������������ʷ��ֵ��ֵ�б�
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��x��y��qualities �ĳ����� count �����
-*        ���ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：goh_get_timed_coor_values
+* 功能：获取单个坐标标签点的单调递增时间序列历史插值。
+* 参数：
+*        [handle]        连接句柄
+*        [pt]            整型，输入，标签点标识
+*        [count]         整型，输入，表示 datetimes、ms、x、y、qualities 的长度。
+*        [datetimes]     整型数组，输入，表示需要的单调递增时间列表，
+*                        为距离1970年1月1日08:00:00的秒数
+*        [ms]            短整型数组，输入，对于时间精度为毫秒的标签点，
+*                        表示需要的单调递增时间对应的毫秒值；否则忽略。
+*        [x]             单精度浮点型数组，输出，浮点型横坐标历史插值数值列表
+*        [y]             单精度浮点型数组，输出，浮点型纵坐标历史插值数值列表
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、x、y、qualities 的长度与 count 相符，
+*        本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -4214,34 +4214,34 @@ goh_get_timed_coor_values(
                           );
 
 /**
-* ������goh_get_interpo_values
-* ���ܣ���ȡ������ǩ��һ��ʱ���ڵȼ����ʷ��ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ����Ҫ�Ĳ�ֵ���������ʱ����ʵ�ʵõ��Ĳ�ֵ����
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷ��ֵ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷ��ֵ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_interpo_values
+* 功能：获取单个标签点一段时间内等间隔历史插值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、values、states、qualities 的长度，
+*                        即需要的插值个数；输出时返回实际得到的插值个数
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史插值数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史插值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史插值数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史插值；否则为 0
+*        [qualities]     短整型数组，输出，历史插值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4258,30 +4258,30 @@ goh_get_interpo_values(
                        );
 
 /**
-* ������goh_get_interval_values
-* ���ܣ���ȡ������ǩ��ĳ��ʱ��֮��һ�������ĵȼ���ڲ�ֵ�滻����ʷ��ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [interval]      ���ͣ����룬��ֵʱ��������λΪ����
-*        [count]         ���ͣ����룬��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ����Ҫ�Ĳ�ֵ������
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷ��ֵ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷ��ֵ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�����ڴ����ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_interval_values
+* 功能：读取单个标签点某个时刻之后一定数量的等间隔内插值替换的历史数值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [interval]      整型，输入，插值时间间隔，单位为毫秒
+*        [count]         整型，输入，表示 datetimes、ms、values、states、qualities 的长度，
+*                        即需要的插值个数。
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史插值数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史插值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史插值数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史插值；否则为 0
+*        [qualities]     短整型数组，输出，历史插值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素用于存放起始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4299,28 +4299,28 @@ goh_get_interval_values(
                         );
 
 /**
-* ������goh_get_single_value
-* ���ܣ���ȡ������ǩ��ĳ��ʱ�����ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [mode]          ���ͣ����룬ȡֵ GOLDEN_NEXT��GOLDEN_PREVIOUS��GOLDEN_EXACT��GOLDEN_INTER ֮һ��
-*                        GOLDEN_NEXT Ѱ����һ����������ݣ�
-*                        GOLDEN_PREVIOUS Ѱ����һ����������ݣ�
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*                        GOLDEN_INTER ȡָ��ʱ����ڲ�ֵ���ݡ�
-*        [datetime]      ���ͣ�����/���������ʱ��ʾʱ��������
-*                        ���ʱ��ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��ʾʱ������������ʱ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*                        ����������룬���ʱΪ 0��
-*        [value]         ˫���ȸ��������������������ʷ��ֵ
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷֵ������Ϊ 0
-*        [state]         64 λ�����������������ʷ��ֵ��
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷֵ������Ϊ 0
-*        [quality]       �����ͣ��������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_single_value
+* 功能：读取单个标签点某个时间的历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [mode]          整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT、GOLDEN_INTER 之一：
+*                        GOLDEN_NEXT 寻找下一个最近的数据；
+*                        GOLDEN_PREVIOUS 寻找上一个最近的数据；
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*                        GOLDEN_INTER 取指定时间的内插值数据。
+*        [datetime]      整型，输入/输出，输入时表示时间秒数；
+*                        输出时表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时表示时间毫秒数；输出时表示实际取得的历史数值时间毫秒数。
+*                        否则忽略输入，输出时为 0。
+*        [value]         双精度浮点数，输出，浮点型历史数值
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史值；否则为 0
+*        [state]         64 位整数，输出，整型历史数值，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史值；否则为 0
+*        [quality]       短整型，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4337,25 +4337,25 @@ goh_get_single_value(
                      );
 
 /**
-* ������goh_get_single_coor_value
-* ���ܣ���ȡ������ǩ��ĳ��ʱ�����������ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [mode]          ���ͣ����룬ȡֵ GOLDEN_NEXT��GOLDEN_PREVIOUS��GOLDEN_EXACT��GOLDEN_INTER ֮һ��
-*                        GOLDEN_NEXT Ѱ����һ����������ݣ�
-*                        GOLDEN_PREVIOUS Ѱ����һ����������ݣ�
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*                        GOLDEN_INTER ȡָ��ʱ����ڲ�ֵ���ݡ�
-*        [datetime]      ���ͣ�����/���������ʱ��ʾʱ��������
-*                        ���ʱ��ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��ʾʱ������������ʱ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*                        ����������룬���ʱΪ 0��
-*        [x]             �����ȸ����ͣ��������������ʷ��ֵ
-*        [y]             �����ȸ����ͣ��������������ʷ��ֵ
-*        [quality]       �����ͣ��������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：goh_get_single_coor_value
+* 功能：读取单个标签点某个时间的坐标型历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [mode]          整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT、GOLDEN_INTER 之一：
+*                        GOLDEN_NEXT 寻找下一个最近的数据；
+*                        GOLDEN_PREVIOUS 寻找上一个最近的数据；
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*                        GOLDEN_INTER 取指定时间的内插值数据。
+*        [datetime]      整型，输入/输出，输入时表示时间秒数；
+*                        输出时表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时表示时间毫秒数；输出时表示实际取得的历史数值时间毫秒数。
+*                        否则忽略输入，输出时为 0。
+*        [x]             单精度浮点型，输出，横坐标历史数值
+*        [y]             单精度浮点型，输出，纵坐标历史数值
+*        [quality]       短整型，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -4372,25 +4372,25 @@ goh_get_single_coor_value(
                           );
 
 /**
-* ������goh_get_single_blob_value
-* ���ܣ���ȡ������ǩ��ĳ��ʱ��Ķ�����/�ַ�������ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [mode]          ���ͣ����룬ȡֵ GOLDEN_NEXT��GOLDEN_PREVIOUS��GOLDEN_EXACT ֮һ��
-*                        GOLDEN_NEXT Ѱ����һ����������ݣ�
-*                        GOLDEN_PREVIOUS Ѱ����һ����������ݣ�
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*        [datetime]      ���ͣ�����/���������ʱ��ʾʱ��������
-*                        ���ʱ��ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��ʾʱ������������ʱ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*                        ����������룬���ʱΪ 0��
-*        [blob]          �ֽ������飬�����������/�ַ�����ʷֵ
-*        [len]           �����ͣ�����/���������ʱ��ʾ blob �ĳ��ȣ�
-*                        ���ʱ��ʾʵ�ʻ�ȡ�Ķ�����/�ַ������ݳ��ȡ�
-*        [quality]       �����ͣ��������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_single_blob_value
+* 功能：读取单个标签点某个时间的二进制/字符串型历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [mode]          整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT 之一：
+*                        GOLDEN_NEXT 寻找下一个最近的数据；
+*                        GOLDEN_PREVIOUS 寻找上一个最近的数据；
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*        [datetime]      整型，输入/输出，输入时表示时间秒数；
+*                        输出时表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时表示时间毫秒数；输出时表示实际取得的历史数值时间毫秒数。
+*                        否则忽略输入，输出时为 0。
+*        [blob]          字节型数组，输出，二进制/字符串历史值
+*        [len]           短整型，输入/输出，输入时表示 blob 的长度，
+*                        输出时表示实际获取的二进制/字符串数据长度。
+*        [quality]       短整型，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -4408,28 +4408,28 @@ goh_get_single_blob_value(
 
 
 /**
-* ������goh_get_archived_blob_values
-* ���ܣ���ȡ������ǩ���ʱ��Ķ�����/�ַ�������ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*        [count]         ���ͣ�����/����������ʾ��Ҫ��ѯ��������
-*                        �����ʾʵ�ʲ鵽��������
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ��������
-*        [ms1]           �����ͣ����룬ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������
-*        [datetime2]     ���ͣ�����,��ʾ����ʱ��������
-*        [ms2]           �����ͣ����룬ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������
-*        [datetimes]     �������飬�������ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ��������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*        [lens]          ���������飬����/���������ʱ��ʾ blob �ĳ��ȣ�
-*                        ���ʱ��ʾʵ�ʻ�ȡ�Ķ�����/�ַ������ݳ��ȡ�
-*        [blobs]         �ֽ������飬�����������/�ַ�����ʷֵ
-*        [qualities]     ���������飬�������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_archived_blob_values
+* 功能：读取单个标签点段时间的二进制/字符串型历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*        [count]         整型，输入/输出，输入表示想要查询多少数据
+*                        输出表示实际查到多少数据
+*        [datetime1]     整型，输入，表示开始时间秒数；
+*        [ms1]           短整型，输入，指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；
+*        [datetime2]     整型，输入,表示结束时间秒数；
+*        [ms2]           短整型，输入，指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；
+*        [datetimes]     整型数组，输出，表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输出，如果 id 指定的标签点时间精度为毫秒，
+*                        表示实际取得的历史数值时间毫秒数。
+*        [lens]          短整型数组，输入/输出，输入时表示 blob 的长度，
+*                        输出时表示实际获取的二进制/字符串数据长度。
+*        [blobs]         字节型数组，输出，二进制/字符串历史值
+*        [qualities]     短整型数组，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error
@@ -4450,25 +4450,25 @@ goh_get_archived_blob_values(
                              );
 
 /**
-* ������goh_get_single_datetime_value
-* ���ܣ���ȡ������ǩ��ĳ��ʱ���datetime��ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [mode]          ���ͣ����룬ȡֵ GOLDEN_NEXT��GOLDEN_PREVIOUS��GOLDEN_EXACT ֮һ��
-*                        GOLDEN_NEXT Ѱ����һ����������ݣ�
-*                        GOLDEN_PREVIOUS Ѱ����һ����������ݣ�
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*        [datetime]      ���ͣ�����/���������ʱ��ʾʱ��������
-*                        ���ʱ��ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��ʾʱ������������ʱ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*                        ����������룬���ʱΪ 0��
-*        [blob]          �ֽ������飬�����datetime��ʷֵ
-*        [len]           �����ͣ�����/���������ʱ��ʾ blob �ĳ��ȣ�
-*                        ���ʱ��ʾʵ�ʻ�ȡ��datetime���ݳ��ȡ�
-*        [quality]       �����ͣ��������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_DATETIME �ı�ǩ����Ч��
+* 命名：goh_get_single_datetime_value
+* 功能：读取单个标签点某个时间的datetime历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [mode]          整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT 之一：
+*                        GOLDEN_NEXT 寻找下一个最近的数据；
+*                        GOLDEN_PREVIOUS 寻找上一个最近的数据；
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*        [datetime]      整型，输入/输出，输入时表示时间秒数；
+*                        输出时表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时表示时间毫秒数；输出时表示实际取得的历史数值时间毫秒数。
+*                        否则忽略输入，输出时为 0。
+*        [blob]          字节型数组，输出，datetime历史值
+*        [len]           短整型，输入/输出，输入时表示 blob 的长度，
+*                        输出时表示实际获取的datetime数据长度。
+*        [quality]       短整型，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_DATETIME 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -4486,30 +4486,30 @@ goh_get_single_datetime_value(
                              );
 
 /**
-* ������goh_get_archived_datetime_values
-* ���ܣ���ȡ������ǩ��һ��ʱ���ʱ��������ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*        [count]         ���ͣ�����/����������ʾ��Ҫ��ѯ��������
-*                        �����ʾʵ�ʲ鵽��������
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ��������
-*        [ms1]           �����ͣ����룬ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������
-*        [datetime2]     ���ͣ�����,��ʾ����ʱ��������
-*        [ms2]           �����ͣ����룬ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������
-*        [datetimes]     �������飬�������ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ��������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*        [dtlens]          ���������飬����/���������ʱ��ʾ blob �ĳ��ȣ�
-*                        ���ʱ��ʾʵ�ʻ�ȡ���������ݳ��ȡ�
-*        [dtvalues]         �ֽ������飬�����������ʷֵ
-*        [qualities]     ���������飬�������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [type]          �����ͣ����룬��yyyy-mm-dd hh:mm:ss.000����typeΪ1�� ͬ��Ĭ�������ʽҲΪ ��yyyy-mm-dd hh:mm:ss.000��
-*                       ��yyyy/mm/dd hh:mm:ss.000����typeΪ2 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_DATETIME �ı�ǩ����Ч��
+* 命名：goh_get_archived_datetime_values
+* 功能：读取单个标签点一段时间的时间类型历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*        [count]         整型，输入/输出，输入表示想要查询多少数据
+*                        输出表示实际查到多少数据
+*        [datetime1]     整型，输入，表示开始时间秒数；
+*        [ms1]           短整型，输入，指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；
+*        [datetime2]     整型，输入,表示结束时间秒数；
+*        [ms2]           短整型，输入，指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；
+*        [datetimes]     整型数组，输出，表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输出，如果 id 指定的标签点时间精度为毫秒，
+*                        表示实际取得的历史数值时间毫秒数。
+*        [dtlens]          短整型数组，输入/输出，输入时表示 blob 的长度，
+*                        输出时表示实际获取的世间数据长度。
+*        [dtvalues]         字节型数组，输出，世间历史值
+*        [qualities]     短整型数组，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [type]          短整型，输入，“yyyy-mm-dd hh:mm:ss.000”的type为1， 同样默认输入格式也为 “yyyy-mm-dd hh:mm:ss.000”
+*                       “yyyy/mm/dd hh:mm:ss.000”的type为2 
+* 备注：本接口只对数据类型为 GOLDEN_DATETIME 的标签点有效。
 */
 GOLDENAPI
 golden_error
@@ -4532,25 +4532,25 @@ goh_get_archived_datetime_values(
 
 
 /**
-* ������goh_put_archived_datetime_values
-* ���ܣ�д��������ǩ������ʱ������ʷ�洢����
-* ������
-*        [handle]        ���Ӿ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ ids��datetimes��ms��dtlens��dtvalues��qualities��errors �ĳ��ȣ�
-*                        ����ʷֵ���������ʱ����ʵ��д�����ֵ����
-*        [ids]           �������飬���룬��ǩ���ʶ
-*        [datetimes]     �������飬���룬��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬���룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾ��Ӧ����ʷ��ֵʱ����룻������ԡ�
-*        [dtvalues]      �ֽ���ָ�����飬���룬ʵʱʱ����ֵ
-*        [dtlens]        ���������飬���룬ʱ����ֵ���ȣ�
-*                        ��ʾ��Ӧ�� dtvalues ָ��ָ��Ļ��������ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [qualities]     ���������飬���룬��ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]        �޷����������飬�����д����ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��dtlens��dtvalues��qualities��errors �ĳ����� count һ�£�
-*        ���ӿڽ�����������Ϊ GOLDEN_DATETIME �ı�ǩ����Ч��
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_archived_datetime_values
+* 功能：写入批量标签点批量时间型历史存储数据
+* 参数：
+*        [handle]        连接句柄
+*        [count]         整型，输入/输出，
+*                        输入时表示 ids、datetimes、ms、dtlens、dtvalues、qualities、errors 的长度，
+*                        即历史值个数；输出时返回实际写入的数值个数
+*        [ids]           整型数组，输入，标签点标识
+*        [datetimes]     整型数组，输入，表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示对应的历史数值时间毫秒；否则忽略。
+*        [dtvalues]      字节型指针数组，输入，实时时间数值
+*        [dtlens]        短整型数组，输入，时间数值长度，
+*                        表示对应的 dtvalues 指针指向的缓冲区长度，超过一个页大小数据将被截断。
+*        [qualities]     短整型数组，输入，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]        无符号整型数组，输出，写入历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、dtlens、dtvalues、qualities、errors 的长度与 count 一致，
+*        本接口仅对数据类型为 GOLDEN_DATETIME 的标签点有效。
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 
 GOLDENAPI
@@ -4569,31 +4569,31 @@ goh_put_archived_datetime_values(
                             );
 
 /**
-* ������goh_summary
-* ���ܣ���ȡ������ǩ��һ��ʱ���ڵ�ͳ��ֵ��
-* ������
-*        [handle]            ���Ӿ��
-*        [id]                ���ͣ����룬��ǩ���ʶ
-*        [datetime1]         ���ͣ�����/���������ʱ��ʾ��ʼʱ��������
-*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-*                            ���ʱ�������ֵ��ʱ��������
-*        [ms1]               �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ��ʼʱ���Ӧ�ĺ��룬���ʱ��ʾ���ֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [datetime2]         ���ͣ�����/���������ʱ��ʾ����ʱ��������
-*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-*                            ���ʱ������Сֵ��ʱ��������
-*        [ms2]               �����ͣ���� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ����ʱ���Ӧ�ĺ��룬���ʱ��ʾ��Сֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [max_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ������ֵ��
-*        [min_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ���С��ֵ��
-*        [total_value]       ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-*        [calc_avg]          ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-*        [power_avg]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_summary
+* 功能：获取单个标签点一段时间内的统计值。
+* 参数：
+*        [handle]            连接句柄
+*        [id]                整型，输入，标签点标识
+*        [datetime1]         整型，输入/输出，输入时表示起始时间秒数。
+*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+*                            输出时返回最大值的时间秒数。
+*        [ms1]               短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                            表示起始时间对应的毫秒，输出时表示最大值的时间毫秒数；否则忽略，返回值为 0 
+*        [datetime2]         整型，输入/输出，输入时表示结束时间秒数。
+*                            如果为 0，表示统计到存档中最近时间的数据为止。
+*                            输出时返回最小值的时间秒数。
+*        [ms2]               短整型，如果 id 指定的标签点时间精度为毫秒，
+*                            表示结束时间对应的毫秒，输出时表示最小值的时间毫秒数；否则忽略，返回值为 0 
+*        [max_value]         双精度浮点型，输出，表示统计时间段内的最大数值。
+*        [min_value]         双精度浮点型，输出，表示统计时间段内的最小数值。
+*        [total_value]       双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+*        [calc_avg]          双精度浮点型，输出，表示统计时间段内的算术平均值。
+*        [power_avg]         双精度浮点型，输出，表示统计时间段内的加权平均值。
+* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        如果输出的最大值或最小值的时间戳秒值为 0，
+*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4613,32 +4613,32 @@ goh_summary(
             );
 
 ///**
-//* ������goh_summary_ex
-//* ���ܣ���ȡ������ǩ��һ��ʱ���ڵ�ͳ��ֵ���Լ����ڼ���ͳ��ֵ�����ݸ�����
-//* ������
-//*        [handle]            ���Ӿ��
-//*        [id]                ���ͣ����룬��ǩ���ʶ
-//*        [datetime1]         ���ͣ�����/���������ʱ��ʾ��ʼʱ��������
-//*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-//*                            ���ʱ�������ֵ��ʱ��������
-//*        [ms1]               �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-//*                            ��ʾ��ʼʱ���Ӧ�ĺ��룬���ʱ��ʾ���ֵ��ʱ���������������ԣ�����ֵΪ 0
-//*        [datetime2]         ���ͣ�����/���������ʱ��ʾ����ʱ��������
-//*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-//*                            ���ʱ������Сֵ��ʱ��������
-//*        [ms2]               �����ͣ���� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-//*                            ��ʾ����ʱ���Ӧ�ĺ��룬���ʱ��ʾ��Сֵ��ʱ���������������ԣ�����ֵΪ 0
-//*        [max_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ������ֵ��
-//*        [min_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ���С��ֵ��
-//*        [total_value]       ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-//*        [calc_avg]          ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-//*        [power_avg]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-//*        [count]             ���ͣ��������ʾͳ��ʱ��������ڼ���ͳ��ֵ�����ݸ�����
-//* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-//*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-//*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-//*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-//*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+//* 命名：goh_summary_ex
+//* 功能：获取单个标签点一段时间内的统计值，以及用于计算统计值的数据个数。
+//* 参数：
+//*        [handle]            连接句柄
+//*        [id]                整型，输入，标签点标识
+//*        [datetime1]         整型，输入/输出，输入时表示起始时间秒数。
+//*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+//*                            输出时返回最大值的时间秒数。
+//*        [ms1]               短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+//*                            表示起始时间对应的毫秒，输出时表示最大值的时间毫秒数；否则忽略，返回值为 0
+//*        [datetime2]         整型，输入/输出，输入时表示结束时间秒数。
+//*                            如果为 0，表示统计到存档中最近时间的数据为止。
+//*                            输出时返回最小值的时间秒数。
+//*        [ms2]               短整型，如果 id 指定的标签点时间精度为毫秒，
+//*                            表示结束时间对应的毫秒，输出时表示最小值的时间毫秒数；否则忽略，返回值为 0
+//*        [max_value]         双精度浮点型，输出，表示统计时间段内的最大数值。
+//*        [min_value]         双精度浮点型，输出，表示统计时间段内的最小数值。
+//*        [total_value]       双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+//*        [calc_avg]          双精度浮点型，输出，表示统计时间段内的算术平均值。
+//*        [power_avg]         双精度浮点型，输出，表示统计时间段内的加权平均值。
+//*        [count]             整型，输出，表示统计时间段内用于计算统计值的数据个数。
+//* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+//*        此时前者表示结束时间，后者表示起始时间。
+//*        如果输出的最大值或最小值的时间戳秒值为 0，
+//*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+//*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 //*/
 //GOLDENAPI
 //golden_error
@@ -4658,32 +4658,32 @@ goh_summary(
 //golden_int32 *count
 //);
 /**
-* ������goh_summary_ex
-* ���ܣ���ȡ������ǩ��һ��ʱ���ڵ�ͳ��ֵ���Լ����ڼ���ͳ��ֵ�����ݸ�����
-* ������
-*        [handle]            ���Ӿ��
-*        [id]                ���ͣ����룬��ǩ���ʶ
-*        [datetime1]         ���ͣ�����/���������ʱ��ʾ��ʼʱ��������
-*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-*                            ���ʱ�������ֵ��ʱ��������
-*        [ms1]               �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ��ʼʱ���Ӧ�ĺ��룬���ʱ��ʾ���ֵ��ʱ���������������ԣ�����ֵΪ 0
-*        [datetime2]         ���ͣ�����/���������ʱ��ʾ����ʱ��������
-*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-*                            ���ʱ������Сֵ��ʱ��������
-*        [ms2]               �����ͣ���� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ����ʱ���Ӧ�ĺ��룬���ʱ��ʾ��Сֵ��ʱ���������������ԣ�����ֵΪ 0
-*        [max_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ������ֵ��
-*        [min_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ���С��ֵ��
-*        [total_value]       ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-*        [calc_avg]          ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-*        [power_avg]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-*        [count]             ���ͣ��������ʾͳ��ʱ��������ڼ���ͳ��ֵ�����ݸ�����
-* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_summary_ex
+* 功能：获取单个标签点一段时间内的统计值，以及用于计算统计值的数据个数。
+* 参数：
+*        [handle]            连接句柄
+*        [id]                整型，输入，标签点标识
+*        [datetime1]         整型，输入/输出，输入时表示起始时间秒数。
+*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+*                            输出时返回最大值的时间秒数。
+*        [ms1]               短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                            表示起始时间对应的毫秒，输出时表示最大值的时间毫秒数；否则忽略，返回值为 0
+*        [datetime2]         整型，输入/输出，输入时表示结束时间秒数。
+*                            如果为 0，表示统计到存档中最近时间的数据为止。
+*                            输出时返回最小值的时间秒数。
+*        [ms2]               短整型，如果 id 指定的标签点时间精度为毫秒，
+*                            表示结束时间对应的毫秒，输出时表示最小值的时间毫秒数；否则忽略，返回值为 0
+*        [max_value]         双精度浮点型，输出，表示统计时间段内的最大数值。
+*        [min_value]         双精度浮点型，输出，表示统计时间段内的最小数值。
+*        [total_value]       双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+*        [calc_avg]          双精度浮点型，输出，表示统计时间段内的算术平均值。
+*        [power_avg]         双精度浮点型，输出，表示统计时间段内的加权平均值。
+*        [count]             整型，输出，表示统计时间段内用于计算统计值的数据个数。
+* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        如果输出的最大值或最小值的时间戳秒值为 0，
+*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error
@@ -4703,39 +4703,39 @@ golden_float64 *power_avg,
 golden_int32 *count
 );
 /**
-* ������goh_summary_in_batches
-* ���ܣ�������ȡ��һ��ǩ��һ��ʱ���ڵ�ͳ��ֵ
-* ������
-*        [handle]            ���Ӿ��
-*        [id]                ���ͣ����룬��ǩ���ʶ
-*        [count]             ���Σ�����/���������ʱ��ʾ datatimes1��ms1��datatimes2��ms2��
-*                            max_values��min_values��total_values��calc_avgs��power_avgs��errors �ĳ��ȣ�
-*                            ���ֶεĸ��������ʱ��ʾ�ɹ�ȡ��ͳ��ֵ�ķֶθ�����
-*        [interval]          64 λ���ͣ����룬�ֶ�ʱ��������λΪ���롣
-*                            ���Ϊ����㣬����ʱ��������1���룬���Ϊ�뼶�㣬��������1000���롣
-*        [datetimes1]        �������飬����/���������ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-*                            ���ʱ���ظ����ֶζ�Ӧ�����ֵ��ʱ��������
-*        [ms1]               ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��һ��Ԫ�ر�ʾ��ʼʱ���Ӧ�ĺ��룬
-*                            ���ʱ���ظ����ֶζ�Ӧ�����ֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [datetimes2]        �������飬����/���������ʱ��һ��Ԫ�ر�ʾ����ʱ��������
-*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-*                            ���ʱ���ظ����ֶζ�Ӧ����Сֵ��ʱ��������
-*        [ms2]               ���������飬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��һ��Ԫ�ر�ʾ����ʱ���Ӧ�ĺ��룬
-*                            ���ʱ���ظ����ֶζ�Ӧ����Сֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [max_values]        ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ������ֵ��
-*        [min_values]        ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ���С��ֵ��
-*        [total_values]      ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-*        [calc_avgs]         ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-*        [power_avgs]        ˫���ȸ��������飬�������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-*        [errors]            �޷����������飬�������ʾ�����ֶ�ȡ��ͳ��ֵ�ķ���ֵ��
-* ��ע���� datetimes1[0]��ms1[0] ��ʾ��ʱ����Դ��� datetimes2[0]��ms2[0] ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_summary_in_batches
+* 功能：分批获取单一标签点一段时间内的统计值
+* 参数：
+*        [handle]            连接句柄
+*        [id]                整型，输入，标签点标识
+*        [count]             整形，输入/输出，输入时表示 datatimes1、ms1、datatimes2、ms2、
+*                            max_values、min_values、total_values、calc_avgs、power_avgs、errors 的长度，
+*                            即分段的个数；输出时表示成功取得统计值的分段个数。
+*        [interval]          64 位整型，输入，分段时间间隔，单位为毫秒。
+*                            如果为毫秒点，输入时间必须大于1毫秒，如果为秒级点，则必须大于1000毫秒。
+*        [datetimes1]        整型数组，输入/输出，输入时第一个元素表示起始时间秒数。
+*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+*                            输出时返回各个分段对应的最大值的时间秒数。
+*        [ms1]               短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                            第一个元素表示起始时间对应的毫秒，
+*                            输出时返回各个分段对应的最大值的时间毫秒数；否则忽略，返回值为 0 
+*        [datetimes2]        整型数组，输入/输出，输入时第一个元素表示结束时间秒数。
+*                            如果为 0，表示统计到存档中最近时间的数据为止。
+*                            输出时返回各个分段对应的最小值的时间秒数。
+*        [ms2]               短整型数组，如果 id 指定的标签点时间精度为毫秒，
+*                            第一个元素表示结束时间对应的毫秒，
+*                            输出时返回各个分段对应的最小值的时间毫秒数；否则忽略，返回值为 0 
+*        [max_values]        双精度浮点型数组，输出，表示统计时间段内的最大数值。
+*        [min_values]        双精度浮点型数组，输出，表示统计时间段内的最小数值。
+*        [total_values]      双精度浮点型数组，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+*        [calc_avgs]         双精度浮点型数组，输出，表示统计时间段内的算术平均值。
+*        [power_avgs]        双精度浮点型数组，输出，表示统计时间段内的加权平均值。
+*        [errors]            无符号整型数组，输出，表示各个分段取得统计值的返回值。
+* 备注：由 datetimes1[0]、ms1[0] 表示的时间可以大于 datetimes2[0]、ms2[0] 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        如果输出的最大值或最小值的时间戳秒值为 0，
+*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4758,39 +4758,39 @@ goh_summary_in_batches(
                        );
 
 /**
-* ������goh_get_plot_values
-* ���ܣ���ȡ������ǩ��һ��ʱ�������ڻ�ͼ����ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [interval]      ���ͣ����룬ʱ��������������λΪ����
-*                        һ���ʹ�û�ͼ�ĺ���(ʱ����)������Ļ��������
-*                        �ù��ܽ���ʼ������ʱ��ȷ�Ϊ interval �����䣬
-*                        ������ÿ������ĵ�һ�������һ����ֵ��������С��ֵ��һ���쳣��ֵ��
-*                        �ʲ��� count �п�������屶�� interval ����ʷֵ������
-*                        �����Ƽ������ count ������ interval ���屶��
-*        [count]         ���ͣ�����/���������ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ����Ҫ��ȡ�������ʷֵ���������ʱ����ʵ�ʵõ�����ʷֵ������
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷֵ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷֵ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ����Դ����ʼ������ʱ�䡣
-*        ��һ��Ԫ���γɵ�ʱ����Դ������һ��Ԫ���γɵ�ʱ�䣬
-*        ��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_plot_values
+* 功能：获取单个标签点一段时间内用于绘图的历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [interval]      整型，输入，时间区间数量，单位为个，
+*                        一般会使用绘图的横轴(时间轴)所用屏幕像素数，
+*                        该功能将起始至结束时间等分为 interval 个区间，
+*                        并返回每个区间的第一个和最后一个数值、最大和最小数值、一条异常数值；
+*                        故参数 count 有可能输出五倍于 interval 的历史值个数，
+*                        所以推荐输入的 count 至少是 interval 的五倍。
+*        [count]         整型，输入/输出，输入时表示 datetimes、ms、values、states、qualities 的长度，
+*                        即需要获取的最大历史值个数，输出时返回实际得到的历史值个数。
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史值数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史值数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史值；否则为 0
+*        [qualities]     短整型数组，输出，历史值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，用以存放起始及结束时间。
+*        第一个元素形成的时间可以大于最后一个元素形成的时间，
+*        此时第一个元素表示结束时间，最后一个元素表示开始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4808,31 +4808,31 @@ goh_get_plot_values(
                     );
 
 /**
-* ������goh_get_cross_section_values
-* ���ܣ���ȡ������ǩ����ĳһʱ�����ʷ��������
-* ������
-*        [handle]        ���Ӿ��
-*        [ids]           �������飬���룬��ǩ���ʶ�б�
-*        [mode]          ���ͣ����룬ȡֵ GOLDEN_NEXT��GOLDEN_PREVIOUS��GOLDEN_EXACT��GOLDEN_INTER ֮һ��
-*                        GOLDEN_NEXT Ѱ����һ����������ݣ�
-*                        GOLDEN_PREVIOUS Ѱ����һ����������ݣ�
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*                        GOLDEN_INTER ȡָ��ʱ����ڲ�ֵ���ݡ�
-*        [count]         ���ͣ����룬��ʾ ids��datetimes��ms��values��states��qualities �ĳ��ȣ�����ǩ�������
-*        [datatimes]     �������飬����/���������ʱ��ʾ��Ӧ��ǩ�����ʷ��ֵʱ��������
-*                        ���ʱ��ʾ���� mode ʵ��Ѱ�ҵ�����ֵʱ��������
-*        [ms]            ���������飬����/���������ʱ�侫��Ϊ����ı�ǩ�㣬
-*                        ����ʱ��ʾ��ʷ��ֵʱ��������������Ӧ�ĺ���ֵ��
-*                        ���ʱ��ʾ���� mode ʵ��Ѱ�ҵ�����ֵʱ�������������������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷֵ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷֵ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]        �޷����������飬�������ȡ��ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_cross_section_values
+* 功能：获取批量标签点在某一时间的历史断面数据
+* 参数：
+*        [handle]        连接句柄
+*        [ids]           整型数组，输入，标签点标识列表
+*        [mode]          整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT、GOLDEN_INTER 之一：
+*                        GOLDEN_NEXT 寻找下一个最近的数据；
+*                        GOLDEN_PREVIOUS 寻找上一个最近的数据；
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*                        GOLDEN_INTER 取指定时间的内插值数据。
+*        [count]         整型，输入，表示 ids、datetimes、ms、values、states、qualities 的长度，即标签点个数。
+*        [datatimes]     整型数组，输入/输出，输入时表示对应标签点的历史数值时间秒数，
+*                        输出时表示根据 mode 实际寻找到的数值时间秒数。
+*        [ms]            短整型数组，输入/输出，对于时间精度为毫秒的标签点，
+*                        输入时表示历史数值时间毫秒数，存放相应的毫秒值，
+*                        输出时表示根据 mode 实际寻找到的数值时间毫秒数；否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史值数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史值数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史值；否则为 0
+*        [qualities]     短整型数组，输出，历史值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]        无符号整型数组，输出，读取历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4851,24 +4851,24 @@ goh_get_cross_section_values(
                              );
 
 /**
-* ������goh_subscribe_playback
-* ���ܣ�����һ����ǩ�����ʷ���ݻط�
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/�������ǩ�������
-*                    ����ʱ��ʾ ids��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ����ĵı�ǩ�����
-*        [ids]       �������飬���룬��ǩ���ʶ�б�
-*        [datetime1] ���ͣ����룬�ط�ʱ�����ʼʱ�䡣
-*        [datetime2] ���ͣ����룬�ط�ʱ��ν���ʱ�䡣
-*        [interval]  ���ͣ����룬ÿ���ν��յ�������֮���ʱ���ȣ���λ���롣
-*        [callback]  goh_data_playback ���ͻص��ӿڣ����룬
-*                    ͨ���ýӿڻ�ñ�ǩ��Ļط����ݡ�
-*        [errors]    �޷����������飬�����
-*                    �����Ƿ�ɹ����б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��errors �ĳ����� count һ�¡�
-*        ���ڶ������ݻطŵ����Ӿ�������Ƕ����ģ������������������� api��
-*        ���򷵻� GoE_OTHER_SDK_DOING ����
+* 命名：goh_subscribe_playback
+* 功能：订阅一批标签点的历史数据回放
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，标签点个数，
+*                    输入时表示 ids、errors 的长度，
+*                    输出时表示成功订阅的标签点个数
+*        [ids]       整型数组，输入，标签点标识列表
+*        [datetime1] 整型，输入，回放时间段起始时间。
+*        [datetime2] 整型，输入，回放时间段结束时间。
+*        [interval]  整型，输入，每两次接收到的数据之间的时间跨度，单位：秒。
+*        [callback]  goh_data_playback 类型回调接口，输入，
+*                    通过该接口获得标签点的回放数据。
+*        [errors]    无符号整型数组，输出，
+*                    订阅是否成功的列表，参考golden_error.h
+* 备注：用户须保证 ids、errors 的长度与 count 一致。
+*        用于订阅数据回放的连接句柄必需是独立的，不能再用来调用其它 api，
+*        否则返回 GoE_OTHER_SDK_DOING 错误。
 */
 GOLDENAPI
 golden_error 
@@ -4885,10 +4885,10 @@ goh_subscribe_playback(
                        );
 
 /**
-* ������goh_stop_playback
-* ���ܣ�ֹͣ��ʷ���ݻط�
-* ������
-*        [handle]    ���Ӿ��
+* 命名：goh_stop_playback
+* 功能：停止历史数据回放
+* 参数：
+*        [handle]    连接句柄
 */
 GOLDENAPI
 golden_error 
@@ -4898,36 +4898,36 @@ goh_stop_playback(
                   );
 
 /**
-* ������goh_get_archived_values_filt
-* ���ܣ���ȡ������ǩ����һ��ʱ���ھ���������ɸѡ�����ʷ����ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [filter]        �ַ��������룬���������߼��������ɵĸ�����������ʽ��
-*                        ���Ȳ��ó��� GOLDEN_EQUATION_SIZE��Ϊ 0 �򲻽�������ɸѡ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ����Ҫ����ֵ���������ʱ����ʵ�ʵõ�����ֵ������
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ�洢ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_archived_values_filt
+* 功能：读取单个标签点在一段时间内经复杂条件筛选后的历史储存值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [filter]        字符串，输入，由算术、逻辑运算符组成的复杂条件表达式，
+*                        长度不得超过 GOLDEN_EQUATION_SIZE，为 0 则不进行条件筛选。
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、values、states、qualities 的长度，
+*                        即需要的数值个数；输出时返回实际得到的数值个数。
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史存储值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史存储值；否则为 0
+*        [qualities]     短整型数组，输出，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4945,32 +4945,32 @@ goh_get_archived_values_filt(
                              );
 
 /**
-* ������goh_get_interval_values_filt
-* ���ܣ���ȡ������ǩ��ĳ��ʱ��֮�󾭸�������ɸѡ��һ�������ĵȼ���ڲ�ֵ�滻����ʷ��ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [filter]        �ַ��������룬���������߼��������ɵĸ�����������ʽ��
-*                        ���Ȳ��ó��� GOLDEN_EQUATION_SIZE������Ϊ 0 �򲻽�������ɸѡ��
-*        [interval]      ���ͣ����룬��ֵʱ��������λΪ����
-*        [count]         ���ͣ����룬��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ����Ҫ�Ĳ�ֵ������
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷ��ֵ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷ��ֵ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�����ڱ�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_interval_values_filt
+* 功能：读取单个标签点某个时刻之后经复杂条件筛选后一定数量的等间隔内插值替换的历史数值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [filter]        字符串，输入，由算术、逻辑运算符组成的复杂条件表达式，
+*                        长度不得超过 GOLDEN_EQUATION_SIZE，长度为 0 则不进行条件筛选。
+*        [interval]      整型，输入，插值时间间隔，单位为毫秒
+*        [count]         整型，输入，表示 datetimes、ms、values、states、qualities 的长度，
+*                        即需要的插值个数。
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史插值数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史插值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史插值数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史插值；否则为 0
+*        [qualities]     短整型数组，输出，历史插值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素用于表示起始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -4989,36 +4989,36 @@ goh_get_interval_values_filt(
                              );
 
 /**
-* ������goh_get_interpo_values_filt
-* ���ܣ���ȡ������ǩ��һ��ʱ���ھ���������ɸѡ��ĵȼ����ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [filter]        �ַ��������룬���������߼��������ɵĸ�����������ʽ��
-*                        ���Ȳ��ó��� GOLDEN_EQUATION_SIZE������Ϊ 0 �򲻽�������ɸѡ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ datetimes��ms��values��states��qualities �ĳ��ȣ�
-*                        ����Ҫ�Ĳ�ֵ���������ʱ����ʵ�ʵõ��Ĳ�ֵ����
-*        [datetimes]     �������飬����/�����
-*                        ����ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                        ���һ��Ԫ�ر�ʾ����ʱ�����������Ϊ 0����ʾֱ�����ݵ����ʱ�䣻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��һ��Ԫ�ر�ʾ��ʼʱ����룬
-*                        ���һ��Ԫ�ر�ʾ����ʱ����룻
-*                        ���ʱ��ʾ��Ӧ����ʷ��ֵʱ����롣
-*                        ����������룬���ʱΪ 0��
-*        [values]        ˫���ȸ��������飬�������������ʷ��ֵ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [states]        64 λ�������飬�����������ʷ��ֵ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����Ӧ����ʷ��ֵ������Ϊ 0
-*        [qualities]     ���������飬�������ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע���û��뱣֤ datetimes��ms��values��states��qualities �ĳ����� count һ�£�
-*        ������ʱ��datetimes��ms ������Ӧ��һ��Ԫ�أ���һ��Ԫ���γɵ�ʱ�����
-*        �������һ��Ԫ���γɵ�ʱ�䣬��ʱ��һ��Ԫ�ر�ʾ����ʱ�䣬
-*        ���һ��Ԫ�ر�ʾ��ʼʱ�䡣
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_get_interpo_values_filt
+* 功能：获取单个标签点一段时间内经复杂条件筛选后的等间隔插值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [filter]        字符串，输入，由算术、逻辑运算符组成的复杂条件表达式，
+*                        长度不得超过 GOLDEN_EQUATION_SIZE，长度为 0 则不进行条件筛选。
+*        [count]         整型，输入/输出，
+*                        输入时表示 datetimes、ms、values、states、qualities 的长度，
+*                        即需要的插值个数；输出时返回实际得到的插值个数
+*        [datetimes]     整型数组，输入/输出，
+*                        输入时第一个元素表示起始时间秒数，
+*                        最后一个元素表示结束时间秒数，如果为 0，表示直到数据的最后时间；
+*                        输出时表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时第一个元素表示起始时间毫秒，
+*                        最后一个元素表示结束时间毫秒；
+*                        输出时表示对应的历史数值时间毫秒。
+*                        否则忽略输入，输出时为 0。
+*        [values]        双精度浮点数数组，输出，浮点型历史插值数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放相应的历史插值；否则为 0
+*        [states]        64 位整数数组，输出，整型历史插值数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放相应的历史插值；否则为 0
+*        [qualities]     短整型数组，输出，历史插值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：用户须保证 datetimes、ms、values、states、qualities 的长度与 count 一致，
+*        在输入时，datetimes、ms 中至少应有一个元素，第一个元素形成的时间可以
+*        大于最后一个元素形成的时间，此时第一个元素表示结束时间，
+*        最后一个元素表示开始时间。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -5036,33 +5036,33 @@ goh_get_interpo_values_filt(
                             );
 
 /**
-* ������goh_summary_filt
-* ���ܣ���ȡ������ǩ��һ��ʱ���ھ���������ɸѡ���ͳ��ֵ
-* ������
-*        [handle]            ���Ӿ��
-*        [id]                ���ͣ����룬��ǩ���ʶ
-*        [filter]            �ַ��������룬���������߼��������ɵĸ�����������ʽ��
-*                            ���Ȳ��ó��� GOLDEN_EQUATION_SIZE������Ϊ 0 �򲻽�������ɸѡ��
-*        [datetime1]         ���ͣ�����/���������ʱ��ʾ��ʼʱ��������
-*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-*                            ���ʱ�������ֵ��ʱ��������
-*        [ms1]               �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ��ʼʱ���Ӧ�ĺ��룬���ʱ��ʾ���ֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [datetime2]         ���ͣ�����/���������ʱ��ʾ����ʱ��������
-*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-*                            ���ʱ������Сֵ��ʱ��������
-*        [ms2]               �����ͣ���� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ����ʱ���Ӧ�ĺ��룬���ʱ��ʾ��Сֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [max_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ������ֵ��
-*        [min_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ���С��ֵ��
-*        [total_value]       ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-*        [calc_avg]          ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-*        [power_avg]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_summary_filt
+* 功能：获取单个标签点一段时间内经复杂条件筛选后的统计值
+* 参数：
+*        [handle]            连接句柄
+*        [id]                整型，输入，标签点标识
+*        [filter]            字符串，输入，由算术、逻辑运算符组成的复杂条件表达式，
+*                            长度不得超过 GOLDEN_EQUATION_SIZE，长度为 0 则不进行条件筛选。
+*        [datetime1]         整型，输入/输出，输入时表示起始时间秒数。
+*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+*                            输出时返回最大值的时间秒数。
+*        [ms1]               短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                            表示起始时间对应的毫秒，输出时表示最大值的时间毫秒数；否则忽略，返回值为 0 
+*        [datetime2]         整型，输入/输出，输入时表示结束时间秒数。
+*                            如果为 0，表示统计到存档中最近时间的数据为止。
+*                            输出时返回最小值的时间秒数。
+*        [ms2]               短整型，如果 id 指定的标签点时间精度为毫秒，
+*                            表示结束时间对应的毫秒，输出时表示最小值的时间毫秒数；否则忽略，返回值为 0 
+*        [max_value]         双精度浮点型，输出，表示统计时间段内的最大数值。
+*        [min_value]         双精度浮点型，输出，表示统计时间段内的最小数值。
+*        [total_value]       双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+*        [calc_avg]          双精度浮点型，输出，表示统计时间段内的算术平均值。
+*        [power_avg]         双精度浮点型，输出，表示统计时间段内的加权平均值。
+* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        如果输出的最大值或最小值的时间戳秒值为 0，
+*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -5083,34 +5083,34 @@ goh_summary_filt(
                  );
 
 /**
-* ������goh_summary_filt_ex
-* ���ܣ���ȡ������ǩ��һ��ʱ���ھ���������ɸѡ���ͳ��ֵ���Լ�����ͳ�Ƶ����ݸ���
-* ������
-*        [handle]            ���Ӿ��
-*        [id]                ���ͣ����룬��ǩ���ʶ
-*        [filter]            �ַ��������룬���������߼��������ɵĸ�����������ʽ��
-*                            ���Ȳ��ó��� GOLDEN_EQUATION_SIZE������Ϊ 0 �򲻽�������ɸѡ��
-*        [datetime1]         ���ͣ�����/���������ʱ��ʾ��ʼʱ��������
-*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-*                            ���ʱ�������ֵ��ʱ��������
-*        [ms1]               �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ��ʼʱ���Ӧ�ĺ��룬���ʱ��ʾ���ֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [datetime2]         ���ͣ�����/���������ʱ��ʾ����ʱ��������
-*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-*                            ���ʱ������Сֵ��ʱ��������
-*        [ms2]               �����ͣ���� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��ʾ����ʱ���Ӧ�ĺ��룬���ʱ��ʾ��Сֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [max_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ������ֵ��
-*        [min_value]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ���С��ֵ��
-*        [total_value]       ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-*        [calc_avg]          ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-*        [power_avg]         ˫���ȸ����ͣ��������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-*        [count]             ���ͣ��������ʾͳ��ʱ��������ڼ���ͳ��ֵ�����ݸ�����
-* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_summary_filt_ex
+* 功能：获取单个标签点一段时间内经复杂条件筛选后的统计值，以及用于统计的数据个数
+* 参数：
+*        [handle]            连接句柄
+*        [id]                整型，输入，标签点标识
+*        [filter]            字符串，输入，由算术、逻辑运算符组成的复杂条件表达式，
+*                            长度不得超过 GOLDEN_EQUATION_SIZE，长度为 0 则不进行条件筛选。
+*        [datetime1]         整型，输入/输出，输入时表示起始时间秒数。
+*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+*                            输出时返回最大值的时间秒数。
+*        [ms1]               短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                            表示起始时间对应的毫秒，输出时表示最大值的时间毫秒数；否则忽略，返回值为 0 
+*        [datetime2]         整型，输入/输出，输入时表示结束时间秒数。
+*                            如果为 0，表示统计到存档中最近时间的数据为止。
+*                            输出时返回最小值的时间秒数。
+*        [ms2]               短整型，如果 id 指定的标签点时间精度为毫秒，
+*                            表示结束时间对应的毫秒，输出时表示最小值的时间毫秒数；否则忽略，返回值为 0 
+*        [max_value]         双精度浮点型，输出，表示统计时间段内的最大数值。
+*        [min_value]         双精度浮点型，输出，表示统计时间段内的最小数值。
+*        [total_value]       双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+*        [calc_avg]          双精度浮点型，输出，表示统计时间段内的算术平均值。
+*        [power_avg]         双精度浮点型，输出，表示统计时间段内的加权平均值。
+*        [count]             整型，输出，表示统计时间段内用于计算统计值的数据个数。
+* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        如果输出的最大值或最小值的时间戳秒值为 0，
+*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -5132,40 +5132,40 @@ goh_summary_filt_ex(
 	                );
 
 /**
-* ������goh_summary_filt_in_batches
-* ���ܣ�������ȡ��һ��ǩ��һ��ʱ���ھ���������ɸѡ���ͳ��ֵ
-* ������
-*        [handle]            ���Ӿ��
-*        [id]                ���ͣ����룬��ǩ���ʶ
-*        [filter]            �ַ��������룬���������߼��������ɵĸ�����������ʽ��
-*                            ���Ȳ��ó��� GOLDEN_EQUATION_SIZE������Ϊ 0 �򲻽�������ɸѡ��
-*        [count]             ���Σ�����/���������ʱ��ʾ datatimes1��ms1��datatimes2��ms2��
-*                            max_values��min_values��total_values��calc_avgs��power_avgs��errors �ĳ��ȣ�
-*                            ���ֶεĸ��������ʱ��ʾ�ɹ�ȡ��ͳ��ֵ�ķֶθ�����
-*        [interval]          64 λ���ͣ����룬�ֶ�ʱ��������λΪ���롣
-*        [datetimes1]        �������飬����/���������ʱ��һ��Ԫ�ر�ʾ��ʼʱ��������
-*                            ���Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ����ͳ�ơ�
-*                            ���ʱ���ظ����ֶζ�Ӧ�����ֵ��ʱ��������
-*        [ms1]               ���������飬����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��һ��Ԫ�ر�ʾ��ʼʱ���Ӧ�ĺ��룬
-*                            ���ʱ���ظ����ֶζ�Ӧ�����ֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [datetimes2]        �������飬����/���������ʱ��һ��Ԫ�ر�ʾ����ʱ��������
-*                            ���Ϊ 0����ʾͳ�Ƶ��浵�����ʱ�������Ϊֹ��
-*                            ���ʱ���ظ����ֶζ�Ӧ����Сֵ��ʱ��������
-*        [ms2]               ���������飬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                            ��һ��Ԫ�ر�ʾ����ʱ���Ӧ�ĺ��룬
-*                            ���ʱ���ظ����ֶζ�Ӧ����Сֵ��ʱ���������������ԣ�����ֵΪ 0 
-*        [max_values]        ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ������ֵ��
-*        [min_values]        ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ���С��ֵ��
-*        [total_values]      ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ��ۼ�ֵ������ĵ�λΪ��ǩ��Ĺ��̵�λ��
-*        [calc_avgs]         ˫���ȸ��������飬�������ʾͳ��ʱ����ڵ�����ƽ��ֵ��
-*        [power_avgs]        ˫���ȸ��������飬�������ʾͳ��ʱ����ڵļ�Ȩƽ��ֵ��
-*        [errors]            �޷����������飬�������ʾ�����ֶ�ȡ��ͳ��ֵ�ķ���ֵ��
-* ��ע���� datetimes1[0]��ms1[0] ��ʾ��ʱ����Դ��� datetimes2[0]��ms2[0] ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
-*        �����������ֵ����Сֵ��ʱ�����ֵΪ 0��
-*        ����������ۼ�ֵ�ͼ�Ȩƽ��ֵ�����Ч������ͳ�ƽ����Ч��
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_summary_filt_in_batches
+* 功能：分批获取单一标签点一段时间内经复杂条件筛选后的统计值
+* 参数：
+*        [handle]            连接句柄
+*        [id]                整型，输入，标签点标识
+*        [filter]            字符串，输入，由算术、逻辑运算符组成的复杂条件表达式，
+*                            长度不得超过 GOLDEN_EQUATION_SIZE，长度为 0 则不进行条件筛选。
+*        [count]             整形，输入/输出，输入时表示 datatimes1、ms1、datatimes2、ms2、
+*                            max_values、min_values、total_values、calc_avgs、power_avgs、errors 的长度，
+*                            即分段的个数；输出时表示成功取得统计值的分段个数。
+*        [interval]          64 位整型，输入，分段时间间隔，单位为毫秒。
+*        [datetimes1]        整型数组，输入/输出，输入时第一个元素表示起始时间秒数。
+*                            如果为 0，表示从存档中最早时间的数据开始进行统计。
+*                            输出时返回各个分段对应的最大值的时间秒数。
+*        [ms1]               短整型数组，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                            第一个元素表示起始时间对应的毫秒，
+*                            输出时返回各个分段对应的最大值的时间毫秒数；否则忽略，返回值为 0 
+*        [datetimes2]        整型数组，输入/输出，输入时第一个元素表示结束时间秒数。
+*                            如果为 0，表示统计到存档中最近时间的数据为止。
+*                            输出时返回各个分段对应的最小值的时间秒数。
+*        [ms2]               短整型数组，如果 id 指定的标签点时间精度为毫秒，
+*                            第一个元素表示结束时间对应的毫秒，
+*                            输出时返回各个分段对应的最小值的时间毫秒数；否则忽略，返回值为 0 
+*        [max_values]        双精度浮点型数组，输出，表示统计时间段内的最大数值。
+*        [min_values]        双精度浮点型数组，输出，表示统计时间段内的最小数值。
+*        [total_values]      双精度浮点型数组，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+*        [calc_avgs]         双精度浮点型数组，输出，表示统计时间段内的算术平均值。
+*        [power_avgs]        双精度浮点型数组，输出，表示统计时间段内的加权平均值。
+*        [errors]            无符号整型数组，输出，表示各个分段取得统计值的返回值。
+* 备注：由 datetimes1[0]、ms1[0] 表示的时间可以大于 datetimes2[0]、ms2[0] 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
+*        如果输出的最大值或最小值的时间戳秒值为 0，
+*        则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -5189,21 +5189,21 @@ goh_summary_filt_in_batches(
                             );
 
 /**
-* ������goh_update_value
-* ���ܣ��޸ĵ�����ǩ��ĳһʱ�����ʷ�洢ֵ.
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime]      ���ͣ����룬ʱ������
-*        [ms]            �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������������ԡ�
-*        [value]         ˫���ȸ����������룬��������ʷ��ֵ
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬����µ���ʷֵ���������
-*        [state]         64 λ���������룬������ʷ��ֵ��
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬����µ���ʷֵ���������
-*        [quality]       �����ͣ����룬�µ���ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_update_value
+* 功能：修改单个标签点某一时间的历史存储值.
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime]      整型，输入，时间秒数
+*        [ms]            短整型，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；否则忽略。
+*        [value]         双精度浮点数，输入，浮点型历史数值
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放新的历史值；否则忽略
+*        [state]         64 位整数，输入，整型历史数值，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放新的历史值；否则忽略
+*        [quality]       短整型，输入，新的历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 */
 GOLDENAPI
 golden_error 
@@ -5219,18 +5219,18 @@ goh_update_value(
                  );
 
 /**
-* ������goh_update_coor_value
-* ���ܣ��޸ĵ�����ǩ��ĳһʱ�����ʷ�洢ֵ.
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime]      ���ͣ����룬ʱ������
-*        [ms]            �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������������ԡ�
-*        [x]             �����ȸ����ͣ����룬�µĺ�������ʷ��ֵ
-*        [y]             �����ȸ����ͣ����룬�µ���������ʷ��ֵ
-*        [quality]       �����ͣ����룬�µ���ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿڽ�����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
+* 命名：goh_update_coor_value
+* 功能：修改单个标签点某一时间的历史存储值.
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime]      整型，输入，时间秒数
+*        [ms]            短整型，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；否则忽略。
+*        [x]             单精度浮点型，输入，新的横坐标历史数值
+*        [y]             单精度浮点型，输入，新的纵坐标历史数值
+*        [quality]       短整型，输入，新的历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口仅对数据类型为 GOLDEN_COOR 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -5247,14 +5247,14 @@ goh_update_coor_value(
 
 
 /**
-* ������goh_remove_value
-* ���ܣ�ɾ��������ǩ��ĳ��ʱ�����ʷ�洢ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime]      ���ͣ����룬ʱ������
-*        [ms]            �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������������ԡ�
+* 命名：goh_remove_value
+* 功能：删除单个标签点某个时间的历史存储值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime]      整型，输入，时间秒数
+*        [ms]            短整型，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；否则忽略。
 */
 GOLDENAPI
 golden_error 
@@ -5267,18 +5267,18 @@ goh_remove_value(
                  );
 
 /**
-* ������goh_remove_values
-* ���ܣ�ɾ��������ǩ��һ��ʱ���ڵ���ʷ�洢ֵ
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ�����������Ϊ 0����ʾ�Ӵ浵������ʱ������ݿ�ʼ��ȡ
-*        [ms1]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ��ʼʱ���Ӧ�ĺ��룻�������
-*        [datetime2]     ���ͣ����룬��ʾ����ʱ�����������Ϊ 0����ʾ��ȡֱ���浵�����ݵ����ʱ��
-*        [ms2]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ����ʱ���Ӧ�ĺ��룻�������
-*        [count]         ���Σ��������ʾɾ������ʷֵ����
-* ��ע���� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
+* 命名：goh_remove_values
+* 功能：删除单个标签点一段时间内的历史存储值
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime1]     整型，输入，表示起始时间秒数。如果为 0，表示从存档中最早时间的数据开始读取
+*        [ms1]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示起始时间对应的毫秒；否则忽略
+*        [datetime2]     整型，输入，表示结束时间秒数。如果为 0，表示读取直至存档中数据的最后时间
+*        [ms2]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示结束时间对应的毫秒；否则忽略
+*        [count]         整形，输出，表示删除的历史值个数
+* 备注：由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
 */
 GOLDENAPI
 golden_error 
@@ -5295,22 +5295,22 @@ goh_remove_values(
 
 
 /**
-* ������goh_put_single_value
-* ���ܣ�д�뵥����ǩ����ĳһʱ�����ʷ���ݡ�
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime]      ���ͣ����룬ʱ������
-*        [ms]            �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������������ԡ�
-*        [value]         ˫���ȸ����������룬��������ʷ��ֵ
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬�����ʷֵ���������
-*        [state]         64 λ���������룬������ʷ��ֵ��
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬�����ʷֵ���������
-*        [quality]       �����ͣ����룬��ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_single_value
+* 功能：写入单个标签点在某一时间的历史数据。
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime]      整型，输入，时间秒数
+*        [ms]            短整型，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；否则忽略。
+*        [value]         双精度浮点数，输入，浮点型历史数值
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，存放历史值；否则忽略
+*        [state]         64 位整数，输入，整型历史数值，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，存放历史值；否则忽略
+*        [quality]       短整型，输入，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 GOLDENAPI
 golden_error 
@@ -5326,19 +5326,19 @@ goh_put_single_value(
                      );
 
 /**
-* ������goh_put_single_coor_value
-* ���ܣ�д�뵥����ǩ����ĳһʱ�����������ʷ���ݡ�
-* ������
-*        [handle]              ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [datetime]      ���ͣ����룬ʱ������
-*        [ms]            �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������������ԡ�
-*        [x]             �����ȸ����ͣ����룬��������ʷ��ֵ
-*        [y]             �����ȸ����ͣ����룬��������ʷ��ֵ
-*        [quality]       �����ͣ����룬��ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_single_coor_value
+* 功能：写入单个标签点在某一时间的坐标型历史数据。
+* 参数：
+*        [handle]              连接句柄
+*        [id]            整型，输入，标签点标识
+*        [datetime]      整型，输入，时间秒数
+*        [ms]            短整型，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；否则忽略。
+*        [x]             单精度浮点型，输入，横坐标历史数值
+*        [y]             单精度浮点型，输入，纵坐标历史数值
+*        [quality]       短整型，输入，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 GOLDENAPI
 golden_error 
@@ -5354,19 +5354,19 @@ goh_put_single_coor_value(
                           );
 
 /**
-* ������goh_put_single_blob_value
-* ���ܣ�д�뵥��������/�ַ�����ǩ����ĳһʱ�����ʷ����
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ����룬��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ����룬��ʷ��ֵʱ�䣬
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [blob]      �ֽ������飬���룬��ʷ������/�ַ�����ֵ
-*        [len]       �����ͣ����룬������/�ַ�����ֵ���ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [quality]   �����ͣ����룬��ʷ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
+* 命名：goh_put_single_blob_value
+* 功能：写入单个二进制/字符串标签点在某一时间的历史数据
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输入，数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输入，历史数值时间，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [blob]      字节型数组，输入，历史二进制/字符串数值
+*        [len]       短整型，输入，二进制/字符串数值长度，超过一个页大小数据将被截断。
+*        [quality]   短整型，输入，历史数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_BLOB、GOLDEN_STRING 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -5382,28 +5382,28 @@ goh_put_single_blob_value(
                           );
 
 /**
-* ������goh_put_archived_values
-* ���ܣ�д��������ǩ��������ʷ�洢����
-* ������
-*        [handle]        ���Ӿ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ ids��datetimes��ms��values��states��qualities��errors �ĳ��ȣ�
-*                        ����ʷֵ���������ʱ����ʵ��д�����ֵ����
-*        [ids]           �������飬���룬��ǩ���ʶ��ͬһ����ǩ���ʶ���Գ��ֶ�Σ�
-*                        �����ǵ�ʱ��������ǵ����ġ�
-*        [datetimes]     �������飬���룬��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬���룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾ��Ӧ����ʷ��ֵʱ����룻������ԡ�
-*        [values]        ˫���ȸ��������飬���룬��������ʷ��ֵ�б�
-*                        ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬��ʾ��Ӧ����ʷ�洢ֵ���������
-*        [states]        64 λ�������飬���룬������ʷ��ֵ�б���
-*                        ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                        GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬��ʾ��Ӧ����ʷ�洢ֵ���������
-*        [qualities]     ���������飬���룬��ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]        �޷����������飬�����д����ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��values��states��qualities��errors �ĳ����� count һ�£�
-*        ���ӿڶ���������Ϊ GOLDEN_COOR��GOLDEN_BLOB��GOLDEN_STRING �ı�ǩ����Ч��
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_archived_values
+* 功能：写入批量标签点批量历史存储数据
+* 参数：
+*        [handle]        连接句柄
+*        [count]         整型，输入/输出，
+*                        输入时表示 ids、datetimes、ms、values、states、qualities、errors 的长度，
+*                        即历史值个数；输出时返回实际写入的数值个数
+*        [ids]           整型数组，输入，标签点标识，同一个标签点标识可以出现多次，
+*                        但它们的时间戳必需是递增的。
+*        [datetimes]     整型数组，输入，表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示对应的历史数值时间毫秒；否则忽略。
+*        [values]        双精度浮点数数组，输入，浮点型历史数值列表
+*                        对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，表示相应的历史存储值；否则忽略
+*        [states]        64 位整数数组，输入，整型历史数值列表，
+*                        对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                        GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，表示相应的历史存储值；否则忽略
+*        [qualities]     短整型数组，输入，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]        无符号整型数组，输出，写入历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、values、states、qualities、errors 的长度与 count 一致，
+*        本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 GOLDENAPI
 golden_error 
@@ -5421,24 +5421,24 @@ goh_put_archived_values(
                         );
 
 /**
-* ������goh_put_archived_coor_values
-* ���ܣ�д��������ǩ��������������ʷ�洢����
-* ������
-*        [handle]        ���Ӿ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ ids��datetimes��ms��x��y��qualities��errors �ĳ��ȣ�
-*                        ����ʷֵ���������ʱ����ʵ��д�����ֵ����
-*        [ids]           �������飬���룬��ǩ���ʶ
-*        [datetimes]     �������飬���룬��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬���룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾ��Ӧ����ʷ��ֵʱ����룻������ԡ�
-*        [x]             �����ȸ��������飬���룬�����ͺ�������ʷ��ֵ�б�
-*        [y]             �����ȸ��������飬���룬��������������ʷ��ֵ�б�
-*        [qualities]     ���������飬���룬��ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]        �޷����������飬�����д����ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��x��y��qualities��errors �ĳ����� count һ�£�
-*        ���ӿڽ�����������Ϊ GOLDEN_COOR �ı�ǩ����Ч��
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_archived_coor_values
+* 功能：写入批量标签点批量坐标型历史存储数据
+* 参数：
+*        [handle]        连接句柄
+*        [count]         整型，输入/输出，
+*                        输入时表示 ids、datetimes、ms、x、y、qualities、errors 的长度，
+*                        即历史值个数；输出时返回实际写入的数值个数
+*        [ids]           整型数组，输入，标签点标识
+*        [datetimes]     整型数组，输入，表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示对应的历史数值时间毫秒；否则忽略。
+*        [x]             单精度浮点型数组，输入，浮点型横坐标历史数值列表
+*        [y]             单精度浮点型数组，输入，浮点型纵坐标历史数值列表
+*        [qualities]     短整型数组，输入，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]        无符号整型数组，输出，写入历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、x、y、qualities、errors 的长度与 count 一致，
+*        本接口仅对数据类型为 GOLDEN_COOR 的标签点有效。
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 GOLDENAPI
 golden_error 
@@ -5456,19 +5456,19 @@ goh_put_archived_coor_values(
                              );
 
 /**
-* ������goh_put_single_datetime_value
-* ���ܣ�д�뵥��datetime��ǩ����ĳһʱ�����ʷ����
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ����룬��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ����룬��ʷ��ֵʱ�䣬
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [blob]      �ֽ������飬���룬��ʷdatetime��ֵ
-*        [len]       �����ͣ����룬datetime��ֵ���ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [quality]   �����ͣ����룬��ʷ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-* ��ע�����ӿ�ֻ����������Ϊ GOLDEN_DATETIME �ı�ǩ����Ч��
+* 命名：goh_put_single_datetime_value
+* 功能：写入单个datetime标签点在某一时间的历史数据
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输入，数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输入，历史数值时间，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [blob]      字节型数组，输入，历史datetime数值
+*        [len]       短整型，输入，datetime数值长度，超过一个页大小数据将被截断。
+*        [quality]   短整型，输入，历史数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+* 备注：本接口只对数据类型为 GOLDEN_DATETIME 的标签点有效。
 */
 GOLDENAPI
 golden_error 
@@ -5486,25 +5486,25 @@ goh_put_single_datetime_value(
 
 
 /**
-* ������goh_put_archived_blob_values
-* ���ܣ�д��������ǩ�������ַ�������ʷ�洢����
-* ������
-*        [handle]        ���Ӿ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ ids��datetimes��ms��lens��blobs��qualities��errors �ĳ��ȣ�
-*                        ����ʷֵ���������ʱ����ʵ��д�����ֵ����
-*        [ids]           �������飬���룬��ǩ���ʶ
-*        [datetimes]     �������飬���룬��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬���룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾ��Ӧ����ʷ��ֵʱ����룻������ԡ�
-*        [blobs]         �ֽ���ָ�����飬���룬ʵʱ������/�ַ�����ֵ
-*        [lens]          ���������飬���룬������/�ַ�����ֵ���ȣ�
-*                        ��ʾ��Ӧ�� blobs ָ��ָ��Ļ��������ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [qualities]     ���������飬���룬��ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]        �޷����������飬�����д����ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��lens��blobs��qualities��errors �ĳ����� count һ�£�
-*        ���ӿڽ�����������Ϊ GOLDEN_STRING��GOLDEN_BLOB �ı�ǩ����Ч��
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_archived_blob_values
+* 功能：写入批量标签点批量字符串型历史存储数据
+* 参数：
+*        [handle]        连接句柄
+*        [count]         整型，输入/输出，
+*                        输入时表示 ids、datetimes、ms、lens、blobs、qualities、errors 的长度，
+*                        即历史值个数；输出时返回实际写入的数值个数
+*        [ids]           整型数组，输入，标签点标识
+*        [datetimes]     整型数组，输入，表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示对应的历史数值时间毫秒；否则忽略。
+*        [blobs]         字节型指针数组，输入，实时二进制/字符串数值
+*        [lens]          短整型数组，输入，二进制/字符串数值长度，
+*                        表示对应的 blobs 指针指向的缓冲区长度，超过一个页大小数据将被截断。
+*        [qualities]     短整型数组，输入，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]        无符号整型数组，输出，写入历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、lens、blobs、qualities、errors 的长度与 count 一致，
+*        本接口仅对数据类型为 GOLDEN_STRING、GOLDEN_BLOB 的标签点有效。
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 
 GOLDENAPI
@@ -5523,16 +5523,16 @@ goh_put_archived_blob_values(
                             );
 
 /**
-* ������goh_flush_archived_values
-* ���ܣ�����ǩ��δд���Ĳ���ʷ����ҳд��浵�ļ��С�
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ��
-*        [count]         ���ͣ����������ҳ�����ݸ�����
-* ��ע������ʷ����ҳд������Զ�д��浵�ļ��У���������ʷ����ҳҲ��д���ļ���
-*      ������һ��ʱ���ӳ٣��ڴ��ڼ�˶����ݿ��ܲ�ѯ������Ϊ�˼�ʱ��������ʷ�Ľ����
-*      Ӧ�ڽ�������ʷ����ñ��ӿڡ�
-*      count ������Ϊ��ָ�룬��Ӧ����Ϣ�����ٷ��ء�
+* 命名：goh_flush_archived_values
+* 功能：将标签点未写满的补历史缓存页写入存档文件中。
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识。
+*        [count]         整型，输出，缓存页中数据个数。
+* 备注：补历史缓存页写满后会自动写入存档文件中，不满的历史缓存页也会写入文件，
+*      但会有一个时间延迟，在此期间此段数据可能查询不到，为了及时看到补历史的结果，
+*      应在结束补历史后调用本接口。
+*      count 参数可为空指针，对应的信息将不再返回。
 */
 GOLDENAPI
 golden_error 
@@ -5545,24 +5545,24 @@ goh_flush_archived_values(
 
 
 /**
-* ������goh_get_single_named_type_value
-* ���ܣ���ȡ�����Զ������ͱ�ǩ��ĳ��ʱ�����ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*        [mode]          ���ͣ����룬ȡֵ GOLDEN_NEXT��GOLDEN_PREVIOUS��GOLDEN_EXACT ֮һ��
-*                        GOLDEN_NEXT Ѱ����һ����������ݣ�
-*                        GOLDEN_PREVIOUS Ѱ����һ����������ݣ�
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*        [datetime]      ���ͣ�����/���������ʱ��ʾʱ��������
-*                        ���ʱ��ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ�����/�������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ������ʱ��ʾʱ������������ʱ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*                        ����������룬���ʱΪ 0��
-*        [object]        void���飬������Զ������ͱ�ǩ����ʷֵ
-*        [length]        �����ͣ�����/���������ʱ��ʾ object �ĳ��ȣ�
-*                        ���ʱ��ʾʵ�ʻ�ȡ���Զ������ͱ�ǩ�����ݳ��ȡ�
-*        [quality]       �����ͣ��������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
+* 命名：goh_get_single_named_type_value
+* 功能：读取单个自定义类型标签点某个时间的历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*        [mode]          整型，输入，取值 GOLDEN_NEXT、GOLDEN_PREVIOUS、GOLDEN_EXACT 之一：
+*                        GOLDEN_NEXT 寻找下一个最近的数据；
+*                        GOLDEN_PREVIOUS 寻找上一个最近的数据；
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*        [datetime]      整型，输入/输出，输入时表示时间秒数；
+*                        输出时表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输入/输出，如果 id 指定的标签点时间精度为毫秒，
+*                        则输入时表示时间毫秒数；输出时表示实际取得的历史数值时间毫秒数。
+*                        否则忽略输入，输出时为 0。
+*        [object]        void数组，输出，自定义类型标签点历史值
+*        [length]        短整型，输入/输出，输入时表示 object 的长度，
+*                        输出时表示实际获取的自定义类型标签点数据长度。
+*        [quality]       短整型，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
 */
 GOLDENAPI
 golden_error 
@@ -5579,26 +5579,26 @@ goh_get_single_named_type_value(
     );
 
 /**
-* ������goh_get_archived_named_type_values
-* ���ܣ�������ȡ�Զ������ͱ�ǩ�����ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [id]            ���ͣ����룬��ǩ���ʶ
-*                        GOLDEN_EXACT ȡָ��ʱ������ݣ����û���򷵻ش��� GoE_DATA_NOT_FOUND��
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ��������
-*        [ms1]           �����ͣ����룬ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������
-*        [datetime2]     ���ͣ�����,��ʾ����ʱ��������
-*        [ms2]           �����ͣ����룬ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʱ���������
-*        [length]        ���������飬���룬����ʱ��ʾ objects �ĳ��ȣ�
-*        [count]         ���ͣ�����/����������ʾ��Ҫ��ѯ��������
-*                        �����ʾʵ�ʲ鵽��������
-*        [datetimes]     �������飬�������ʾʵ��ȡ�õ���ʷ��ֵ��Ӧ��ʱ��������
-*        [ms]            �����ͣ��������� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾʵ��ȡ�õ���ʷ��ֵʱ���������
-*        [objects]       void�������飬������Զ������ͱ�ǩ����ʷֵ
-*        [qualities]     ���������飬�������ʷֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
+* 命名：goh_get_archived_named_type_values
+* 功能：连续读取自定义类型标签点的历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [id]            整型，输入，标签点标识
+*                        GOLDEN_EXACT 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+*        [datetime1]     整型，输入，表示开始时间秒数；
+*        [ms1]           短整型，输入，指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；
+*        [datetime2]     整型，输入,表示结束时间秒数；
+*        [ms2]           短整型，输入，指定的标签点时间精度为毫秒，
+*                        表示时间毫秒数；
+*        [length]        短整型数组，输入，输入时表示 objects 的长度，
+*        [count]         整型，输入/输出，输入表示想要查询多少数据
+*                        输出表示实际查到多少数据
+*        [datetimes]     整型数组，输出，表示实际取得的历史数值对应的时间秒数。
+*        [ms]            短整型，输出，如果 id 指定的标签点时间精度为毫秒，
+*                        表示实际取得的历史数值时间毫秒数。
+*        [objects]       void类型数组，输出，自定义类型标签点历史值
+*        [qualities]     短整型数组，输出，历史值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
 */
 GOLDENAPI
 golden_error
@@ -5619,18 +5619,18 @@ goh_get_archived_named_type_values(
     );
 
 /**
-* ������goh_put_single_named_type_value
-* ���ܣ�д���Զ������ͱ�ǩ��ĵ�����ʷ�¼�
-* ������
-*        [handle]    ���Ӿ��
-*        [id]        ���ͣ����룬��ǩ���ʶ
-*        [datetime]  ���ͣ����룬��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        �����ͣ����룬��ʷ��ֵʱ�䣬
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬�����Ӧ�ĺ���ֵ���������
-*        [object]    void���飬���룬��ʷ�Զ������ͱ�ǩ����ֵ
-*        [length]    �����ͣ����룬�Զ������ͱ�ǩ����ֵ���ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [quality]   �����ͣ����룬��ʷ��ֵƷ�ʣ����ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
+* 命名：goh_put_single_named_type_value
+* 功能：写入自定义类型标签点的单个历史事件
+* 参数：
+*        [handle]    连接句柄
+*        [id]        整型，输入，标签点标识
+*        [datetime]  整型，输入，数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型，输入，历史数值时间，
+*                    对于时间精度为毫秒的标签点，存放相应的毫秒值；否则忽略
+*        [object]    void数组，输入，历史自定义类型标签点数值
+*        [length]    短整型，输入，自定义类型标签点数值长度，超过一个页大小数据将被截断。
+*        [quality]   短整型，输入，历史数值品质，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
 */
 GOLDENAPI
 golden_error 
@@ -5646,24 +5646,24 @@ goh_put_single_named_type_value(
     );
 
 /**
-* ������goh_put_archived_named_type_values
-* ���ܣ�������д�Զ������ͱ�ǩ�����ʷ�¼�
-* ������
-*        [handle]        ���Ӿ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ ids��datetimes��ms��lens��blobs��qualities��errors �ĳ��ȣ�
-*                        ����ʷֵ���������ʱ����ʵ��д�����ֵ����
-*        [ids]           �������飬���룬��ǩ���ʶ
-*        [datetimes]     �������飬���룬��ʾ��Ӧ����ʷ��ֵʱ��������
-*        [ms]            ���������飬���룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬
-*                        ��ʾ��Ӧ����ʷ��ֵʱ����룻������ԡ�
-*        [objects]       void����ָ�����飬���룬�Զ������ͱ�ǩ����ֵ
-*        [lengths]       ���������飬���룬�Զ������ͱ�ǩ����ֵ���ȣ�
-*                        ��ʾ��Ӧ�� objects ָ��ָ��Ļ��������ȣ�����һ��ҳ��С���ݽ����ضϡ�
-*        [qualities]     ���������飬���룬��ʷ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]        �޷����������飬�����д����ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��lens��objects��qualities��errors �ĳ����� count һ�£�
-*        ��� datetimes��ms ��ʶ�������Ѿ����ڣ���ֵ�����滻��
+* 命名：goh_put_archived_named_type_values
+* 功能：批量补写自定义类型标签点的历史事件
+* 参数：
+*        [handle]        连接句柄
+*        [count]         整型，输入/输出，
+*                        输入时表示 ids、datetimes、ms、lens、blobs、qualities、errors 的长度，
+*                        即历史值个数；输出时返回实际写入的数值个数
+*        [ids]           整型数组，输入，标签点标识
+*        [datetimes]     整型数组，输入，表示对应的历史数值时间秒数。
+*        [ms]            短整型数组，输入，如果 id 指定的标签点时间精度为毫秒，
+*                        表示对应的历史数值时间毫秒；否则忽略。
+*        [objects]       void类型指针数组，输入，自定义类型标签点数值
+*        [lengths]       短整型数组，输入，自定义类型标签点数值长度，
+*                        表示对应的 objects 指针指向的缓冲区长度，超过一个页大小数据将被截断。
+*        [qualities]     短整型数组，输入，历史数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]        无符号整型数组，输出，写入历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、lens、objects、qualities、errors 的长度与 count 一致，
+*        如果 datetimes、ms 标识的数据已经存在，其值将被替换。
 */
 
 GOLDENAPI
@@ -5681,29 +5681,29 @@ goh_put_archived_named_type_values(
       golden_error* errors
       );
 
-/************************************ ����ʽ����ӿ� ************************************/
+/************************************ 方程式计算接口 ************************************/
 
 
 
 /**
-* ������goe_compute_history
-* ���ܣ�����������������ǩ����ʷ����
-* ������
-*        [handle]        ���Ӿ��
-*        [count]         ���ͣ�����/�����
-*                        ����ʱ��ʾ ids��errors �ĳ��ȣ�
-*                        ����ǩ����������ʱ���سɹ���ʼ����ı�ǩ�����
-*        [flag]          �����ͣ����룬��Ϊ 0 ��ʾ�������㣬ɾ��ʱ�䷶Χ���Ѿ�������ʷ���ݣ�
-*                        Ϊ 0 ��ʾ���㣬����ʱ�䷶Χ���Ѿ�������ʷ���ݣ�����ͬʱ�̵ļ���ֵ��
-*        [datetime1]     ���ͣ����룬��ʾ��ʼʱ��������
-*        [ms1]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ��ʼʱ���Ӧ�ĺ��룻�������
-*        [datetime2]     ���ͣ����룬��ʾ����ʱ�����������Ϊ 0����ʾ����ֱ���浵�����ݵ����ʱ��
-*        [ms2]           �����ͣ����룬��� id ָ���ı�ǩ��ʱ�侫��Ϊ���룬��ʾ����ʱ���Ӧ�ĺ��룻�������
-*        [ids]           �������飬���룬��ǩ���ʶ
-*        [errors]        �޷����������飬�����������ʷ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��errors �ĳ����� count һ�£����ӿڽ��Դ��м�����չ���Եı�ǩ����Ч��
-*        �� datetime1��ms1 ��ʾ��ʱ����Դ��� datetime2��ms2 ��ʾ��ʱ�䣬
-*        ��ʱǰ�߱�ʾ����ʱ�䣬���߱�ʾ��ʼʱ�䡣
+* 命名：goe_compute_history
+* 功能：重算或补算批量计算标签点历史数据
+* 参数：
+*        [handle]        连接句柄
+*        [count]         整型，输入/输出，
+*                        输入时表示 ids、errors 的长度，
+*                        即标签点个数；输出时返回成功开始计算的标签点个数
+*        [flag]          短整型，输入，不为 0 表示进行重算，删除时间范围内已经存在历史数据；
+*                        为 0 表示补算，保留时间范围内已经存在历史数据，覆盖同时刻的计算值。
+*        [datetime1]     整型，输入，表示起始时间秒数。
+*        [ms1]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示起始时间对应的毫秒；否则忽略
+*        [datetime2]     整型，输入，表示结束时间秒数。如果为 0，表示计算直至存档中数据的最后时间
+*        [ms2]           短整型，输入，如果 id 指定的标签点时间精度为毫秒，表示结束时间对应的毫秒；否则忽略
+*        [ids]           整型数组，输入，标签点标识
+*        [errors]        无符号整型数组，输出，计算历史数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、errors 的长度与 count 一致，本接口仅对带有计算扩展属性的标签点有效。
+*        由 datetime1、ms1 表示的时间可以大于 datetime2、ms2 表示的时间，
+*        此时前者表示结束时间，后者表示起始时间。
 */
 GOLDENAPI
 golden_error 
@@ -5721,15 +5721,15 @@ goe_compute_history(
                     );
 
 /**
-* ������goe_get_equation_graph_count
-* ���ܣ����ݱ�ǩ�� id ��ȡ���������ʽ��ֵ������
-* ������
-*      [handle]   ���Ӿ��
-*      [id]       ���ͣ����룬��ǩ���ʶ
-*      [flag]     ö�٣����룬��ȡ������ͼ�Ĺ�ϵ
-*      [count]    ���ͣ����룬����ͼ��ֵ������
-* ��ע����ֵ��Ϊ���ݽṹ���洢����ʽ�漰���ĸ���ǩ��ID�����丸ID��
-*		����ο�goe_get_equation_graph_datas
+* 命名：goe_get_equation_graph_count
+* 功能：根据标签点 id 获取相关联方程式键值对数量
+* 参数：
+*      [handle]   连接句柄
+*      [id]       整型，输入，标签点标识
+*      [flag]     枚举，输入，获取的拓扑图的关系
+*      [count]    整型，输入，拓扑图键值对数量
+* 备注：键值对为数据结构，存储方程式涉及到的各标签点ID、及其父ID等
+*		具体参考goe_get_equation_graph_datas
 */
 GOLDENAPI
 golden_error 
@@ -5742,17 +5742,17 @@ goe_get_equation_graph_count(
 							);
 
 /**
-* ������goe_get_equation_graph_datas
-* ���ܣ����ݱ�ǩ�� id ��ȡ���������ʽ��ֵ������
-* ������
-*      [handle]   ���Ӿ��
-*      [id]       ���ͣ����룬��ǩ���ʶ
-*      [flag]     ö�٣����룬��ȡ������ͼ�Ĺ�ϵ
-*      [count]    ���ͣ����
-                    ����ʱ����ʾ����ͼ��ֵ������
-                    ���ʱ����ʾʵ�ʻ�ȡ��������ͼ��ֵ������
-*      [graph]    �����GOLDE_GRAPH���ݽṹ������ͼ��ֵ����Ϣ
-* ��ע����ֵ��Ϊ���ݽṹ���洢����ʽ�漰���ĸ���ǩ��ID�����丸ID��
+* 命名：goe_get_equation_graph_datas
+* 功能：根据标签点 id 获取相关联方程式键值对数据
+* 参数：
+*      [handle]   连接句柄
+*      [id]       整型，输入，标签点标识
+*      [flag]     枚举，输入，获取的拓扑图的关系
+*      [count]    整型，输出
+                    输入时，表示拓扑图键值对数量
+                    输出时，表示实际获取到的拓扑图键值对数量
+*      [graph]    输出，GOLDE_GRAPH数据结构，拓扑图键值对信息
+* 备注：键值对为数据结构，存储方程式涉及到的各标签点ID、及其父ID等
 */
 GOLDENAPI
 golden_error 
@@ -5766,7 +5766,7 @@ goe_get_equation_graph_datas(
 								);
 
 
-/************************************ ��ѯ��ǩ�����Խӿ� ************************************/
+/************************************ 查询标签点属性接口 ************************************/
 
 GOLDENAPI
   golden_error
@@ -6275,14 +6275,14 @@ GOLDENAPI
   );
 
 
-/************************************ ��ѯ���ܼ�����Ϣ�ӿ� ************************************/
+/************************************ 查询性能计数信息接口 ************************************/
 
 /**
-* ������gop_get_perf_tags_count
-* ���ܣ���ȡPerf������֧�ֵ����ܼ����������
-* ������
-*      [handle]   ���Ӿ��
-*      [count]    ���ͣ��������ʾʵ�ʻ�ȡ����Perf������֧�ֵ����ܼ����������
+* 命名：gop_get_perf_tags_count
+* 功能：获取Perf服务中支持的性能计数点的数量
+* 参数：
+*      [handle]   连接句柄
+*      [count]    整型，输出，表示实际获取到的Perf服务中支持的性能计数点的数量
 */
 GOLDENAPI
 golden_error 
@@ -6293,15 +6293,15 @@ gop_get_perf_tags_count(
 
 
 /**
-* ������gop_get_perf_tags_info
-* ���ܣ��������ܼ�����ID��ȡ��ص����ܼ�������Ϣ
-* ������
-*      [handle]   ���Ӿ��
-*      [count]    ���ͣ����룬���
-                    ����ʱ����ʾ��Ҫ��ȡ�����ܼ�������Ϣ��������Ҳ��ʾtags_info��errors�ȵĳ���
-                    ���ʱ����ʾʵ�ʻ�ȡ�������ܼ�������Ϣ������
-       [errors] �޷����������飬�������ȡ���ܼ�������Ϣ�ķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤����� tags_info��errors �Ŀռ��� count ���
+* 命名：gop_get_perf_tags_info
+* 功能：根据性能计数点ID获取相关的性能计数点信息
+* 参数：
+*      [handle]   连接句柄
+*      [count]    整型，输入，输出
+                    输入时，表示想要获取的性能计数点信息的数量，也表示tags_info，errors等的长度
+                    输出时，表示实际获取到的性能计数点信息的数量
+       [errors] 无符号整型数组，输出，获取性能计数点信息的返回值列表，参考golden_error.h
+* 备注：用户须保证分配给 tags_info，errors 的空间与 count 相符
 */
 GOLDENAPI
 golden_error 
@@ -6314,26 +6314,26 @@ golden_error
 
 
 /**
-* ������gop_get_perf_values
-* ���ܣ�������ȡ���ܼ�����ĵ�ǰ������ֵ
-* ������
-*        [handle]    ���Ӿ��
-*        [count]     ���ͣ�����/��������ܵ������
-*                    ����ʱ��ʾ perf_ids��datetimes��ms��values��states��qualities��errors �ĳ��ȣ�
-*                    ���ʱ��ʾ�ɹ���ȡʵʱֵ�����ܼ��������
-*        [perf_ids]  �������飬���룬���ܼ������ʶ�б����ο�GOLDEN_PERF_TAG_ID
-*        [datetimes] �������飬�����ʵʱ��ֵʱ���б�,
-*                    ��ʾ����1970��1��1��08:00:00������
-*        [ms]        ���������飬�����ʵʱ��ֵʱ���б���
-*                    ����ʱ�侫��Ϊ����ı�ǩ�㣬������Ӧ�ĺ���ֵ������Ϊ 0
-*        [values]    ˫���ȸ��������飬�����ʵʱ��������ֵ�б���
-*                    ������������Ϊ GOLDEN_REAL16��GOLDEN_REAL32��GOLDEN_REAL64 �ı�ǩ�㣬������Ӧ�Ŀ���ֵ������Ϊ 0
-*        [states]    64 λ�������飬�����ʵʱ������ֵ�б���
-*                    ������������Ϊ GOLDEN_BOOL��GOLDEN_UINT8��GOLDEN_INT8��GOLDEN_CHAR��GOLDEN_UINT16��GOLDEN_INT16��
-*                    GOLDEN_UINT32��GOLDEN_INT32��GOLDEN_INT64 �ı�ǩ�㣬������Ӧ�Ŀ���ֵ������Ϊ 0
-*        [qualities] ���������飬�����ʵʱ��ֵƷ���б������ݿ�Ԥ�����Ʒ�ʲμ�ö�� GOLDEN_QUALITY 
-*        [errors]    �޷����������飬�������ȡʵʱ���ݵķ���ֵ�б����ο�golden_error.h
-* ��ע���û��뱣֤ ids��datetimes��ms��values��states��qualities��errors �ĳ����� count һ�¡�
+* 命名：gop_get_perf_values
+* 功能：批量读取性能计数点的当前快照数值
+* 参数：
+*        [handle]    连接句柄
+*        [count]     整型，输入/输出，性能点个数，
+*                    输入时表示 perf_ids、datetimes、ms、values、states、qualities、errors 的长度，
+*                    输出时表示成功获取实时值的性能计数点个数
+*        [perf_ids]  整型数组，输入，性能计数点标识列表，参考GOLDEN_PERF_TAG_ID
+*        [datetimes] 整型数组，输出，实时数值时间列表,
+*                    表示距离1970年1月1日08:00:00的秒数
+*        [ms]        短整型数组，输出，实时数值时间列表，
+*                    对于时间精度为毫秒的标签点，返回相应的毫秒值；否则为 0
+*        [values]    双精度浮点型数组，输出，实时浮点型数值列表，
+*                    对于数据类型为 GOLDEN_REAL16、GOLDEN_REAL32、GOLDEN_REAL64 的标签点，返回相应的快照值；否则为 0
+*        [states]    64 位整型数组，输出，实时整型数值列表，
+*                    对于数据类型为 GOLDEN_BOOL、GOLDEN_UINT8、GOLDEN_INT8、GOLDEN_CHAR、GOLDEN_UINT16、GOLDEN_INT16、
+*                    GOLDEN_UINT32、GOLDEN_INT32、GOLDEN_INT64 的标签点，返回相应的快照值；否则为 0
+*        [qualities] 短整型数组，输出，实时数值品质列表，数据库预定义的品质参见枚举 GOLDEN_QUALITY 
+*        [errors]    无符号整型数组，输出，读取实时数据的返回值列表，参考golden_error.h
+* 备注：用户须保证 ids、datetimes、ms、values、states、qualities、errors 的长度与 count 一致。
 */
 GOLDENAPI
 golden_error 
@@ -6350,13 +6350,13 @@ GOLDENAPI_CALLRULE
   golden_error* errors);
 
 
-#pragma region ת����������ģ��ͨ�Žӿ� add by yuanbo.sheng 2015.04.01
+#pragma region 转发服务配置模块通信接口 add by yuanbo.sheng 2015.04.01
 /**
-* ������god_get_plugin_info_total_size
-* ���ܣ���ȡ����ת�������Ϣ�ܳ���
-* ������
-*        [handle]    ���Ӿ��
-*        [total_plugin_size]  �����Ϣ�ܳ��ȣ������
+* 命名：god_get_plugin_info_total_size
+* 功能：获取所有转发插件信息总长度
+* 参数：
+*        [handle]    连接句柄
+*        [total_plugin_size]  插件信息总长度，输出；
 */
 GOLDENAPI
 golden_error
@@ -6364,12 +6364,12 @@ GOLDENAPI_CALLRULE
 god_get_plugin_info_total_size(golden_int32 handle, golden_int32& total_plugin_size);
 
 /**
-* ������god_get_plugin_info_array
-* ���ܣ���ȡ����ת�������Ϣ
-* ������
-*        [handle]    ���Ӿ��
-*        [plugin_info_array] �ַ��������������������total_plugin_size��
-*        [total_plugin_size]  �����Ϣ�ܳ��ȣ������
+* 命名：god_get_plugin_info_array
+* 功能：获取所有转发插件信息
+* 参数：
+*        [handle]    连接句柄
+*        [plugin_info_array] 字符串缓存区，长度需等于total_plugin_size；
+*        [total_plugin_size]  插件信息总长度，输出；
  */
 GOLDENAPI
 golden_error
@@ -6377,13 +6377,13 @@ GOLDENAPI_CALLRULE
 god_get_plugin_info_array(golden_int32 handle, char* plugin_info_array, golden_int32& total_plugin_size);
 
 /**
-* ������god_register_plugin
-* ���ܣ�ע������Ϣ
-* ������
-*        [handle]    ���Ӿ��
-*        [_plugin_info] �ַ��������������������plugin_size��
-*        [_plugin_size]  �����Ϣ���ȣ�
-*        [plugin_id] �����ţ������
+* 命名：god_register_plugin
+* 功能：注册插件信息
+* 参数：
+*        [handle]    连接句柄
+*        [_plugin_info] 字符串缓存区，长度需等于plugin_size；
+*        [_plugin_size]  插件信息长度；
+*        [plugin_id] 插件编号，输出；
 */
 GOLDENAPI
 golden_error
@@ -6391,11 +6391,11 @@ GOLDENAPI_CALLRULE
 god_register_plugin(golden_int32 handle, const char* _plugin_info, golden_int32 plugin_size, golden_int32& plugin_id);
 
 /**
-* ������god_unregister_plugin
-* ���ܣ�ж�ز����Ϣ
-* ������
-*        [handle]    ���Ӿ��
-*        [plugin_id] �����ţ�
+* 命名：god_unregister_plugin
+* 功能：卸载插件信息
+* 参数：
+*        [handle]    连接句柄
+*        [plugin_id] 插件编号；
  */
 GOLDENAPI
 golden_error
@@ -6404,13 +6404,13 @@ god_unregister_plugin(golden_int32 handle, golden_int32 plugin_id);
 
 /*
  *
- * ���������������
+ * 按插件编号启动插件
  *
  * inputs:
- *     golden_int32 handle: ����ͨ�ž��
- *     golden_int32 plugin_id: ������
+ *     golden_int32 handle: 网络通信句柄
+ *     golden_int32 plugin_id: 插件编号
  * returns:
- *     0 �ɹ�  ���� ʧ��
+ *     0 成功  其他 失败
  */
  
 GOLDENAPI
@@ -6422,12 +6422,12 @@ GOLDENAPI_CALLRULE
 
 /*
  *
- * ����ת�����������������õĲ��
+ * 启动转发服务器所有已配置的插件
  * 
  *  inputs:
- *      golden_int32 handle: ����ͨ�ž�� 
+ *      golden_int32 handle: 网络通信句柄 
  *  return:
- *      0 �ɹ�  ���� ʧ��
+ *      0 成功  其他 失败
  */
 
 GOLDENAPI
@@ -6438,13 +6438,13 @@ GOLDENAPI_CALLRULE
 
 /*
 *
-* ���������������
+* 按插件编号启动插件
 *
 * inputs:
-*     golden_int32 handle: ����ͨ�ž��
-*     golden_int32 plugin_id: ������
+*     golden_int32 handle: 网络通信句柄
+*     golden_int32 plugin_id: 插件编号
 * returns:
-*     0 �ɹ�  ���� ʧ��
+*     0 成功  其他 失败
 */
 
 GOLDENAPI
@@ -6456,12 +6456,12 @@ GOLDENAPI_CALLRULE
 
 /*
  * 
- *  ֹͣ�������������õĲ��
+ *  停止运行所有已配置的插件
  *  
  *  inputs:
- *      golden_int32 handle: ����ͨ�ž��
+ *      golden_int32 handle: 网络通信句柄
  *  return:
- *      0 �ɹ�  ���� ʧ��
+ *      0 成功  其他 失败
  */
 GOLDENAPI
 golden_error
@@ -6471,15 +6471,15 @@ GOLDENAPI_CALLRULE
 
 /*
  *
- * �����������ò��������״̬
+ * 按插件编号设置插件的启用状态
  *
  * inputs:
- *     golden_int32 handle: ����ͨ�ž��
- *     golden_int8  enable_status: �������״̬ ����ֵ�������Ϣ�ṹ��golden_output_plugin_info_t
- *     golden_int32 plugin_id: ������
+ *     golden_int32 handle: 网络通信句柄
+ *     golden_int8  enable_status: 插件启用状态 具体值见插件信息结构体golden_output_plugin_info_t
+ *     golden_int32 plugin_id: 插件编号
  *     
  * returns:
- *     0 �ɹ�  ���� ʧ��
+ *     0 成功  其他 失败
  */
 
 GOLDENAPI
@@ -6491,15 +6491,15 @@ GOLDENAPI_CALLRULE
   golden_int32  enable_status);
 
 /*
-* ���ݲ����Ŷ�ȡָ�������Ϣ���ݳ���
+* 根据插件编号读取指定插件信息数据长度
 *
 * @input:
-golden_int32 handle: ���ݿ����Ӿ��
-golden_int32 plugin_id: ������
+golden_int32 handle: 数据库连接句柄
+golden_int32 plugin_id: 插件编号
 @output:
-golden_int32 plugin_info_size�������Ϣ���ݳ���
+golden_int32 plugin_info_size：插件信息数据长度
 @return:
-0 �ɹ� ���� ʧ��
+0 成功 其它 失败
 */
 GOLDENAPI
 golden_error
@@ -6510,16 +6510,16 @@ golden_int32 plugin_id,
 golden_int32& plugin_info_size);
 
 /*
-* ���ݲ����Ŷ�ȡָ�������Ϣ����
+* 根据插件编号读取指定插件信息数据
 *
 * @input:
-    golden_int32 handle: ���ݿ����Ӿ��
-    golden_int32 plugin_id: ������
+    golden_int32 handle: 数据库连接句柄
+    golden_int32 plugin_id: 插件编号
   @output:
-    char* plugin_info_data: �����Ϣ����
-    golden_int32 plugin_info_size�������Ϣ���ݳ���
+    char* plugin_info_data: 插件信息数据
+    golden_int32 plugin_info_size：插件信息数据长度
   @return:
-    0 �ɹ� ���� ʧ��
+    0 成功 其它 失败
 */
 GOLDENAPI
 golden_error
@@ -6532,16 +6532,16 @@ god_get_single_plugin_info_data (
   );
 
 /*
-*  ���ݲ����Ÿ��²����Ϣ
+*  根据插件编号更新插件信息
    @input:
-    golden_int32 handle: ���ݿ����Ӿ��
-    golden_int32 plugin_id: ������
-    const char* plugin_info_data : ��������
-    golden_int32 plugin_info_size : �������ݳ���
+    golden_int32 handle: 数据库连接句柄
+    golden_int32 plugin_id: 插件编号
+    const char* plugin_info_data : 配置数据
+    golden_int32 plugin_info_size : 配置内容长度
    @output:
-     ��
+     无
    @return:
-     0 �ɹ� ���� ʧ��
+     0 成功 其它 失败
 */
 GOLDENAPI
 golden_error
@@ -6554,15 +6554,15 @@ golden_int32 plugin_info_size
 );
 
 /*
-* ���ݲ����Ŷ�ȡָ������������ļ����ݳ���
+* 根据插件编号读取指定插件的配置文件内容长度
 *
 * @input:
-golden_int32 handle: ���ݿ����Ӿ��
-golden_int32 plugin_id: ������
+golden_int32 handle: 数据库连接句柄
+golden_int32 plugin_id: 插件编号
 @output:
-golden_int32 config_dize���������ݳ���
+golden_int32 config_dize：配置数据长度
 @return:
-0 �ɹ� ���� ʧ��
+0 成功 其它 失败
 */
 GOLDENAPI
 golden_error
@@ -6573,16 +6573,16 @@ golden_int32 plugin_id,
 golden_int32& config_size);
 
 /*
-* ���ݲ����Ŷ�ȡָ������������ļ�����
+* 根据插件编号读取指定插件的配置文件内容
 *
 * @input:
-    golden_int32 handle: ���ݿ����Ӿ��
-    golden_int32 plugin_id: ������
+    golden_int32 handle: 数据库连接句柄
+    golden_int32 plugin_id: 插件编号
   @output:
-    char* config_data: ��������
-    golden_int32 config_dize���������ݳ���
+    char* config_data: 配置数据
+    golden_int32 config_dize：配置数据长度
   @return:
-    0 �ɹ� ���� ʧ��
+    0 成功 其它 失败
 */
 GOLDENAPI
 golden_error
@@ -6595,17 +6595,17 @@ god_download_plugin_config_data_by_id(
   );
 
 /*
-*  ���ݲ����Ÿ��²���������ļ�����
+*  根据插件编号更新插件的配置文件内容
 
    @input:
-    golden_int32 handle: ���ݿ����Ӿ��
-    golden_int32 plugin_id: ������
-    const char* config_data : ��������
-    golden_int32 config_size : �������ݳ���
+    golden_int32 handle: 数据库连接句柄
+    golden_int32 plugin_id: 插件编号
+    const char* config_data : 配置数据
+    golden_int32 config_size : 配置内容长度
    @output:
-     ��
+     无
    @return:
-     0 �ɹ� ���� ʧ��
+     0 成功 其它 失败
 */
 GOLDENAPI
 golden_error

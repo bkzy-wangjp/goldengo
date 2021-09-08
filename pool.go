@@ -6,6 +6,18 @@ import (
 	"time"
 )
 
+//庚顿的部分需要重新连接的错误码
+var _Golden_Err_Codes = []string{
+	"0xFFFF2005", // 无效的句柄
+	"0xFFFFA746",
+	"0xFFFFA745",
+	"0xFFFFA736",
+	"0xFFFFC010",
+	"0xFFFF703C", // 连接请求超时，未能建立连接
+	"0xFFFF703D", // 连接被拒绝
+	"0xFFFF703E", // 连接被关闭
+}
+
 //庚顿数据库结构
 type Golden struct {
 	RTDBService
@@ -69,7 +81,7 @@ func NewGoldenPool(hostname, username, password string, port, cap int, max_sec .
 		username: username,              //用户名
 		password: password,              //密码
 		port:     port,                  //端口号
-		Version:  "v1.0.2101",
+		Version:  "v1.0.2102",
 	}
 	var err error
 	for i := 0; i < cap; i++ { //创建句柄连接池
@@ -181,11 +193,12 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
 
 	p.Req <- 1
 	g := new(Golden)
-	select { //有资源就分配资源，没有资源就阻塞等待
-	case p.Worker <- 1: //有资源可分配
-		g.Handle = <-p.Handel //从连接池取句柄
-		<-p.Req               //请求数量减少
-	}
+	//select { //有资源就分配资源，没有资源就阻塞等待
+	//case
+	p.Worker <- 1         //有资源可分配
+	g.Handle = <-p.Handel //从连接池取句柄
+	<-p.Req               //请求数量减少
+	//}
 	//从连接池获取基本信息
 	g.HostName = p.hostname
 	g.UserName = p.username
@@ -194,11 +207,7 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
 	_, err := g.HostTime() //测试句柄
 	if err != nil {
 		//无效的句柄\远程主机强迫关闭了一个现有的连接\你的主机中的软件中止了一个已建立的连接
-		if stringContains(err.Error(), "0xFFFF2005",
-			"0xFFFFA746",
-			"0xFFFFA745",
-			"0xFFFFA736",
-			"0xFFFFC010") {
+		if stringContains(err.Error(), _Golden_Err_Codes...) {
 			err = g.connect() //重新创建句柄
 			if err != nil {   //创建连接失败
 				g.Handle = 0x0FFFFFFF
@@ -233,11 +242,12 @@ func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
 		}
 
 		p.Req <- 1
-		select { //有资源就分配资源，没有资源就阻塞等待
-		case p.Worker <- 1: //有资源可分配
-			g.Handle = <-p.Handel //从连接池取句柄
-			<-p.Req               //请求数量减少
-		}
+		//select { //有资源就分配资源，没有资源就阻塞等待
+		//case
+		p.Worker <- 1         //有资源可分配
+		g.Handle = <-p.Handel //从连接池取句柄
+		<-p.Req               //请求数量减少
+		//}
 		//从连接池获取基本信息
 		g.HostName = p.hostname
 		g.UserName = p.username
@@ -246,7 +256,7 @@ func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
 		_, err := g.HostTime() //测试句柄
 		if err != nil {
 			//无效的句柄\远程主机强迫关闭了一个现有的连接\你的主机中的软件中止了一个已建立的连接
-			if stringContains(err.Error(), "0xFFFF2005", "0xFFFFA746", "0xFFFFA745") {
+			if stringContains(err.Error(), _Golden_Err_Codes...) {
 				err = g.connect() //重新创建句柄
 				if err != nil {   //创建连接失败
 					g.Handle = 0x0FFFFFFF
