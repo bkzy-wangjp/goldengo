@@ -41,8 +41,8 @@ type HisData struct {
 	[*Golden] 实时数据库对象
 - 备注:在调用所有的接口函数之前，必须先调用本函数建立Golden对象。
 *******************************************************************************/
-func CreateGolden(hostname, username, password string, port ...int) *Golden {
-	rtdb := new(Golden)
+func CreateGolden(hostname, username, password string, port ...int) *GoldenConnect {
+	rtdb := new(GoldenConnect)
 	rtdb.HostName = hostname
 	rtdb.UserName = username
 	rtdb.Password = password
@@ -102,7 +102,7 @@ func CreateGolden(hostname, username, password string, port ...int) *Golden {
 - 备注:
 - 时间: 2020年5月15日
 *******************************************************************************/
-func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData, error) {
+func (g *GoldenConnect) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData, error) {
 	snaps := make(map[string]SnapData)
 	idtagmap := make(map[int]string) //以id为key,以变量名为value的map
 	if len(tagfullnames) > 0 {
@@ -167,7 +167,7 @@ func (g *Golden) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData,
 - 备注:
 - 时间: 2020年5月15日
 *******************************************************************************/
-func (g *Golden) GetSnapShotById(ids, dtypes []int) (map[int]SnapData, error) {
+func (g *GoldenConnect) GetSnapShotById(ids, dtypes []int) (map[int]SnapData, error) {
 	snaps := make(map[int]SnapData)
 	if len(ids) != len(dtypes) {
 		return snaps, fmt.Errorf("设置的Id数量和变量类型数量不匹配")
@@ -228,7 +228,7 @@ func (g *Golden) GetSnapShotById(ids, dtypes []int) (map[int]SnapData, error) {
 - 备注:
 - 时间: 2020年5月15日
 *******************************************************************************/
-func (g *Golden) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
+func (g *GoldenConnect) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
 	datas := make(map[string][]RealTimeSeriesData)
 	ids, dtypes, _, _, err := g.FindPoints(tagfullnames...) //根据变量名读取基本信息
 	if err != nil {
@@ -283,7 +283,7 @@ func (g *Golden) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string)
   	本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
 - 时间: 2020年12月04日
 *******************************************************************************/
-func (g *Golden) GetHistorySummaryByName(bgtime, endtime int64, tagfullname string) (int64,
+func (g *GoldenConnect) GetHistorySummaryByName(bgtime, endtime int64, tagfullname string) (int64,
 	int64, float64, float64, float64, float64, float64, int, error) {
 	ids, _, _, _, err := g.FindPoints(tagfullname) //根据变量名读取基本信息
 	if err != nil {
@@ -322,7 +322,7 @@ func (g *Golden) GetHistorySummaryByName(bgtime, endtime int64, tagfullname stri
 - 备注:
 - 时间: 2020年5月15日
 *******************************************************************************/
-func (g *Golden) GetHistorySingleByName(mode int, datatime int64, tagfullnames ...string) (map[string]RealTimeSeriesData, error) {
+func (g *GoldenConnect) GetHistorySingleByName(mode int, datatime int64, tagfullnames ...string) (map[string]RealTimeSeriesData, error) {
 	datas := make(map[string]RealTimeSeriesData)
 	ids, dtypes, _, _, err := g.FindPoints(tagfullnames...) //根据变量名读取基本信息
 	if err != nil {
@@ -366,7 +366,7 @@ func (g *Golden) GetHistorySingleByName(mode int, datatime int64, tagfullnames .
 - 备注:
 - 时间: 2020年5月15日
 *******************************************************************************/
-func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
+func (g *GoldenConnect) GetHisIntervalByName(count int, bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
 	datas := make(map[string][]RealTimeSeriesData)
 	ids, dtypes, _, _, err := g.FindPoints(tagfullnames...) //根据变量名读取基本信息
 	if err != nil {
@@ -414,7 +414,7 @@ func (g *Golden) GetHisIntervalByName(count int, bgtime, endtime int64, tagfulln
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string]HisData, error) {
+func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interval int, tagnames ...string) (map[string]HisData, error) {
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Critical("Golden.GetHistoryDataAlignHeadAndTail 中捕获的错误信息:%#v", err)
@@ -542,7 +542,7 @@ func (g *Golden) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, Interva
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) GetTagNameListInTables(tbnames ...string) (map[string][]string, error) {
+func (g *GoldenConnect) GetTagNameListInTables(tbnames ...string) (map[string][]string, error) {
 	tagsmap := make(map[string][]string)
 	err := g.GetTables()
 	if err != nil {
@@ -591,7 +591,7 @@ func (g *Golden) GetTagNameListInTables(tbnames ...string) (map[string][]string,
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) GetTagListInTables(tbnames ...string) (map[string][]GoldenPoint, error) {
+func (g *GoldenConnect) GetTagListInTables(tbnames ...string) (map[string][]GoldenPoint, error) {
 	tagsmap := make(map[string][]GoldenPoint)
 	err := g.GetTables()
 	if err != nil {
@@ -638,7 +638,7 @@ func (g *Golden) GetTagListInTables(tbnames ...string) (map[string][]GoldenPoint
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoint, error) {
+func (g *GoldenConnect) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoint, error) {
 	datas := make(map[string]GoldenPoint)
 	var nullstring string
 	var pids []int
@@ -679,7 +679,7 @@ func (g *Golden) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoi
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) SetSnapShot(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
+func (g *GoldenConnect) SetSnapShot(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
 	timestemp := time.Now().UnixNano()
 	if len(datatime) > 0 {
 		timestemp = datatime[0]
@@ -721,7 +721,7 @@ func (g *Golden) SetSnapShot(tagname string, datavalue float64, qualitie int, da
 时间:2020年5月16日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) SetSnapShotBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
+func (g *GoldenConnect) SetSnapShotBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
 	var df []float64
 	var dv []int64
 	var dq []int16
@@ -763,7 +763,7 @@ func (g *Golden) SetSnapShotBatch(tagnames []string, datavalues []float64, quali
 时间:2020年8月14日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) SetArchivedValue(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
+func (g *GoldenConnect) SetArchivedValue(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
 	timestemp := time.Now().UnixNano()
 	if len(datatime) > 0 {
 		timestemp = datatime[0]
@@ -805,7 +805,7 @@ func (g *Golden) SetArchivedValue(tagname string, datavalue float64, qualitie in
 时间:2020年8月14日
 编辑:wang_jp
 *******************************************************************************/
-func (g *Golden) SetArchivedValuesBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
+func (g *GoldenConnect) SetArchivedValuesBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
 	var df []float64
 	var dv []int64
 	var dq []int16
