@@ -1,6 +1,7 @@
 package goldengo
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -19,7 +20,7 @@ var _Golden_Err_Codes = []string{
 }
 
 //庚顿数据库结构
-type Golden struct {
+type GoldenConnect struct {
 	RTDBService
 }
 
@@ -36,6 +37,7 @@ type GoldenPool struct {
 	username   string     //用户名
 	password   string     //密码
 	port       int        //端口号
+	isclose    bool       //关闭指令
 	Version    string     //版本号
 }
 
@@ -85,7 +87,7 @@ func NewGoldenPool(hostname, username, password string, port, cap int, max_sec .
 	}
 	var err error
 	for i := 0; i < cap; i++ { //创建句柄连接池
-		g := new(Golden)
+		g := new(GoldenConnect)
 		g.HostName = hostname
 		g.UserName = username
 		g.Password = password
@@ -99,7 +101,7 @@ func NewGoldenPool(hostname, username, password string, port, cap int, max_sec .
 		}
 		pool.Handel <- g.Handle //将句柄压入连接池
 	}
-	go pool.Run()
+	go pool.run()
 	return pool, err
 }
 
@@ -110,21 +112,25 @@ func NewGoldenPool(hostname, username, password string, port, cap int, max_sec .
 - 备注: 自动释放超时的链接
 - 时间: 2021年4月14日
 *******************************************************************************/
-func (p *GoldenPool) Run() {
+func (p *GoldenPool) run() {
+	defer p.removePool()
 	for {
+		if p.isclose { //有退出指令
+			break
+		}
 		if len(p.Worker) > 0 {
 			p.BegineTime.Range(func(k, v interface{}) bool {
 				bgt, _ := v.(time.Time)
 				//超时资源自动释放
 				if bgt.Before(time.Now().Add(-1 * time.Second * time.Duration(p.maxSec))) {
-					g := new(Golden)
+					g := new(GoldenConnect)
 					g.Handle, _ = k.(int32)
 					g.DisConnect(p)
 				}
 				return true
 			})
 		}
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * 5)
 	}
 }
 
@@ -135,15 +141,19 @@ func (p *GoldenPool) Run() {
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func (p *GoldenPool) RemovePool() {
+func (p *GoldenPool) removePool() {
 	close(p.Worker)
 	close(p.Req)
 	for h := range p.Handel {
-		g := new(Golden)
+		g := new(GoldenConnect)
 		g.Handle = h
 		g.disConnect()
 	}
 	close(p.Handel)
+}
+
+func (p *GoldenPool) Close() {
+	p.isclose = true
 }
 
 /*******************************************************************************
@@ -182,7 +192,7 @@ func (p *GoldenPool) ShowTenant() interface{} {
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
+func (p *GoldenPool) GetConnect(tenant ...string) (*GoldenConnect, error) {
 	var tenantstr string //租户名称
 	for i, str := range tenant {
 		if i != 0 {
@@ -192,7 +202,7 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
 	}
 
 	p.Req <- 1
-	g := new(Golden)
+	g := new(GoldenConnect)
 	//select { //有资源就分配资源，没有资源就阻塞等待
 	//case
 	p.Worker <- 1         //有资源可分配
@@ -231,7 +241,7 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*Golden, error) {
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
+func (g *GoldenConnect) GetConnect(p *GoldenPool, tenant ...string) error {
 	if g.Handle <= 0 { //是否已经获取了句柄
 		var tenantstr string //租户名称
 		for i, str := range tenant {
@@ -281,7 +291,7 @@ func (g *Golden) GetConnect(p *GoldenPool, tenant ...string) error {
 - 备注:
 - 时间: 2020年6月27日
 *******************************************************************************/
-func (g *Golden) DisConnect(p *GoldenPool) {
+func (g *GoldenConnect) DisConnect(p *GoldenPool) {
 	if g.Handle > 0 { //有资源的时候才准许释放
 		<-p.Worker                    //释放连接资源
 		p.Handel <- g.Handle          //归还句柄到连接池
@@ -306,4 +316,642 @@ func stringContains(s string, substrs ...string) bool {
 		}
 	}
 	return false
+}
+
+/*******************************************************************************
+- 功能: 通过变量全名获取快照值
+- 参数:
+	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+- 输出:
+	[map[string]SnapData] 快照Map,key为变量全名
+	[error] 错误信息
+- 备注:
+- 时间: 2020年5月15日
+*******************************************************************************/
+func (p *GoldenPool) GetSnapShotByName(tagfullnames ...string) (map[string]SnapData, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetSnapShotByName(tagfullnames...)
+}
+
+/*******************************************************************************
+- 功能: 通过变量id获取快照值
+- 参数:
+	[ids]  id切片，输入
+- 输出:
+	[map[int]SnapData] 快照Map,key为变量全名
+	[error] 错误信息
+- 备注:
+- 时间: 2020年5月15日
+*******************************************************************************/
+func (p *GoldenPool) GetSnapShotById(ids, dtypes []int) (map[int]SnapData, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetSnapShotById(ids, dtypes)
+}
+
+/*******************************************************************************
+- 功能: 通过变量全名获取历史数据值
+- 参数:
+	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
+    [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
+	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+- 输出:
+	[map[string][]RealTimeSeriesData] 历史Map,key为变量全名
+	[error] 错误信息
+- 备注:
+- 时间: 2020年5月15日
+*******************************************************************************/
+func (p *GoldenPool) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetHistoryByName(bgtime, endtime, tagfullnames...)
+}
+
+/*******************************************************************************
+- 功能: 通过变量全名获取历史数据统计信息
+- 参数:
+	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
+    [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
+	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+- 输出:
+	[max_time]    整形,最大值对应的Unix毫秒时间.如果为 0,则表示无最大值
+	[min_time]    整形,最小值对应的Unix毫秒时间.如果为 0,则表示无最小值
+    [max_value]   双精度浮点型，输出，表示统计时间段内的最大数值。
+    [min_value]   双精度浮点型，输出，表示统计时间段内的最小数值。
+    [total_value] 双精度浮点型，输出，表示统计时间段内的累计值，结果的单位为标签点的工程单位。
+    [calc_avg]    双精度浮点型，输出，表示统计时间段内的算术平均值。
+    [power_avg]   双精度浮点型，输出，表示统计时间段内的加权平均值。
+    [count]       整型，输出，表示统计时间段内用于计算统计值的数据个数。
+    [error]       错误信息
+- 备注:如果输出的最大值或最小值的时间戳秒值为 0，则表明仅有累计值和加权平均值输出有效，其余统计结果无效。
+  	本接口对数据类型为 GOLDEN_COOR、GOLDEN_BLOB、GOLDEN_STRING 的标签点无效。
+- 时间: 2020年12月04日
+*******************************************************************************/
+func (p *GoldenPool) GetHistorySummaryByName(bgtime, endtime int64, tagfullname string) (int64,
+	int64, float64, float64, float64, float64, float64, int, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return 0, 0, 0., 0., 0., 0., 0., 0, err
+	}
+	defer g.DisConnect(p)
+	return g.GetHistorySummaryByName(bgtime, endtime, tagfullname)
+}
+
+/*******************************************************************************
+- 功能: 通过变量全名获取单个时间点的历史数据值
+- 参数:
+	[mode]   整型，输入，取值 GOLDEN_NEXT(0)、GOLDEN_PREVIOUS(1)、GOLDEN_EXACT(2)、
+    			GOLDEN_INTER(3) 之一:
+    				 GOLDEN_NEXT(0) 寻找下一个最近的数据；
+   					 GOLDEN_PREVIOUS(1) 寻找上一个最近的数据；
+    				 GOLDEN_EXACT(2) 取指定时间的数据，如果没有则返回错误 GoE_DATA_NOT_FOUND；
+    				 GOLDEN_INTER(3) 取指定时间的内插值数据。
+    [datatime]  整型，输入，时间UnixNano秒数。
+	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+- 输出:
+	[map[string]RealTimeSeriesData] 快照Map,key为变量全名
+	[error] 错误信息
+- 备注:
+- 时间: 2020年5月15日
+*******************************************************************************/
+func (p *GoldenPool) GetHistorySingleByName(mode int, datatime int64, tagfullnames ...string) (map[string]RealTimeSeriesData, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetHistorySingleByName(mode, datatime, tagfullnames...)
+}
+
+/*******************************************************************************
+- 功能: 通过变量全名获取等间隔历史数据值
+- 参数:
+	[count]	整形,需要的插值个数
+	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
+    [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
+	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+- 输出:
+	[map[string][]RealTimeSeriesData] 快照Map,key为变量全名
+	[error] 错误信息
+- 备注:
+- 时间: 2020年5月15日
+*******************************************************************************/
+func (p *GoldenPool) GetHisIntervalByName(count int, bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetHisIntervalByName(count, bgtime, endtime, tagfullnames...)
+}
+
+/*******************************************************************************
+功能:获取补全了开头和结尾时刻数据的历史数据
+输入:[bginTime] 开始时间,UnixNano
+	[endTime] 结束时间,UnixNano
+	[Interval] 两个数据点之间的间隔时间,单位:秒.如果为0，则读取原始历史数据.如果大于零,则读取等间隔差值历史数据
+	[tagnames] 变量名,至少要有一个,可以为多个
+输出:[map[string][]RealTimeSeriesData] 数据Map,以变量名为key
+	[map[string]error] 变量的错误信息Map,以变量名为key
+	[map[string]bool] 快照数据时间大于endTime,则为true,否则为false
+	[error]
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) GetHistoryDataAlignHeadAndTail(bgtime, endtime int64, Interval int, tagfullnames ...string) (map[string]HisData, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetHistoryDataAlignHeadAndTail(bgtime, endtime, Interval, tagfullnames...)
+}
+
+/*******************************************************************************
+功能:获取表中的标签点名称列表
+输入:可选的表名称列表
+输出:标签点表Map,Map的key为表名
+说明:如果不输入表名,则读取数据库中所有表下的标签点
+	如果输入表名,则读取输入的每个表下的标签点
+	如果输入的表不存在,对应的map下的字符串切片为空
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) GetTagNameListInTables(tbnames ...string) (map[string][]string, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetTagNameListInTables(tbnames...)
+}
+
+/*******************************************************************************
+功能:获取表中的标签点列表
+输入:可选的表名称列表
+输出:标签点表Map,Map的key为表名
+说明:如果不输入表名,则读取数据库中所有表下的标签点
+	如果输入表名,则读取输入的每个表下的标签点
+	如果输入的表不存在,对应的map下的字符串切片为空
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) GetTagListInTables(tbnames ...string) (map[string][]GoldenPoint, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetTagListInTables(tbnames...)
+}
+
+/*******************************************************************************
+功能:根据标签点全名获取标签点的配置信息
+输入:标签点名列表
+输出:标签点Map,Map的key为标签名
+说明:
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) GetTagPointInfoByName(tagnames ...string) (map[string]GoldenPoint, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	return g.GetTagPointInfoByName(tagnames...)
+}
+
+/*******************************************************************************
+功能:根据标签点全名获取标签点的配置信息
+输入:标签点ID
+输出:标签点和错误信息
+说明:
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) GetTagPointInfoById(id int) (GoldenPoint, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		var gdp GoldenPoint
+		return gdp, err
+	}
+	defer g.DisConnect(p)
+	return g.GetSinglePointPropterty(id)
+}
+
+/*******************************************************************************
+功能:根据标签点名写快照
+输入:[tagname]   标签点全名
+	[datavalue] 数值
+	[qualitie]  质量码
+	[datatime]  可选的时间,UnixNano。省略时采用当前服务器时间
+输出:
+说明:
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) SetSnapShot(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
+	g, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer g.DisConnect(p)
+	return g.SetSnapShot(tagname, datavalue, qualitie, datatime...)
+}
+
+/*******************************************************************************
+功能:批量写快照
+输入:[tagnames]   标签点全名.同一个标签点标识可以出现多次，但它们的时间戳必需是递增的
+	[datavalues] 数值
+	[qualities]  质量码
+	[datatimes]  时间,UnixNano
+输出:
+说明:
+时间:2020年5月16日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) SetSnapShotBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
+	g, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer g.DisConnect(p)
+	return g.SetSnapShotBatch(tagnames, datavalues, qualities, datatimes)
+}
+
+/*******************************************************************************
+功能:根据标签点名写历史值
+输入:[tagname]   标签点全名
+	[datavalue] 数值
+	[qualitie]  质量码
+	[datatime]  可选的时间,UnixNano。省略时采用当前服务器时间
+输出:
+说明:
+时间:2020年8月14日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) SetArchivedValue(tagname string, datavalue float64, qualitie int, datatime ...int64) error {
+	g, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer g.DisConnect(p)
+	return g.SetArchivedValue(tagname, datavalue, qualitie, datatime...)
+}
+
+/*******************************************************************************
+功能:根据标签点名批量写历史值
+输入:[tagnames]   标签点全名.同一个标签点标识可以出现多次，但它们的时间戳必需是递增的
+	[datavalues] 数值
+	[qualities]  质量码
+	[datatimes]  时间,UnixNano
+输出:
+说明:
+时间:2020年8月14日
+编辑:wang_jp
+*******************************************************************************/
+func (p *GoldenPool) SetArchivedValuesBatch(tagnames []string, datavalues []float64, qualities []int, datatimes []int64) error {
+	g, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer g.DisConnect(p)
+	return g.SetArchivedValuesBatch(tagnames, datavalues, qualities, datatimes)
+}
+
+/***************************************************
+功能:读取庚顿服务器时间
+输入:无
+输出:时间,err
+时间:2020年3月19日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) GetServerTime() (time.Time, error) {
+	var st time.Time
+	g, err := p.GetConnect()
+	if err != nil {
+		return st, err
+	}
+	defer g.DisConnect(p)
+	t, err := g.HostTime()
+	if err != nil {
+		return st, err
+	}
+	st = time.UnixMilli(int64(t) * 1e3)
+	return st, nil
+}
+
+/***************************************************
+功能:读取庚顿服务器版本号
+输入:无
+输出:版本号,err
+时间:2020年3月19日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) GetApiVersion() (string, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return "", err
+	}
+	defer g.DisConnect(p)
+	return g.GetAPIVersion()
+}
+
+/***************************************************
+功能:读取庚顿服务器数据标签表
+输入:[selector] 不输入或者0:读取数据表列表,反馈为数据表列表的map,以表id为key([]goldengo.Tables)
+		1: 读取数据表列表,反馈为数据表ID数组([]int)
+		2: 读取数据表列表,反馈为数据表名字符串数组([]string)
+		其他:同0
+输出:数据接口,err
+时间:2020年3月19日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TablesGet(selector ...int) (interface{}, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	err = g.GetTables()
+	if err != nil {
+		return nil, err
+	}
+	if len(selector) > 0 {
+		switch selector[0] {
+		case 1:
+			return g.TableIds, err //返回ID数组
+		case 2:
+			var names []string
+			for _, id := range g.TableIds {
+				names = append(names, g.Tables[id].Name)
+			}
+			return names, nil //返回表名数组
+		default:
+			return g.Tables, nil //返回表信息Map
+		}
+	}
+	return g.Tables, nil
+}
+
+/***************************************************
+功能:根据表名读取庚顿服务器数据标签表信息
+输入:[tablenames] 零个一个或者多个数据表名,如果不输入,则返回所有表的信息
+输出:map[string]goldengo.GoldenTable,以表名为Key
+	err,错误信息
+时间:2020年3月19日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TablesPropertys(tablenames ...string) (map[string]GoldenTable, error) {
+	datas := make(map[string]GoldenTable)
+	tabp, err := p.TablesGet(0)
+	if err != nil {
+		return datas, err
+	}
+	tbinfs, _ := tabp.(map[int]GoldenTable)
+	if len(tablenames) == 0 {
+		for _, tb := range tbinfs {
+			datas[tb.Name] = tb
+		}
+	} else {
+		var gdtb GoldenTable
+		for _, name := range tablenames {
+			for _, tb := range tbinfs {
+				datas[name] = gdtb
+				if strings.EqualFold(tb.Name, name) {
+					datas[name] = tb
+					break
+				}
+			}
+		}
+	}
+	return datas, nil
+}
+
+/***************************************************
+功能:添加表
+输入:[tableName]  表名称
+	[tableDesc]  表描述
+输出:[int] 表ID
+	[error] 错误信息
+说明:
+时间:2020年6月18日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TableInsert(tableName, tableDesc string) (int, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return 0, err
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	tb := new(GoldenTable)
+	tb.Name = tableName
+	tb.Desc = tableDesc
+	err = tb.AppendTable(g.Handle)
+
+	return tb.Id, err
+}
+
+/***************************************************
+功能:添加表或者更新表
+输入:[tableName]  表名称
+	[tableDesc]  表描述
+输出:[bool] 如果新建表，则为true;更新表为false
+	[int] 表ID
+	[error] 错误信息
+说明:如果表名称不存在，则添加表，如果存在，则更新表的描述信息
+时间:2020年6月18日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TableInsertOrUpdate(tableName, tableDesc string) (bool, int, error) {
+	m, err := p.GetConnect()
+	if err != nil {
+		return false, 0, err
+	}
+	defer m.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	isinsert := false
+	tb := new(GoldenTable)
+	tb.Name = tableName
+	tb.Desc = tableDesc
+	e := tb.GetTablePropertyByName(m.Handle)
+	if e != nil || tb.Id == 0 { //如果读取时有错误或者没有读取到ID
+		err = tb.AppendTable(m.Handle) //插入新数据
+		isinsert = true
+	} else {
+		err = tb.UpdateTableDescByName(m.Handle) //更新描述信息
+	}
+	return isinsert, tb.Id, err
+}
+
+/***************************************************
+功能:删除表
+输入:[tableName]  表名称
+输出:[error] 错误信息
+说明:
+时间:2020年6月18日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TableRemove(tableName string) error {
+	m, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer m.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	tb := new(GoldenTable)
+	tb.Name = tableName
+	return tb.RemoveTableByName(m.Handle)
+}
+
+/***************************************************
+功能:重命名表
+输入:[oldtableName]  旧表名称
+	[newtableName]  新表名称
+输出:[error] 错误信息
+说明:
+时间:2020年6月18日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TableReName(oldtableName, newtableName string) error {
+	m, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer m.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	tb := new(GoldenTable)
+	tb.Name = oldtableName
+	return tb.UpdateTableNameByOldName(m.Handle, newtableName)
+}
+
+/***************************************************
+功能:通过表名获取表ID
+输入:[tableName]  表名称
+输出:[int] 表ID
+	[error] 错误信息
+说明:
+时间:2020年6月18日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) TableGetIdByName(tableName string) (int, error) {
+	m, err := p.GetConnect()
+	if err != nil {
+		return 0, err
+	}
+	defer m.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	tb := new(GoldenTable)
+	tb.Name = tableName
+	err = tb.GetTablePropertyByName(m.Handle)
+	return tb.Id, err
+}
+
+/***************************************************
+功能:获取标签点的属性
+输入:[fullname string]  标签点全名
+输出:
+    [gdp *GoldenPoint] 标签点属性
+	[error] 错误信息
+说明:
+时间:2022年2月17日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) PointPropterty(fullname string) (gdp *GoldenPoint, err error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	ids, _, _, _, err := g.FindPoints(fullname)
+	if err != nil || ids[0] == 0 {
+		if err == nil {
+			err = fmt.Errorf("tagname [%s] not exist inGolden", fullname)
+		}
+		return
+	}
+	gdp = new(GoldenPoint)
+	gdp.Base.Id = ids[0]
+	gdp.GetPointProptertyById(g.Handle)
+	return
+}
+
+/***************************************************
+功能:新建标签点
+输入:[GoldenPoint]  标签点属性
+输出:
+	[error] 错误信息
+说明:
+时间:2020年6月18日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) PointInsert(gdp *GoldenPoint) error {
+	m, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer m.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	return gdp.InsertPoint(m.Handle)
+}
+
+/***************************************************
+功能:更新标签点
+输入:[gdp *GoldenPoint]  标签点属性
+输出:
+	[error] 错误信息
+说明:
+时间:2022年2月17日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) PointUpdate(gdp *GoldenPoint) error {
+	g, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	return gdp.UpdatePointById(g.Handle)
+}
+
+/***************************************************
+功能:删除标签点
+输入:[fullname string]  标签点全名
+输出:
+	[error] 错误信息
+说明:
+时间:2022年2月17日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) PointRemove(fullname string) error {
+	g, err := p.GetConnect()
+	if err != nil {
+		return err
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	ids, _, _, _, err := g.FindPoints(fullname)
+	if err != nil || ids[0] == 0 {
+		if err == nil {
+			err = fmt.Errorf("tagname [%s] not exist inGolden", fullname)
+		}
+		return err
+	}
+	gdp := new(GoldenPoint)
+	gdp.Base.Id = ids[0]
+	return gdp.RemovePointById(g.Handle)
 }
