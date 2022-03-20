@@ -669,6 +669,24 @@ func (p *GoldenPool) GetApiVersion() (string, error) {
 }
 
 /***************************************************
+功能:读取庚顿服务器数据标签点
+输入:无
+输出:map[int]GoldenPoint,err
+时间:2022年3月20日
+编辑:wang_jp
+***************************************************/
+func (p *GoldenPool) Points() (map[int]GoldenPoint, error) {
+	g, err := p.GetConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	err = g.GetTables(true)
+	return g.Points, err
+}
+
+/***************************************************
 功能:读取庚顿服务器数据标签表
 输入:[selector] 不输入或者0:读取数据表列表,反馈为数据表列表的map,以表id为key([]goldengo.Tables)
 		1: 读取数据表列表,反馈为数据表ID数组([]int)
