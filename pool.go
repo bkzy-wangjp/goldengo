@@ -973,3 +973,51 @@ func (p *GoldenPool) PointRemove(fullname string) error {
 	gdp.Base.Id = ids[0]
 	return gdp.RemovePointById(g.Handle)
 }
+
+/***************************************************
+- 功能:搜索符合条件的标签点，使用标签点名时支持通配符
+- 参数:
+	 [tagmask]       字符串，输入，标签点名称掩码，支持"*"和"?"通配符，缺省设置为"*"，
+						长度不得超过GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+	 [tablemask]     字符串，输入，标签点表名称掩码，支持"*"和"?"通配符，缺省设置为"*"，
+						长度不得超过 GOLDEN_TAG_SIZE，支持多个搜索条件，以空格分隔。
+	 [source]        字符串，输入，数据源集合，字符串中的每个字符均表示一个数据源，空字符串
+						表示不用数据源作搜索条件，缺省设置为空，长度不得超过 GOLDEN_DESC_SIZE。
+	 [unit]          字符串，输入，标签点工程单位的子集，工程单位中包含该参数的标签点均满足条件，
+						空字符串表示不用工程单位作搜索条件，缺省设置为空，长度不得超GOLDEN_UNIT_SIZE。
+	 [desc]          字符串，输入，标签点描述的子集，描述中包含该参数的标签点均满足条件，
+						空字符串表示不用描述作搜索条件，缺省设置为空，长度不得超过 GOLDEN_SOURCE_SIZE。
+	 [instrument]    字符串，输入参数，标签点设备名称。缺省设置为空，长度不得超过GOLDEN_INSTRUMENT_SIZE。
+	 [mode]          整型，GOLDEN_SORT_BY_TABLE(0)、GOLDEN_SORT_BY_TAG(1)、GOLDEN_SORT_BY_ID(2) 之一，
+						搜索结果的排序模式，输入，缺省值为GOLDEN_SORT_BY_TABLE
+- 返回: [[]ids]           整型数组，输出，返回搜索到的标签点标识列表
+		[[]tagnames]	字符串数组,标签点全名
+	 	[error]         错误信息
+- 备注:用户须保证分配给 ids 的空间与 count 相符，各参数中包含的搜索条件之间的关系为"与"的关系，
+	用包含通配符的标签点名称作搜索条件时，如果第一个字符不是通配符(如"ai67*")，会得到最快的搜索速度。
+ 	如果 tagmask、tablemask 为空指针，则表示使用缺省设置"*",
+ 	多个搜索条件可以通过空格分隔，比如"demo_*1 demo_*2"，会将满足demo_*1或者demo_*2条件的标签点搜索出来。
+***************************************************/
+func (p *GoldenPool) PointSearch(tagmask, tablemask, source, unit, desc, instrument string, mode int) (tagids []int, tagnames []string, err error) {
+	g, e := p.GetConnect()
+	if e != nil {
+		err = e
+		return
+	}
+	defer g.DisConnect(p)
+	////////////////////////////////////////////////////////////////
+	ids, e := g.Search(tagmask, tablemask, source, unit, desc, instrument, mode)
+	if e != nil {
+		err = e
+		return
+	}
+	tagids = append(tagids, ids...)
+	err = g.GetPointPropterty(ids...)
+	if err != nil {
+		return
+	}
+	for _, id := range ids {
+		tagnames = append(tagnames, g.Points[id].Base.TableDotTag)
+	}
+	return
+}
