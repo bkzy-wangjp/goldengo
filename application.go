@@ -501,6 +501,8 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 			if histime[len(histime)-1] < endTime/1e6 { //如果读取到的历史数据中的最后一个点的时间小于指定的结束时间
 				edv := hisdata[len(hisdata)-1]
 				edv.Time = endTime / 1e6
+				edv.Value = hisreal[len(hisreal)-1]
+				edv.Quality = int(hisq[len(hisq)-1])
 				hisdata = append(hisdata, edv)
 			}
 		} else { //没有读到历史数据
