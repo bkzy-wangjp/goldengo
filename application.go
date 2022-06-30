@@ -466,44 +466,21 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 		} else {
 			if bgtime == 0 {
 				bgerr = fmt.Errorf("no data was found.变量[%s]在时间点[%s](含)之前没有数据", tag, time.Unix(bginTime/1e9, bginTime%1e9/1e6))
-			} else {
-				bghd.Quality = int(bgq)
-				bghd.Time = bgtime
-				switch dtypes[i] {
-				case 0, 1, 2, 3, 4, 5, 6, 7, 8: //整形等
-					bghd.Value = float64(bgint)
-				case 9, 10, 11: //浮点数
-					bghd.Value = bgreal
-				default: //其他类型
-					bghd.Value = 0.0
-				}
 			}
 		}
 		if len(histime) > 0 { //读到了历史数据
 			if histime[0] > bginTime/1e6 { //第一个历史数据时间大于开始时间
-				bghd.Time = bginTime / 1e6
+				bghd = formatRealTimeSeriesData(dtypes[i], bginTime/1e6, bgreal, bgint, bgq)
 				hisdata = append(hisdata, bghd)
 			}
+			var hd RealTimeSeriesData
 			for j, ht := range histime {
-				var hd RealTimeSeriesData
-				hd.Quality = int(hisq[j])
-				hd.Time = ht
-				switch dtypes[i] {
-				case 0, 1, 2, 3, 4, 5, 6, 7, 8: //整形等
-					hd.Value = float64(hisint[j])
-				case 9, 10, 11: //浮点数
-					hd.Value = hisreal[j]
-				default: //其他类型
-					hd.Value = 0.0
-				}
+				hd = formatRealTimeSeriesData(dtypes[i], ht, hisreal[j], hisint[j], hisq[j])
 				hisdata = append(hisdata, hd)
 			}
-			if histime[len(histime)-1] < endTime/1e6 { //如果读取到的历史数据中的最后一个点的时间小于指定的结束时间
-				edv := hisdata[len(hisdata)-1]
-				edv.Time = endTime / 1e6
-				edv.Value = hisreal[len(hisreal)-1]
-				edv.Quality = int(hisq[len(hisq)-1])
-				hisdata = append(hisdata, edv)
+			if hd.Time < endTime/1e6 { //如果读取到的历史数据中的最后一个点的时间小于指定的结束时间
+				hd.Time = endTime / 1e6
+				hisdata = append(hisdata, hd)
 			}
 		} else { //没有读到历史数据
 			if bgerr != nil {
@@ -516,7 +493,7 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 					tag, time.Unix(bginTime/1e9, bginTime%1e9),
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
-				bghd.Time = bginTime / 1e6
+				bghd = formatRealTimeSeriesData(dtypes[i], bginTime/1e6, bgreal, bgint, bgq)
 				hisdata = append(hisdata, bghd)
 				bghd.Time = endTime / 1e6
 				hisdata = append(hisdata, bghd)
@@ -532,6 +509,21 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 		hismap[tg] = hd
 	}
 	return hismap, nil
+}
+
+func formatRealTimeSeriesData(dtype int, datatime int64, realval float64, intval int64, quality int16) RealTimeSeriesData {
+	var hisdata RealTimeSeriesData //时间序列数据
+	hisdata.Quality = int(quality)
+	hisdata.Time = datatime
+	switch dtype {
+	case 0, 1, 2, 3, 4, 5, 6, 7, 8: //整形等
+		hisdata.Value = float64(intval)
+	case 9, 10, 11: //浮点数
+		hisdata.Value = realval
+	default: //其他类型
+		hisdata.Value = 0.0
+	}
+	return hisdata
 }
 
 /*******************************************************************************
