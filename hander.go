@@ -427,8 +427,12 @@ func (s *RTDBService) GetArchivedValues(id int, bgtime int64, endtime int64) ([]
 			logs.Critical("%#v", err)
 		}
 	}()
-	count, err := s.ArchivedValuesCount(id, bgtime, endtime) //读取历史数据数量
-
+	datacount, err := s.ArchivedValuesCount(id, bgtime, endtime) //读取历史数据数量
+	//fmt.Printf("查询到的历史数据的数量为:%d ==============================\n", datacount)
+	count := datacount
+	if datacount == 1 {
+		count += 1
+	}
 	//整型数组，输入/输出，输入时第一个元素表示起始时间秒数，最后一个元素表示结束时间
 	//秒数，如果为 0，表示直到数据的最后时间；输出时表示对应的历史数值时间秒数。
 	datetimes := make([]int32, count)
@@ -463,6 +467,15 @@ func (s *RTDBService) GetArchivedValues(id int, bgtime int64, endtime int64) ([]
 			times[i] = int64(sec)*1e3 + int64(ms[i])
 		}
 	}
+	//fmt.Printf("结果数组:%v =========1========\n", times)
+	if datacount == 1 || (datacount == 2 && endtime/1e6 == times[1] && values[1] == 0) {
+		times = append(times[:1], times[2:]...)
+		values = append(values[:1], values[2:]...)
+		states = append(states[:1], states[2:]...)
+		qualities = append(qualities[:1], qualities[2:]...)
+	}
+	//fmt.Printf("结果数组:%v =========2========\n", times)
+	//fmt.Printf("时间:%v,数值:%v,状态:%v,质量:%v,错误信息:%v *******************\n", times, values, states, qualities, err)
 	return times, values, states, qualities, err
 }
 
