@@ -405,7 +405,8 @@ func (g *GoldenConnect) GetHisIntervalByName(count int, bgtime, endtime int64, t
 功能:获取补全了开头和结尾时刻数据的历史数据
 输入:[bginTime] 开始时间,UnixNano
 	[endTime] 结束时间,UnixNano
-	[Interval] 两个数据点之间的间隔时间,单位:秒.如果为0，则读取原始历史数据.如果大于零,则读取等间隔差值历史数据
+	[Interval] 两个数据点之间的间隔时间,单位:秒.如果不大于0，则读取原始历史数据.如果大于零,则读取等间隔差值历史数据
+				如果Interval小于0,则不对开头和结尾的数据进行补全
 	[tagnames] 变量名,至少要有一个,可以为多个
 输出:[map[string][]RealTimeSeriesData] 数据Map,以变量名为key
 	[map[string]error] 变量的错误信息Map,以变量名为key
@@ -446,7 +447,7 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 		var histime, hisint []int64
 		var hisreal []float64
 		var hisq []int16
-		if Interval == 0 {
+		if Interval <= 0 {
 			histime, hisreal, hisint, hisq, err = g.GetArchivedValues(ids[i], bginTime, endTime) //根据Id读取历史数据
 			if err != nil {
 				errs[tag] = fmt.Errorf("读取变量[%s]从[%s]到[%s]的历史存档数据时错误:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9), time.Unix(endTime/1e9, endTime%1e9), err.Error())
@@ -458,7 +459,7 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 				errs[tag] = fmt.Errorf("读取变量[%s]从[%s]到[%s]的等间隔插值历史存档数据时错误:[%s]", tag, time.Unix(bginTime/1e9, bginTime%1e9), time.Unix(endTime/1e9, endTime%1e9), err.Error())
 			}
 		}
-
+		//fmt.Printf("直接查询的结果:%v,%v ----------------------\n", histime, hisreal)
 		var bghd RealTimeSeriesData                                                //开始时间点之前的一个历史数据
 		bgtime, bgreal, bgint, bgq, bgerr := g.GetSingleValue(ids[i], 1, bginTime) //根据Id读取历史时刻单值数据
 		if bgerr != nil {
@@ -469,7 +470,8 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 			}
 		}
 		if len(histime) > 0 { //读到了历史数据
-			if histime[0] > bginTime/1e6 { //第一个历史数据时间大于开始时间
+			//Interval小于0时不补齐开头和结尾
+			if Interval >= 0 && histime[0] > bginTime/1e6 { //第一个历史数据时间大于开始时间
 				bghd = formatRealTimeSeriesData(dtypes[i], bginTime/1e6, bgreal, bgint, bgq)
 				hisdata = append(hisdata, bghd)
 			}
@@ -478,7 +480,8 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 				hd = formatRealTimeSeriesData(dtypes[i], ht, hisreal[j], hisint[j], hisq[j])
 				hisdata = append(hisdata, hd)
 			}
-			if hd.Time < endTime/1e6 { //如果读取到的历史数据中的最后一个点的时间小于指定的结束时间
+
+			if Interval >= 0 && hd.Time < endTime/1e6 { //如果读取到的历史数据中的最后一个点的时间小于指定的结束时间
 				hd.Time = endTime / 1e6
 				hisdata = append(hisdata, hd)
 			}
@@ -493,10 +496,12 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 					tag, time.Unix(bginTime/1e9, bginTime%1e9),
 					time.Unix(endTime/1e9, endTime%1e9),
 					time.Unix(snaptimes[i]/1e3, snaptimes[i]%1e3*1e6))
-				bghd = formatRealTimeSeriesData(dtypes[i], bginTime/1e6, bgreal, bgint, bgq)
-				hisdata = append(hisdata, bghd)
-				bghd.Time = endTime / 1e6
-				hisdata = append(hisdata, bghd)
+				if Interval >= 0 {
+					bghd = formatRealTimeSeriesData(dtypes[i], bginTime/1e6, bgreal, bgint, bgq)
+					hisdata = append(hisdata, bghd)
+					bghd.Time = endTime / 1e6
+					hisdata = append(hisdata, bghd)
+				}
 			}
 		}
 		datas[tag] = hisdata
@@ -508,6 +513,7 @@ func (g *GoldenConnect) GetHistoryDataAlignHeadAndTail(bginTime, endTime int64, 
 		hd.HisRtsd = his
 		hismap[tg] = hd
 	}
+	//fmt.Printf("查询结果:%v,interval=%d ====================\n", hismap, Interval)
 	return hismap, nil
 }
 

@@ -459,7 +459,8 @@ func (p *GoldenPool) GetHisIntervalByName(count int, bgtime, endtime int64, tagf
 功能:获取补全了开头和结尾时刻数据的历史数据
 输入:[bginTime] 开始时间,UnixNano
 	[endTime] 结束时间,UnixNano
-	[Interval] 两个数据点之间的间隔时间,单位:秒.如果为0，则读取原始历史数据.如果大于零,则读取等间隔差值历史数据
+	[Interval] 两个数据点之间的间隔时间,单位:秒.如果不大于0，则读取原始历史数据.如果大于零,则读取等间隔差值历史数据
+				如果Interval小于0,则不对开头和结尾的数据进行补全
 	[tagnames] 变量名,至少要有一个,可以为多个
 输出:[map[string][]RealTimeSeriesData] 数据Map,以变量名为key
 	[map[string]error] 变量的错误信息Map,以变量名为key
