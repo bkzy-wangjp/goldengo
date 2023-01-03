@@ -83,7 +83,7 @@ func NewGoldenPool(hostname, username, password string, port, cap int, max_sec .
 		username: username,              //用户名
 		password: password,              //密码
 		port:     port,                  //端口号
-		Version:  "v1.0.2102",
+		Version:  "v1.0.2301",
 	}
 	var err error
 	for i := 0; i < cap; i++ { //创建句柄连接池
