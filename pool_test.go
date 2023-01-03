@@ -89,3 +89,12 @@ func TestPointPropterty(t *testing.T) {
 	}
 	pool.Close()
 }
+
+func TestDisconnect(t *testing.T) {
+	g := new(GoldenConnect)
+	g.Handle = 1
+	err := g.disConnect()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}

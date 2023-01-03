@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bkzy-wangjp/goldengo"
 	"github.com/bkzy-wangjp/miclog"
+	"github.com/bkzy/goldengo"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gopkg.in/ini.v1"
