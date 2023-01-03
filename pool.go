@@ -218,6 +218,7 @@ func (p *GoldenPool) GetConnect(tenant ...string) (*GoldenConnect, error) {
 	if err != nil {
 		//无效的句柄\远程主机强迫关闭了一个现有的连接\你的主机中的软件中止了一个已建立的连接
 		if stringContains(err.Error(), _Golden_Err_Codes...) {
+			g.disConnect()    //释放原有连接
 			err = g.connect() //重新创建句柄
 			if err != nil {   //创建连接失败
 				g.Handle = 0x0FFFFFFF
@@ -267,6 +268,7 @@ func (g *GoldenConnect) GetConnect(p *GoldenPool, tenant ...string) error {
 		if err != nil {
 			//无效的句柄\远程主机强迫关闭了一个现有的连接\你的主机中的软件中止了一个已建立的连接
 			if stringContains(err.Error(), _Golden_Err_Codes...) {
+				g.disConnect()    //释放原有连接
 				err = g.connect() //重新创建句柄
 				if err != nil {   //创建连接失败
 					g.Handle = 0x0FFFFFFF
@@ -357,16 +359,16 @@ func (p *GoldenPool) GetSnapShotById(ids, dtypes []int) (map[int]SnapData, error
 }
 
 /*******************************************************************************
-- 功能: 通过变量全名获取历史数据值
-- 参数:
-	[bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
-    [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
-	[tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
-- 输出:
-	[map[string][]RealTimeSeriesData] 历史Map,key为变量全名
-	[error] 错误信息
-- 备注:
-- 时间: 2020年5月15日
+    - 功能: 通过变量全名获取历史数据值
+    - 参数:
+	  [bgtime]   整型，输入，表示起始时间UnixNano秒数。如果为 0，表示从存档中最早时间的数据开始读取
+      [endtime]  整型，输入，表示结束时间UnixNano秒数。如果为 0，表示读取直至存档中数据的最后时间
+	  [tagfullnames]  字符串切片，输入. 变量全名格式:tablename.tagname
+    - 输出:
+	    [map[string][]RealTimeSeriesData] 历史Map,key为变量全名
+	    [error] 错误信息
+    - 备注:
+    - 时间: 2020年5月15日
 *******************************************************************************/
 func (p *GoldenPool) GetHistoryByName(bgtime, endtime int64, tagfullnames ...string) (map[string][]RealTimeSeriesData, error) {
 	g, err := p.GetConnect()
